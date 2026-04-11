@@ -1,7 +1,10 @@
 import React from 'react';
+import type { PageCounterMode } from '../types/document';
 
 interface HeaderFooterActionsProps {
   activePageId: string | null;
+  pageCounterMode: PageCounterMode;
+  onPageCounterModeChange: (mode: PageCounterMode) => void;
   onCopyHeaderToAll: () => void;
   onCopyFooterToAll: () => void;
   onClearHeader: () => void;
@@ -16,6 +19,8 @@ interface HeaderFooterActionsProps {
  */
 export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   activePageId,
+  pageCounterMode,
+  onPageCounterModeChange,
   onCopyHeaderToAll,
   onCopyFooterToAll,
   onClearHeader,
@@ -24,12 +29,34 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   onClearAllFooters,
 }) => {
   const hasActivePage = activePageId !== null;
+  const handlePageCounterModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextMode = event.target.value;
+    if (nextMode === 'none' || nextMode === 'header' || nextMode === 'footer' || nextMode === 'both') {
+      onPageCounterModeChange(nextMode);
+    }
+  };
 
   return (
     <div
-      className="flex flex-wrap gap-1"
+      className="flex flex-wrap items-center gap-2"
       data-testid="header-footer-actions"
     >
+      <label className="flex items-center gap-2 text-xs text-gray-600" htmlFor="page-counter-mode">
+        <span>Page counter</span>
+        <select
+          id="page-counter-mode"
+          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+          data-testid="page-counter-mode"
+          value={pageCounterMode}
+          onChange={handlePageCounterModeChange}
+        >
+          <option value="none">None</option>
+          <option value="header">Header</option>
+          <option value="footer">Footer</option>
+          <option value="both">Both</option>
+        </select>
+      </label>
+
       <ActionButton
         label="Copy Header → All"
         onClick={onCopyHeaderToAll}

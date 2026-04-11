@@ -1,7 +1,9 @@
 import React, { useCallback } from 'react';
+import { $selectAll, type LexicalEditor } from 'lexical';
 import { useDocument } from '../context/document-context';
 import { HeaderFooterToggle } from './HeaderFooterToggle';
 import { HeaderFooterActions } from './HeaderFooterActions';
+import type { PageCounterMode } from '../types/document';
 import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
 import { toggleBold, toggleItalic, toggleUnderline, toggleStrikethrough, setAlignment } from '../lexical/commands/format-commands';
@@ -16,7 +18,43 @@ import { debug } from '../utils/debug';
  * Dispatches Lexical commands to the active editor via DocumentContext.
  */
 export const Toolbar: React.FC = () => {
-  const { document, dispatch, activePageId, activeEditor } = useDocument();
+  const {
+    document,
+    dispatch,
+    activePageId,
+    activeEditor,
+    editorRegistry,
+    globalSelectionActive,
+  } = useDocument();
+
+  const withBodySelection = useCallback(
+    (editor: LexicalEditor, action: (targetEditor: LexicalEditor) => void) => {
+      editor.update(() => {
+        $selectAll();
+      });
+      action(editor);
+    },
+    [],
+  );
+
+  const applyToBodyEditors = useCallback(
+    (action: (targetEditor: LexicalEditor) => void) => {
+      const targetEditors = globalSelectionActive
+        ? editorRegistry.all()
+        : activeEditor
+          ? [activeEditor]
+          : [];
+
+      targetEditors.forEach(editor => {
+        if (globalSelectionActive) {
+          withBodySelection(editor, action);
+        } else {
+          action(editor);
+        }
+      });
+    },
+    [activeEditor, editorRegistry, globalSelectionActive, withBodySelection],
+  );
 
   const handleToggle = (enabled: boolean) => {
     dispatch({ type: 'SET_HEADER_FOOTER_ENABLED', enabled });
@@ -36,66 +74,67 @@ export const Toolbar: React.FC = () => {
   };
   const handleClearAllHeaders = () => dispatch({ type: 'CLEAR_ALL_HEADERS' });
   const handleClearAllFooters = () => dispatch({ type: 'CLEAR_ALL_FOOTERS' });
+  const handlePageCounterModeChange = useCallback((mode: PageCounterMode) => {
+    dispatch({ type: 'SET_PAGE_COUNTER_MODE', mode });
+  }, [dispatch]);
 
   const handleBold = useCallback(() => {
-    debug('toolbar', `bold (hasEditor=${!!activeEditor})`);
-    if (activeEditor) toggleBold(activeEditor);
-  }, [activeEditor]);
+    debug('toolbar', `bold (globalSelection=${globalSelectionActive}, editors=${editorRegistry.all().length}, hasEditor=${!!activeEditor})`);
+    applyToBodyEditors(toggleBold);
+  }, [activeEditor, applyToBodyEditors, editorRegistry, globalSelectionActive]);
 
   const handleItalic = useCallback(() => {
-    debug('toolbar', `italic (hasEditor=${!!activeEditor})`);
-    if (activeEditor) toggleItalic(activeEditor);
-  }, [activeEditor]);
+    debug('toolbar', `italic (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
+    applyToBodyEditors(toggleItalic);
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive]);
 
   const handleUnderline = useCallback(() => {
-    debug('toolbar', `underline (hasEditor=${!!activeEditor})`);
-    if (activeEditor) toggleUnderline(activeEditor);
-  }, [activeEditor]);
+    debug('toolbar', `underline (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
+    applyToBodyEditors(toggleUnderline);
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive]);
 
   const handleStrikethrough = useCallback(() => {
-    debug('toolbar', `strikethrough (hasEditor=${!!activeEditor})`);
-    if (activeEditor) toggleStrikethrough(activeEditor);
-  }, [activeEditor]);
+    debug('toolbar', `strikethrough (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
+    applyToBodyEditors(toggleStrikethrough);
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive]);
 
   const handleAlignLeft = useCallback(() => {
-    if (activeEditor) setAlignment(activeEditor, 'left');
-  }, [activeEditor]);
+    applyToBodyEditors(editor => setAlignment(editor, 'left'));
+  }, [applyToBodyEditors]);
 
   const handleAlignCenter = useCallback(() => {
-    if (activeEditor) setAlignment(activeEditor, 'center');
-  }, [activeEditor]);
+    applyToBodyEditors(editor => setAlignment(editor, 'center'));
+  }, [applyToBodyEditors]);
 
   const handleAlignRight = useCallback(() => {
-    if (activeEditor) setAlignment(activeEditor, 'right');
-  }, [activeEditor]);
+    applyToBodyEditors(editor => setAlignment(editor, 'right'));
+  }, [applyToBodyEditors]);
 
   const handleAlignJustify = useCallback(() => {
-    if (activeEditor) setAlignment(activeEditor, 'justify');
-  }, [activeEditor]);
+    applyToBodyEditors(editor => setAlignment(editor, 'justify'));
+  }, [applyToBodyEditors]);
 
   const handleListNumber = useCallback(() => {
-    if (activeEditor) insertList(activeEditor, 'number');
-  }, [activeEditor]);
+    applyToBodyEditors(editor => insertList(editor, 'number'));
+  }, [applyToBodyEditors]);
 
   const handleListBullet = useCallback(() => {
-    if (activeEditor) insertList(activeEditor, 'bullet');
-  }, [activeEditor]);
+    applyToBodyEditors(editor => insertList(editor, 'bullet'));
+  }, [applyToBodyEditors]);
 
   const handleIndent = useCallback(() => {
-    if (activeEditor) indentContent(activeEditor);
-  }, [activeEditor]);
+    applyToBodyEditors(indentContent);
+  }, [applyToBodyEditors]);
 
   const handleOutdent = useCallback(() => {
-    if (activeEditor) outdentContent(activeEditor);
-  }, [activeEditor]);
+    applyToBodyEditors(outdentContent);
+  }, [applyToBodyEditors]);
 
   const handleFontChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      if (activeEditor) {
-        applyFontFamily(activeEditor, e.target.value as FontFamily);
-      }
+      applyToBodyEditors(editor => applyFontFamily(editor, e.target.value as FontFamily));
     },
-    [activeEditor],
+    [applyToBodyEditors],
   );
 
   return (
@@ -160,6 +199,8 @@ export const Toolbar: React.FC = () => {
       {document.headerFooterEnabled && (
         <HeaderFooterActions
           activePageId={activePageId}
+          pageCounterMode={document.pageCounterMode}
+          onPageCounterModeChange={handlePageCounterModeChange}
           onCopyHeaderToAll={handleCopyHeaderToAll}
           onCopyFooterToAll={handleCopyFooterToAll}
           onClearHeader={handleClearHeader}

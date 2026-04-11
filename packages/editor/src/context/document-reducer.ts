@@ -4,6 +4,45 @@ import type { DocumentAction } from './document-context';
 import { MAX_HEADER_HEIGHT_PX, MAX_FOOTER_HEIGHT_PX } from '../constants/dimensions';
 import { debug, shortId } from '../utils/debug';
 
+function serializedStateChanged(
+  current: import('lexical').SerializedEditorState | null,
+  next: import('lexical').SerializedEditorState | null,
+): boolean {
+  return JSON.stringify(current) !== JSON.stringify(next);
+}
+
+function withExternalSyncVersions(
+  currentDocument: Lex4Document,
+  nextDocument: Lex4Document,
+): Lex4Document {
+  const currentPages = new Map(currentDocument.pages.map(page => [page.id, page]));
+
+  return {
+    ...nextDocument,
+    pages: nextDocument.pages.map(nextPage => {
+      const currentPage = currentPages.get(nextPage.id);
+      if (!currentPage) {
+        return nextPage;
+      }
+
+      const bodyChanged = serializedStateChanged(currentPage.bodyState, nextPage.bodyState);
+      const headerChanged =
+        currentPage.headerHeight !== nextPage.headerHeight ||
+        serializedStateChanged(currentPage.headerState, nextPage.headerState);
+      const footerChanged =
+        currentPage.footerHeight !== nextPage.footerHeight ||
+        serializedStateChanged(currentPage.footerState, nextPage.footerState);
+
+      return {
+        ...nextPage,
+        bodySyncVersion: bodyChanged ? currentPage.bodySyncVersion + 1 : currentPage.bodySyncVersion,
+        headerSyncVersion: headerChanged ? currentPage.headerSyncVersion + 1 : currentPage.headerSyncVersion,
+        footerSyncVersion: footerChanged ? currentPage.footerSyncVersion + 1 : currentPage.footerSyncVersion,
+      };
+    }),
+  };
+}
+
 /**
  * Pure reducer for document state.
  * Handles all page-level and document-level mutations.
@@ -68,12 +107,19 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       return { ...state, headerFooterEnabled: action.enabled };
     }
 
+    case 'SET_PAGE_COUNTER_MODE': {
+      debug('reducer', `SET_PAGE_COUNTER_MODE mode=${action.mode}`);
+      return { ...state, pageCounterMode: action.mode };
+    }
+
     case 'COPY_HEADER_TO_ALL': {
       debug('reducer', `COPY_HEADER_TO_ALL from=${shortId(action.sourcePageId)}`);
       const source = state.pages.find(p => p.id === action.sourcePageId);
       if (!source) return state;
       return {
         ...state,
+        defaultHeaderState: source.headerState,
+        defaultHeaderHeight: source.headerHeight,
         pages: state.pages.map(p => ({
           ...p,
           headerState: source.headerState,
@@ -89,6 +135,8 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       if (!source) return state;
       return {
         ...state,
+        defaultFooterState: source.footerState,
+        defaultFooterHeight: source.footerHeight,
         pages: state.pages.map(p => ({
           ...p,
           footerState: source.footerState,
@@ -126,6 +174,8 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       debug('reducer', 'CLEAR_ALL_HEADERS');
       return {
         ...state,
+        defaultHeaderState: null,
+        defaultHeaderHeight: 0,
         pages: state.pages.map(p => ({
           ...p, headerState: null, headerHeight: 0, headerSyncVersion: p.headerSyncVersion + 1,
         })),
@@ -136,9 +186,29 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       debug('reducer', 'CLEAR_ALL_FOOTERS');
       return {
         ...state,
+        defaultFooterState: null,
+        defaultFooterHeight: 0,
         pages: state.pages.map(p => ({
           ...p, footerState: null, footerHeight: 0, footerSyncVersion: p.footerSyncVersion + 1,
         })),
+      };
+    }
+
+    case 'CLEAR_DOCUMENT_CONTENT': {
+      debug('reducer', 'CLEAR_DOCUMENT_CONTENT');
+      const firstPage = state.pages[0];
+      return {
+        ...state,
+        pages: [{
+          ...createEmptyPage(firstPage?.id),
+          headerState: firstPage?.headerState ?? null,
+          footerState: firstPage?.footerState ?? null,
+          headerHeight: firstPage?.headerHeight ?? 0,
+          footerHeight: firstPage?.footerHeight ?? 0,
+          bodySyncVersion: (firstPage?.bodySyncVersion ?? 0) + 1,
+          headerSyncVersion: firstPage?.headerSyncVersion ?? 0,
+          footerSyncVersion: firstPage?.footerSyncVersion ?? 0,
+        }],
       };
     }
 
@@ -166,7 +236,7 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
 
     case 'SET_DOCUMENT': {
       debug('reducer', `SET_DOCUMENT pages=${action.document.pages.length}`);
-      return action.document;
+      return withExternalSyncVersions(state, action.document);
     }
 
     default:

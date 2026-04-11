@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { Lex4Document } from '../types/document';
+import type { Lex4Document, PageCounterMode } from '../types/document';
 import type { LexicalEditor } from 'lexical';
 
 /** All actions the document reducer can handle */
@@ -10,12 +10,14 @@ export type DocumentAction =
   | { type: 'UPDATE_PAGE_HEADER'; pageId: string; headerState: import('lexical').SerializedEditorState | null }
   | { type: 'UPDATE_PAGE_FOOTER'; pageId: string; footerState: import('lexical').SerializedEditorState | null }
   | { type: 'SET_HEADER_FOOTER_ENABLED'; enabled: boolean }
+  | { type: 'SET_PAGE_COUNTER_MODE'; mode: PageCounterMode }
   | { type: 'COPY_HEADER_TO_ALL'; sourcePageId: string }
   | { type: 'COPY_FOOTER_TO_ALL'; sourcePageId: string }
   | { type: 'CLEAR_HEADER'; pageId: string }
   | { type: 'CLEAR_FOOTER'; pageId: string }
   | { type: 'CLEAR_ALL_HEADERS' }
   | { type: 'CLEAR_ALL_FOOTERS' }
+  | { type: 'CLEAR_DOCUMENT_CONTENT' }
   | { type: 'SET_HEADER_HEIGHT'; pageId: string; height: number }
   | { type: 'SET_FOOTER_HEIGHT'; pageId: string; height: number }
   | { type: 'SET_DOCUMENT'; document: Lex4Document };
@@ -25,6 +27,7 @@ export interface EditorRegistry {
   register(pageId: string, editor: LexicalEditor): void;
   unregister(pageId: string): void;
   get(pageId: string): LexicalEditor | undefined;
+  all(): LexicalEditor[];
 }
 
 /** Shape of the document context value */
@@ -35,6 +38,10 @@ export interface DocumentContextValue {
   setActivePageId: (id: string | null) => void;
   activeEditor: LexicalEditor | null;
   setActiveEditor: (editor: LexicalEditor | null) => void;
+  globalSelectionActive: boolean;
+  setGlobalSelectionActive: (active: boolean) => void;
+  undo: () => void;
+  redo: () => void;
   editorRegistry: EditorRegistry;
 }
 

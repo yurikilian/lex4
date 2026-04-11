@@ -190,8 +190,7 @@ The `lex4-memory.db` file is committed intentionally — it preserves developmen
 
 ## Known Limitations
 
-1. **Per-page undo/redo** — each page body has its own history stack
-2. **No mid-block splitting** — blocks move whole between pages
-3. **Heuristic pagination** — initial block height estimation (24px/line), corrected by ResizeObserver
-4. **No collaborative editing** — out of scope
-5. **No table support** — out of scope
+1. **No mid-block splitting** — blocks move whole between pages
+2. **Heuristic pagination** — initial block height estimation (24px/line), corrected by ResizeObserver
+3. **No collaborative editing** — out of scope
+4. **No table support** — out of scope

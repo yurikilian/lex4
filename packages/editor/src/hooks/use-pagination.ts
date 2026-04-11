@@ -9,7 +9,7 @@ import {
   createEditorStateFromNodes,
 } from '../utils/editor-state-utils';
 import type { Lex4Document, PageState } from '../types/document';
-import { createEmptyPage } from '../types/document';
+import { createEmptyPage, createPageFromTemplate } from '../types/document';
 
 /**
  * usePagination — Orchestrates content flow between pages.
@@ -116,7 +116,12 @@ export function usePagination(
         } else {
           // Create a new page with overflow content
           const newPage: PageState = {
-            ...createEmptyPage(),
+            ...createPageFromTemplate({
+              headerState: document.defaultHeaderState,
+              footerState: document.defaultFooterState,
+              headerHeight: document.defaultHeaderHeight,
+              footerHeight: document.defaultFooterHeight,
+            }),
             bodyState: overflowState,
           };
           dispatch({
@@ -265,7 +270,12 @@ export function usePagination(
         const pageNodes = remainingNodes.slice(0, maxNodes);
         remainingNodes = remainingNodes.slice(maxNodes);
 
-        const basePage = existingPage ?? createEmptyPage();
+        const basePage = existingPage ?? createPageFromTemplate({
+          headerState: document.defaultHeaderState,
+          footerState: document.defaultFooterState,
+          headerHeight: document.defaultHeaderHeight,
+          footerHeight: document.defaultFooterHeight,
+        });
         newPages.push({
           ...basePage,
           bodyState: createEditorStateFromNodes(pageNodes),

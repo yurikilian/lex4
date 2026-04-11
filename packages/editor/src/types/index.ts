@@ -1,4 +1,4 @@
-export type { Lex4Document, PageState } from './document';
+export type { Lex4Document, PageCounterMode, PageState } from './document';
 export { createEmptyPage, createEmptyDocument } from './document';
 export type { Lex4EditorProps } from './editor-props';
 export type {

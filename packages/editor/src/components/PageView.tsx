@@ -23,6 +23,8 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   const { document, dispatch, setActivePageId, setActiveEditor } = useDocument();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
+  const pageCounterMode = document.pageCounterMode;
+  const pageCounterLabel = `Page ${pageIndex + 1} of ${document.pages.length}`;
 
   if (!page) return null;
 
@@ -96,12 +98,14 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
           key={`header-${page.headerSyncVersion}`}
           pageId={pageId}
           initialHeaderState={page.headerState}
+          pageCounterLabel={pageCounterMode === 'header' || pageCounterMode === 'both' ? pageCounterLabel : undefined}
           onHeaderChange={handleHeaderChange}
           onHeightChange={handleHeaderHeight}
         />
       )}
 
       <PageBody
+        key={`body-${page.bodySyncVersion}`}
         pageId={pageId}
         initialBodyState={page.bodyState}
         onBodyChange={handleBodyChange}
@@ -115,6 +119,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
           key={`footer-${page.footerSyncVersion}`}
           pageId={pageId}
           initialFooterState={page.footerState}
+          pageCounterLabel={pageCounterMode === 'footer' || pageCounterMode === 'both' ? pageCounterLabel : undefined}
           onFooterChange={handleFooterChange}
           onHeightChange={handleFooterHeight}
         />

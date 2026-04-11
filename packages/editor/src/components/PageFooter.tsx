@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import type { EditorState, SerializedEditorState } from 'lexical';
@@ -15,6 +14,7 @@ import { debug, shortId } from '../utils/debug';
 interface PageFooterProps {
   pageId: string;
   initialFooterState?: SerializedEditorState | null;
+  pageCounterLabel?: string;
   onFooterChange?: (state: SerializedEditorState) => void;
   onHeightChange?: (height: number) => void;
 }
@@ -29,9 +29,11 @@ interface PageFooterProps {
 export const PageFooter: React.FC<PageFooterProps> = ({
   pageId,
   initialFooterState,
+  pageCounterLabel,
   onFooterChange,
   onHeightChange,
 }) => {
+  const hasPageCounter = !!pageCounterLabel;
   const config = useMemo(
     () => {
       const baseConfig = createEditorConfig('footer', pageId);
@@ -73,20 +75,27 @@ export const PageFooter: React.FC<PageFooterProps> = ({
           contentEditable={
             <ContentEditable
               ref={contentRef}
-              className="outline-none p-2 text-sm text-gray-600 min-h-[24px]"
+              className={`outline-none p-2 text-sm text-gray-600 min-h-[24px] ${hasPageCounter ? 'pr-24' : ''}`}
             />
           }
           placeholder={
-            <div className="absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 text-sm">
+            <div className={`absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 text-sm ${hasPageCounter ? 'pr-24' : ''}`}>
               Footer
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
-        <HistoryPlugin />
         <HeightLimitPlugin maxHeight={MAX_FOOTER_HEIGHT_PX} channel="footer" />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
+      {pageCounterLabel && (
+        <div
+          className="pointer-events-none absolute right-2 top-2 select-none text-xs text-gray-500"
+          data-testid={`page-counter-footer-${pageId}`}
+        >
+          {pageCounterLabel}
+        </div>
+      )}
     </div>
   );
 };

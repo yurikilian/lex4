@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
@@ -133,7 +132,6 @@ export const PageBody: React.FC<PageBodyProps> = ({
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
-        <HistoryPlugin />
         <ListPlugin />
         <TabIndentPlugin />
         <PastePlugin />
