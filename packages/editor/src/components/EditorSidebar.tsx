@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
 interface EditorSidebarProps {
   title: string;
@@ -24,21 +25,23 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       className="flex h-full w-[320px] shrink-0 flex-col border-l border-gray-200 bg-white"
       data-testid="editor-sidebar"
     >
-      <div className="flex items-start justify-between border-b border-gray-200 px-4 py-3">
+      <div className="flex items-start justify-between border-b border-gray-200 px-3 py-2.5">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-xs font-semibold text-gray-900">{title}</h2>
           {subtitle && (
-            <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>
           )}
         </div>
         {onClose && (
           <button
             type="button"
-            className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-gray-400
+                       transition-colors hover:bg-gray-100 hover:text-gray-600"
             data-testid="close-editor-sidebar"
             onClick={onClose}
+            aria-label="Close sidebar"
           >
-            Close
+            <X size={14} />
           </button>
         )}
       </div>

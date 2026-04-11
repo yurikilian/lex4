@@ -13,10 +13,6 @@ interface HeaderFooterActionsProps {
   onClearAllFooters: () => void;
 }
 
-/**
- * HeaderFooterActions — Buttons for copy/clear operations
- * on headers and footers.
- */
 export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   activePageId,
   pageCounterMode,
@@ -38,14 +34,15 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center gap-1"
       data-testid="header-footer-actions"
     >
-      <label className="flex items-center gap-2 text-xs text-gray-600" htmlFor="page-counter-mode">
+      <label className="flex items-center gap-1 text-xs text-gray-600" htmlFor="page-counter-mode">
         <span>Page counter</span>
         <select
           id="page-counter-mode"
-          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+          className="h-6 rounded border border-gray-200 bg-white px-1.5 text-xs text-gray-700
+                     focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
           data-testid="page-counter-mode"
           value={pageCounterMode}
           onChange={handlePageCounterModeChange}
@@ -105,10 +102,12 @@ interface ActionButtonProps {
 const ActionButton: React.FC<ActionButtonProps> = ({ label, onClick, disabled, testId }) => (
   <button
     type="button"
+    onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
     disabled={disabled}
-    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300
-               disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    className="h-6 rounded border border-gray-200 bg-white px-2 text-xs text-gray-600
+               transition-colors hover:bg-gray-50 hover:text-gray-900
+               disabled:cursor-not-allowed disabled:opacity-40"
     data-testid={testId}
   >
     {label}

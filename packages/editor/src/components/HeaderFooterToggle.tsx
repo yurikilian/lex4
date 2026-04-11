@@ -5,39 +5,36 @@ interface HeaderFooterToggleProps {
   onToggle: (enabled: boolean) => void;
 }
 
-/**
- * HeaderFooterToggle — Global switch to enable/disable
- * headers and footers across all pages.
- */
 export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
   enabled,
   onToggle,
 }) => {
   return (
     <label
-      className="flex items-center gap-2 cursor-pointer select-none"
+      className="flex items-center gap-1.5 cursor-pointer select-none"
       data-testid="header-footer-toggle"
     >
-      <span className="text-sm font-medium text-gray-700">
+      <span className="text-xs font-medium text-gray-600">
         Headers & Footers
       </span>
       <button
         type="button"
         role="switch"
         aria-checked={enabled}
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => onToggle(!enabled)}
         className={`
-          relative inline-flex h-5 w-9 items-center rounded-full
+          relative inline-flex h-4 w-7 items-center rounded-full
           transition-colors duration-200
-          ${enabled ? 'bg-blue-600' : 'bg-gray-300'}
+          ${enabled ? 'bg-blue-500' : 'bg-gray-300'}
         `}
         data-testid="header-footer-switch"
       >
         <span
           className={`
-            inline-block h-3.5 w-3.5 rounded-full bg-white shadow
+            inline-block h-3 w-3 rounded-full bg-white shadow-sm
             transition-transform duration-200
-            ${enabled ? 'translate-x-4' : 'translate-x-0.5'}
+            ${enabled ? 'translate-x-3.5' : 'translate-x-0.5'}
           `}
         />
       </button>

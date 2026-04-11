@@ -32,7 +32,7 @@ export const HistorySidebar: React.FC = () => {
     >
       {visibleEntries.length === 0 ? (
         <div
-          className="px-4 py-6 text-sm text-gray-500"
+          className="px-3 py-4 text-xs text-gray-500"
           data-testid="history-empty"
         >
           No history yet.
@@ -47,19 +47,19 @@ export const HistorySidebar: React.FC = () => {
               <li key={entry.id}>
                 <button
                   type="button"
-                  className={`w-full px-4 py-3 text-left transition-colors ${
+                  className={`w-full px-3 py-2 text-left transition-colors ${
                     isCurrent ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
                   }`}
                   data-testid={`history-entry-${actualIndex}`}
                   data-history-current={isCurrent ? 'true' : 'false'}
                   onClick={() => jumpToHistoryEntry(actualIndex)}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className={`text-sm ${isCurrent ? 'font-semibold text-blue-700' : 'text-gray-900'}`}>
+                      <div className={`text-xs ${isCurrent ? 'font-semibold text-blue-700' : 'text-gray-900'}`}>
                         {entry.label}
                       </div>
-                      <div className="mt-1 text-xs text-gray-500">
+                      <div className="mt-0.5 text-xs text-gray-400">
                         {entry.source}
                       </div>
                     </div>
