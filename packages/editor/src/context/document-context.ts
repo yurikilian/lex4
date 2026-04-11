@@ -57,6 +57,9 @@ export interface DocumentContextValue {
   activeEditor: LexicalEditor | null;
   setActiveEditor: (editor: LexicalEditor | null, caretPosition?: CaretPosition | null) => void;
   consumePendingCaretPosition: (caretPosition: CaretPosition) => CaretSelection | null | undefined;
+  consumePendingFocusAtEnd: (caretPosition: CaretPosition) => boolean;
+  requestFocusAtEnd: (caretPosition: CaretPosition) => void;
+  focusAtEndVersion: number;
   globalSelectionActive: boolean;
   setGlobalSelectionActive: (active: boolean) => void;
   historyEntries: HistoryEntry[];

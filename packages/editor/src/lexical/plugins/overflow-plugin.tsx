@@ -25,7 +25,10 @@ function serializeNodeTree(node: LexicalNode): SerializedLexicalNode {
 
 interface OverflowPluginProps {
   /** Called with the serialized overflow content that must go to the next page */
-  onOverflow: (overflowContent: SerializedEditorState) => void;
+  onOverflow: (
+    overflowContent: SerializedEditorState,
+    cause: 'paste' | 'content',
+  ) => void;
 }
 
 /** Debounce delay for typing-triggered overflow checks (ms) */
@@ -58,7 +61,11 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
     let unregisterUpdateListener: (() => void) | null = null;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const checkOverflow = (rootElement: HTMLElement, container: HTMLElement) => {
+    const checkOverflow = (
+      rootElement: HTMLElement,
+      container: HTMLElement,
+      cause: 'paste' | 'content',
+    ) => {
       if (processingRef.current) return;
 
       const availableHeight = container.clientHeight;
@@ -141,7 +148,7 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
           } as SerializedEditorState;
 
           setTimeout(() => {
-            onOverflowRef.current(overflowState);
+            onOverflowRef.current(overflowState, cause);
             processingRef.current = false;
           }, 0);
         },
@@ -164,7 +171,11 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       debug('overflow', `observers attached (ns=${editor.getKey()})`);
 
       const immediateCheck = () => {
-        requestAnimationFrame(() => checkOverflow(rootElement, container));
+        requestAnimationFrame(() => checkOverflow(rootElement, container, 'content'));
+      };
+
+      const pasteCheck = () => {
+        requestAnimationFrame(() => checkOverflow(rootElement, container, 'paste'));
       };
 
       const debouncedCheck = () => {
@@ -183,7 +194,10 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
 
         // Paste and external state changes trigger immediate overflow check.
         // Normal typing is debounced to avoid extracting only the cursor paragraph.
-        if (tags.has('paste') || tags.has('collaboration') || tags.has('historic')) {
+        if (tags.has('paste')) {
+          debug('overflow', `paste check (tags=${Array.from(tags).join(',')})`);
+          pasteCheck();
+        } else if (tags.has('collaboration') || tags.has('historic')) {
           debug('overflow', `immediate check (tags=${Array.from(tags).join(',')})`);
           immediateCheck();
         } else {

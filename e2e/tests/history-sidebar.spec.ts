@@ -219,4 +219,21 @@ test.describe('History Sidebar', () => {
     await expect(historyEntries).toHaveCount(1);
     await expect(page.getByTestId('history-entry-list')).toContainText('Pasted content - Page 1');
   });
+
+  test('large paste moves the caret to the end of the pasted content on the last page', async ({ page }) => {
+    await pasteLargeDocument(page);
+    await page.waitForTimeout(1200);
+
+    const bodyEditors = page.locator('[data-testid^="page-body-"] [contenteditable="true"]');
+    expect(await bodyEditors.count()).toBeGreaterThan(1);
+
+    await page.keyboard.type('ENDMARK');
+    await page.waitForTimeout(200);
+
+    const firstBodyText = await bodyEditors.first().evaluate((element) => (element as HTMLElement).innerText);
+    const lastBodyText = await bodyEditors.last().evaluate((element) => (element as HTMLElement).innerText);
+
+    expect(firstBodyText).not.toContain('ENDMARK');
+    expect(lastBodyText.trimEnd().endsWith('ENDMARK')).toBe(true);
+  });
 });

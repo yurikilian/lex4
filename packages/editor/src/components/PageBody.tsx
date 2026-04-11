@@ -21,7 +21,7 @@ interface PageBodyProps {
   pageId: string;
   initialBodyState?: SerializedEditorState | null;
   onBodyChange?: (state: SerializedEditorState) => void;
-  onOverflow?: (overflowContent: SerializedEditorState) => void;
+  onOverflow?: (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => void;
   onFocus?: () => void;
   readOnly?: boolean;
 }
@@ -95,9 +95,9 @@ export const PageBody: React.FC<PageBodyProps> = ({
   );
 
   const handleOverflow = useCallback(
-    (overflowContent: SerializedEditorState) => {
+    (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => {
       debug('page', `PageBody ${shortId(pageId)}: overflow callback fired with ${overflowContent.root?.children?.length ?? 0} children`);
-      onOverflow?.(overflowContent);
+      onOverflow?.(overflowContent, cause);
     },
     [onOverflow, pageId],
   );

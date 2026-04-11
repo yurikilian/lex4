@@ -16,9 +16,11 @@ import { debug, shortId } from '../utils/debug';
  * creating new pages or prepending to existing next pages.
  */
 export const DocumentView: React.FC = () => {
-  const { document, dispatch, editorRegistry, runHistoryAction } = useDocument();
+  const { document, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction } = useDocument();
   const { reflowAll } = usePagination(document, dispatch);
   const previousBodyHeightsRef = useRef<number[] | null>(null);
+  const pasteOverflowSequenceRef = useRef(false);
+  const pasteOverflowReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const defaultPageTemplate = useMemo(
     () => ({
       headerState: document.defaultHeaderState,
@@ -61,11 +63,38 @@ export const DocumentView: React.FC = () => {
     }
   }, [bodyHeights, reflowAll]);
 
+  useEffect(
+    () => () => {
+      if (pasteOverflowReleaseTimerRef.current) {
+        clearTimeout(pasteOverflowReleaseTimerRef.current);
+      }
+    },
+    [],
+  );
+
   const handlePageOverflow = useCallback(
-    (pageIndex: number, overflowContent: SerializedEditorState) => {
+    (
+      pageIndex: number,
+      overflowContent: SerializedEditorState,
+      cause: 'paste' | 'content',
+    ) => {
       const nextPageIndex = pageIndex + 1;
       const overflowChildCount = overflowContent.root?.children?.length ?? 0;
       debug('page', `handlePageOverflow: pageIndex=${pageIndex} overflowChildren=${overflowChildCount} totalPages=${document.pages.length}`);
+
+      if (cause === 'paste') {
+        pasteOverflowSequenceRef.current = true;
+      }
+
+      if (pasteOverflowSequenceRef.current) {
+        if (pasteOverflowReleaseTimerRef.current) {
+          clearTimeout(pasteOverflowReleaseTimerRef.current);
+        }
+        pasteOverflowReleaseTimerRef.current = setTimeout(() => {
+          pasteOverflowSequenceRef.current = false;
+          pasteOverflowReleaseTimerRef.current = null;
+        }, 800);
+      }
 
       if (nextPageIndex < document.pages.length) {
         // Prepend overflow content to the next page's editor directly
@@ -88,6 +117,9 @@ export const DocumentView: React.FC = () => {
 
           const newEditorState = nextEditor.parseEditorState(JSON.stringify(mergedState));
           nextEditor.setEditorState(newEditorState);
+          if (pasteOverflowSequenceRef.current) {
+            requestFocusAtEnd({ pageId: nextPage.id, region: 'body' });
+          }
         } else {
           debug('page', `editor not found in registry for page ${shortId(nextPage.id)} — falling back to ADD_PAGE`);
           const newPage = createPageFromTemplate(defaultPageTemplate);
@@ -102,6 +134,9 @@ export const DocumentView: React.FC = () => {
               dispatch({ type: 'ADD_PAGE', afterIndex: pageIndex, page: newPage });
             },
           );
+          if (pasteOverflowSequenceRef.current) {
+            requestFocusAtEnd({ pageId: newPage.id, region: 'body' });
+          }
         }
       } else {
         // Create a new page with the overflow content as initial state
@@ -118,9 +153,12 @@ export const DocumentView: React.FC = () => {
             dispatch({ type: 'ADD_PAGE', page: newPage });
           },
         );
+        if (pasteOverflowSequenceRef.current) {
+          requestFocusAtEnd({ pageId: newPage.id, region: 'body' });
+        }
       }
     },
-    [defaultPageTemplate, document.pages, dispatch, editorRegistry, runHistoryAction],
+    [defaultPageTemplate, document.pages, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction],
   );
 
   return (
@@ -134,7 +172,7 @@ export const DocumentView: React.FC = () => {
           key={page.id}
           pageId={page.id}
           pageIndex={index}
-          onOverflow={(content) => handlePageOverflow(index, content)}
+          onOverflow={(content, cause) => handlePageOverflow(index, content, cause)}
         />
       ))}
     </div>

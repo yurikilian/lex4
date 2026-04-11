@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $createRangeSelectionFromDom,
+  $getRoot,
   $setSelection,
   COMMAND_PRIORITY_LOW,
   FOCUS_COMMAND,
@@ -59,7 +60,13 @@ export const ActiveEditorPlugin: React.FC<ActiveEditorPluginProps> = ({
   onFocus,
 }) => {
   const [editor] = useLexicalComposerContext();
-  const { consumePendingCaretPosition, setActiveEditor, setActivePageId } = useDocument();
+  const {
+    consumePendingCaretPosition,
+    consumePendingFocusAtEnd,
+    focusAtEndVersion,
+    setActiveEditor,
+    setActivePageId,
+  } = useDocument();
 
   useEffect(() => {
     const caretPosition: CaretPosition = { pageId, region };
@@ -101,6 +108,31 @@ export const ActiveEditorPlugin: React.FC<ActiveEditorPluginProps> = ({
       });
     });
   }, [consumePendingCaretPosition, editor, pageId, region, setActiveEditor, setActivePageId]);
+
+  useEffect(() => {
+    const caretPosition: CaretPosition = { pageId, region };
+    if (!consumePendingFocusAtEnd(caretPosition)) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      setActivePageId(pageId);
+      setActiveEditor(editor, caretPosition);
+      editor.focus(() => {
+        editor.update(() => {
+          $getRoot().selectEnd();
+        });
+      });
+    });
+  }, [
+    consumePendingFocusAtEnd,
+    editor,
+    focusAtEndVersion,
+    pageId,
+    region,
+    setActiveEditor,
+    setActivePageId,
+  ]);
 
   useEffect(() => {
     return editor.registerCommand(

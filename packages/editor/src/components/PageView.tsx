@@ -9,7 +9,7 @@ import type { SerializedEditorState } from 'lexical';
 interface PageViewProps {
   pageId: string;
   pageIndex: number;
-  onOverflow?: (overflowContent: SerializedEditorState) => void;
+  onOverflow?: (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => void;
 }
 
 /**
@@ -54,8 +54,8 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   }, [setActivePageId, pageId]);
 
   const handleOverflow = useCallback(
-    (overflowContent: SerializedEditorState) => {
-      onOverflow?.(overflowContent);
+    (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => {
+      onOverflow?.(overflowContent, cause);
     },
     [onOverflow],
   );

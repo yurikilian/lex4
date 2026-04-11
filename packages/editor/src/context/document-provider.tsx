@@ -6,7 +6,7 @@ import type {
   HistoryActionDescriptor,
   HistoryState,
 } from '../types/history';
-import { $createRangeSelectionFromDom, $getSelection, $isRangeSelection } from 'lexical';
+import { $createRangeSelectionFromDom, $getRoot, $getSelection, $isRangeSelection } from 'lexical';
 import type { LexicalEditor } from 'lexical';
 import { createEmptyDocument } from '../types/document';
 import { DocumentContext, type DocumentAction, type EditorRegistry } from './document-context';
@@ -284,10 +284,12 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
   const activePageIdRef = useRef<string | null>(initialSnapshot.pages[0]?.id ?? null);
   const [globalSelectionActive, setGlobalSelectionActive] = useState(false);
   const [historySidebarOpen, setHistorySidebarOpen] = useState(true);
+  const [focusAtEndVersion, setFocusAtEndVersion] = useState(0);
   const activeEditorRef = useRef<LexicalEditor | null>(null);
   const activeCaretPositionRef = useRef<CaretPosition | null>(null);
   const pendingCaretPositionRef = useRef<CaretPosition | null>(null);
   const pendingCaretSelectionRef = useRef<CaretSelection | null>(null);
+  const pendingFocusAtEndRef = useRef<CaretPosition | null>(null);
   const [, forceUpdate] = useState(0);
   const historySuppressedRef = useRef(false);
   const historyReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -331,6 +333,18 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
     forceUpdate(n => n + 1);
   }, []);
 
+  const focusEditorAtEnd = useCallback((editor: LexicalEditor, caretPosition: CaretPosition) => {
+    requestAnimationFrame(() => {
+      setActivePageId(caretPosition.pageId);
+      setActiveEditor(editor, caretPosition);
+      editor.focus(() => {
+        editor.update(() => {
+          $getRoot().selectEnd();
+        });
+      });
+    });
+  }, [setActiveEditor, setActivePageId]);
+
   const consumePendingCaretPosition = useCallback((caretPosition: CaretPosition) => {
     const pendingCaretPosition = pendingCaretPositionRef.current;
     if (
@@ -346,6 +360,37 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
     pendingCaretSelectionRef.current = null;
     return pendingCaretSelection;
   }, []);
+
+  const consumePendingFocusAtEnd = useCallback((caretPosition: CaretPosition) => {
+    const pendingFocusAtEnd = pendingFocusAtEndRef.current;
+    if (
+      !pendingFocusAtEnd
+      || pendingFocusAtEnd.pageId !== caretPosition.pageId
+      || pendingFocusAtEnd.region !== caretPosition.region
+    ) {
+      return false;
+    }
+
+    pendingFocusAtEndRef.current = null;
+    return true;
+  }, []);
+
+  const requestFocusAtEnd = useCallback((caretPosition: CaretPosition) => {
+    pendingCaretPositionRef.current = null;
+    pendingCaretSelectionRef.current = null;
+
+    if (caretPosition.region === 'body') {
+      const editor = editorRegistry.get(caretPosition.pageId);
+      if (editor) {
+        pendingFocusAtEndRef.current = null;
+        focusEditorAtEnd(editor, caretPosition);
+        return;
+      }
+    }
+
+    pendingFocusAtEndRef.current = caretPosition;
+    setFocusAtEndVersion(version => version + 1);
+  }, [editorRegistry, focusEditorAtEnd]);
 
   const flushHistoryBatch = useCallback(() => {
     if (historyFlushTimerRef.current) {
@@ -615,6 +660,9 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
       setActivePageId,
       activeEditor: activeEditorRef.current,
       consumePendingCaretPosition,
+      consumePendingFocusAtEnd,
+      requestFocusAtEnd,
+      focusAtEndVersion,
       setActiveEditor,
       globalSelectionActive,
       setGlobalSelectionActive,
