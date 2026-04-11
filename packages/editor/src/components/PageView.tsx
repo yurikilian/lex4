@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import { A4_WIDTH_PX, A4_HEIGHT_PX, PAGE_MARGIN_PX } from '../constants/dimensions';
-import { computeBodyHeight } from '../constants/page-layout';
 import { useDocument } from '../context/document-context';
 import { PageBody } from './PageBody';
 import { PageHeader } from './PageHeader';
@@ -26,10 +25,6 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   const showHeaderFooter = document.headerFooterEnabled;
 
   if (!page) return null;
-
-  const headerHeight = showHeaderFooter ? page.headerHeight : 0;
-  const footerHeight = showHeaderFooter ? page.footerHeight : 0;
-  const bodyHeight = computeBodyHeight(headerHeight, footerHeight);
 
   const handleBodyChange = useCallback(
     (bodyState: SerializedEditorState) => {
@@ -106,7 +101,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
 
       <PageBody
         pageId={pageId}
-        bodyHeight={bodyHeight}
+        initialBodyState={page.bodyState}
         onBodyChange={handleBodyChange}
         onOverflow={handleOverflow}
         onFocus={handleFocus}

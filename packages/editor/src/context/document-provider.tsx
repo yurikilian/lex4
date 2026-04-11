@@ -1,8 +1,8 @@
-import React, { useReducer, useState, useCallback, useEffect, useRef } from 'react';
+import React, { useReducer, useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { Lex4Document } from '../types/document';
 import type { LexicalEditor } from 'lexical';
 import { createEmptyDocument } from '../types/document';
-import { DocumentContext } from './document-context';
+import { DocumentContext, type EditorRegistry } from './document-context';
 import { documentReducer } from './document-reducer';
 
 interface DocumentProviderProps {
@@ -26,6 +26,17 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
   const activeEditorRef = useRef<LexicalEditor | null>(null);
   const [, forceUpdate] = useState(0);
 
+  const editorMapRef = useRef(new Map<string, LexicalEditor>());
+  const editorRegistry: EditorRegistry = useMemo(() => ({
+    register: (pageId: string, editor: LexicalEditor) => {
+      editorMapRef.current.set(pageId, editor);
+    },
+    unregister: (pageId: string) => {
+      editorMapRef.current.delete(pageId);
+    },
+    get: (pageId: string) => editorMapRef.current.get(pageId),
+  }), []);
+
   const setActivePageId = useCallback((id: string | null) => {
     setActivePageIdRaw(id);
   }, []);
@@ -47,6 +58,7 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
       setActivePageId,
       activeEditor: activeEditorRef.current,
       setActiveEditor,
+      editorRegistry,
     }}>
       {children}
     </DocumentContext.Provider>

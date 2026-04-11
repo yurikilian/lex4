@@ -312,4 +312,97 @@ test.describe('Bug Fix Regressions', () => {
     const count = await pages.count();
     expect(count).toBeGreaterThan(1);
   });
+
+  // ───── Bug 5 (CRITICAL): New pages must contain overflow content ─────
+
+  test('overflow pages contain the overflowed content, not empty', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    // Generate many long paragraphs that will definitely overflow one page.
+    // Each paragraph wraps to 3+ visual lines at ~20px each ≈ 60px/para.
+    // ~18 paragraphs fill one page, so 40 guarantees page 2 has content.
+    const paragraphs = Array.from({ length: 40 }, (_, i) =>
+      `Paragraph ${i + 1}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec ligula sollicitudin, congue dolor eget, sagittis orci. Aliquam dolor ante, hendrerit nec neque non, porta consectetur sem.`
+    );
+    const largeText = paragraphs.join('\n');
+
+    // Paste via ClipboardEvent — triggers Lexical's paste handler
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(3000);
+
+    // Must have at least 2 pages
+    const pages = page.locator('[data-page-id]');
+    const count = await pages.count();
+    expect(count).toBeGreaterThan(1);
+
+    // The second page MUST have text content (not empty)
+    const secondBody = page.locator('[data-testid^="page-body-"]').nth(1);
+    const secondBodyText = await secondBody.innerText();
+    expect(secondBodyText.trim().length).toBeGreaterThan(0);
+
+    // The second page must contain some of the paragraphs
+    expect(secondBodyText).toContain('Lorem ipsum');
+  });
+
+  test('cascade overflow creates 3+ pages for very large content', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    // Generate enough content for 3+ pages (~18 paragraphs per page at ~60px each)
+    const paragraphs = Array.from({ length: 100 }, (_, i) =>
+      `Row ${i + 1}: Sed gravida sit amet enim vel fermentum. Aenean ut ante a mi pulvinar placerat in eu odio. Phasellus ac posuere neque. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.`
+    );
+    const largeText = paragraphs.join('\n');
+
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(5000);
+
+    const pages = page.locator('[data-page-id]');
+    const count = await pages.count();
+    expect(count).toBeGreaterThanOrEqual(3);
+
+    // All pages must be A4
+    for (let i = 0; i < count; i++) {
+      const box = await pages.nth(i).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.width).toBe(794);
+      expect(box!.height).toBe(1123);
+    }
+
+    // Every page (except possibly last) should have content
+    for (let i = 0; i < count - 1; i++) {
+      const pageBody = page.locator('[data-testid^="page-body-"]').nth(i);
+      const text = await pageBody.innerText();
+      expect(text.trim().length).toBeGreaterThan(0);
+    }
+  });
 });

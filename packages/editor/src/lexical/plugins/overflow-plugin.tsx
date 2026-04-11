@@ -1,21 +1,49 @@
 import { useEffect, useRef } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getRoot, type SerializedEditorState, type SerializedLexicalNode } from 'lexical';
+import {
+  $getRoot,
+  $isElementNode,
+  type LexicalNode,
+  type SerializedEditorState,
+  type SerializedLexicalNode,
+} from 'lexical';
+import { debug, debugWarn } from '../../utils/debug';
+
+/**
+ * Recursively serializes a Lexical node and all its children.
+ * ElementNode.exportJSON() returns children: [] by default —
+ * the recursive walk must be done manually.
+ */
+function serializeNodeTree(node: LexicalNode): SerializedLexicalNode {
+  const json = node.exportJSON();
+  if ($isElementNode(node)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (json as any).children = node.getChildren().map(serializeNodeTree);
+  }
+  return json;
+}
 
 interface OverflowPluginProps {
   /** Called with the serialized overflow content that must go to the next page */
   onOverflow: (overflowContent: SerializedEditorState) => void;
 }
 
+/** Debounce delay for typing-triggered overflow checks (ms) */
+const OVERFLOW_DEBOUNCE_MS = 300;
+
 /**
  * OverflowPlugin — Detects content overflow inside a Lexical editor
  * and automatically extracts overflow nodes.
  *
- * Uses the actual rendered container height (from CSS flexbox) rather
- * than a prop, so it correctly handles header/footer size changes.
+ * Uses registerRootListener to reliably get the root element (handles
+ * the case where the root is not yet available on first render).
  *
- * Observes both the root element (content changes) and its container
- * (layout changes from header/footer resizing) to catch all overflow.
+ * Measures child element positions via getBoundingClientRect() relative
+ * to the container, which works regardless of CSS overflow settings.
+ *
+ * Debounces overflow checks during normal typing (300ms) to avoid
+ * extracting only the empty trailing paragraph. Paste and external
+ * state changes (e.g. setEditorState) trigger immediate checks.
  */
 export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
   onOverflow,
@@ -26,58 +54,64 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
   onOverflowRef.current = onOverflow;
 
   useEffect(() => {
-    const rootElement = editor.getRootElement();
-    if (!rootElement) return;
+    let observer: ResizeObserver | null = null;
+    let unregisterUpdateListener: (() => void) | null = null;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const container = rootElement.closest('.lex4-page-body') as HTMLElement | null;
-    if (!container) return;
-
-    const checkOverflow = () => {
+    const checkOverflow = (rootElement: HTMLElement, container: HTMLElement) => {
       if (processingRef.current) return;
 
-      // Use the actual rendered container height — this correctly reflects
-      // the flex layout including header/footer space changes
       const availableHeight = container.clientHeight;
       if (availableHeight <= 0) return;
 
-      if (rootElement.scrollHeight <= availableHeight + 2) return; // +2 for sub-pixel
+      // Use scrollHeight for reliable overflow detection — unaffected by
+      // scroll position (getBoundingClientRect is affected when the browser
+      // scrolls overflow:hidden containers to follow the cursor after paste).
+      const contentHeight = rootElement.scrollHeight;
 
-      processingRef.current = true;
+      // No overflow if all content fits (+2px tolerance for sub-pixel rounding)
+      if (contentHeight <= availableHeight + 2) return;
 
-      // Find the split point by measuring DOM children
       const children = Array.from(rootElement.children) as HTMLElement[];
+      if (children.length === 0) return;
+
       if (children.length <= 1) {
-        processingRef.current = false;
+        debug('overflow', `single block overflows (content=${contentHeight}px > available=${availableHeight}px) — cannot split`);
         return;
       }
 
-      // Measure relative to the container top for accuracy
-      const containerTop = container.getBoundingClientRect().top;
-      let splitIndex = children.length;
+      processingRef.current = true;
 
+      debug('overflow', `OVERFLOW detected: content=${contentHeight}px available=${availableHeight}px children=${children.length}`);
+
+      // Find the first child whose bottom exceeds the available height.
+      // Uses offsetTop (relative to offsetParent, unaffected by scroll)
+      // instead of getBoundingClientRect (which shifts with scroll).
+      let splitIndex = children.length;
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
-        const rect = child.getBoundingClientRect();
-        const bottomRelative = rect.bottom - containerTop;
+        const childBottom = child.offsetTop + child.offsetHeight;
 
-        if (bottomRelative > availableHeight && i > 0) {
+        if (childBottom > availableHeight && i > 0) {
           splitIndex = i;
+          debug('overflow', `split at index ${i} (childBottom=${childBottom}px > ${availableHeight}px)`);
           break;
         }
       }
 
       if (splitIndex >= children.length) {
+        debugWarn('overflow', 'no valid split point found — all children fit individually');
         processingRef.current = false;
         return;
       }
 
-      // Extract overflow nodes from the editor
       editor.update(
         () => {
           const root = $getRoot();
           const allChildren = root.getChildren();
 
           if (splitIndex >= allChildren.length) {
+            debugWarn('overflow', `splitIndex=${splitIndex} >= Lexical children=${allChildren.length} — mismatch`);
             processingRef.current = false;
             return;
           }
@@ -86,12 +120,14 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
           const toRemove = allChildren.slice(splitIndex);
 
           for (const node of toRemove) {
-            overflowNodes.push(node.exportJSON());
+            overflowNodes.push(serializeNodeTree(node));
           }
 
           for (const node of toRemove) {
             node.remove();
           }
+
+          debug('overflow', `extracted ${overflowNodes.length} overflow nodes, kept ${splitIndex} nodes on current page`);
 
           const overflowState: SerializedEditorState = {
             root: {
@@ -113,23 +149,77 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       );
     };
 
-    const observer = new ResizeObserver(() => {
-      requestAnimationFrame(checkOverflow);
-    });
+    const setupObservers = (rootElement: HTMLElement) => {
+      // Clean up any previous observers
+      if (observer) observer.disconnect();
+      if (unregisterUpdateListener) unregisterUpdateListener();
+      if (debounceTimer) clearTimeout(debounceTimer);
 
-    // Watch the root element for content size changes
-    observer.observe(rootElement);
-    // Watch the container for layout changes (header/footer resize)
-    observer.observe(container);
+      const container = rootElement.closest('.lex4-page-body') as HTMLElement | null;
+      if (!container) {
+        debugWarn('overflow', 'no .lex4-page-body container found');
+        return;
+      }
 
-    const unregister = editor.registerUpdateListener(({ tags }) => {
-      if (tags.has('overflow-split')) return;
-      requestAnimationFrame(checkOverflow);
-    });
+      debug('overflow', `observers attached (ns=${editor.getKey()})`);
+
+      const immediateCheck = () => {
+        requestAnimationFrame(() => checkOverflow(rootElement, container));
+      };
+
+      const debouncedCheck = () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(immediateCheck, OVERFLOW_DEBOUNCE_MS);
+      };
+
+      // ResizeObserver fires on actual layout changes — debounce to
+      // avoid constant checks during typing
+      observer = new ResizeObserver(debouncedCheck);
+      observer.observe(rootElement);
+      observer.observe(container);
+
+      unregisterUpdateListener = editor.registerUpdateListener(({ tags }) => {
+        if (tags.has('overflow-split')) return;
+
+        // Paste and external state changes trigger immediate overflow check.
+        // Normal typing is debounced to avoid extracting only the cursor paragraph.
+        if (tags.has('paste') || tags.has('collaboration') || tags.has('historic')) {
+          debug('overflow', `immediate check (tags=${Array.from(tags).join(',')})`);
+          immediateCheck();
+        } else {
+          debouncedCheck();
+        }
+      });
+
+      // Initial check after setup (immediate — handles mount with initial content)
+      immediateCheck();
+    };
+
+    // registerRootListener fires immediately with current root (if any)
+    // and again whenever the root element changes — handles the case
+    // where getRootElement() returns null on first render
+    const unregisterRootListener = editor.registerRootListener(
+      (rootElement: HTMLElement | null) => {
+        if (rootElement) {
+          debug('overflow', `rootListener: root available (ns=${editor.getKey()})`);
+          setupObservers(rootElement);
+        } else {
+          debug('overflow', `rootListener: root detached (ns=${editor.getKey()})`);
+          if (observer) observer.disconnect();
+          if (unregisterUpdateListener) unregisterUpdateListener();
+          if (debounceTimer) clearTimeout(debounceTimer);
+          observer = null;
+          unregisterUpdateListener = null;
+          debounceTimer = null;
+        }
+      },
+    );
 
     return () => {
-      observer.disconnect();
-      unregister();
+      unregisterRootListener();
+      if (observer) observer.disconnect();
+      if (unregisterUpdateListener) unregisterUpdateListener();
+      if (debounceTimer) clearTimeout(debounceTimer);
     };
   }, [editor]);
 

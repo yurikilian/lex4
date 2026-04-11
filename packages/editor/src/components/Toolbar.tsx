@@ -6,6 +6,7 @@ import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
 import { toggleBold, toggleItalic, toggleUnderline, toggleStrikethrough, setAlignment } from '../lexical/commands/format-commands';
 import { insertList, indentContent, outdentContent } from '../lexical/commands/list-commands';
+import { debug } from '../utils/debug';
 
 /**
  * Toolbar — Main formatting toolbar for the Lex4 editor.
@@ -37,18 +38,22 @@ export const Toolbar: React.FC = () => {
   const handleClearAllFooters = () => dispatch({ type: 'CLEAR_ALL_FOOTERS' });
 
   const handleBold = useCallback(() => {
+    debug('toolbar', `bold (hasEditor=${!!activeEditor})`);
     if (activeEditor) toggleBold(activeEditor);
   }, [activeEditor]);
 
   const handleItalic = useCallback(() => {
+    debug('toolbar', `italic (hasEditor=${!!activeEditor})`);
     if (activeEditor) toggleItalic(activeEditor);
   }, [activeEditor]);
 
   const handleUnderline = useCallback(() => {
+    debug('toolbar', `underline (hasEditor=${!!activeEditor})`);
     if (activeEditor) toggleUnderline(activeEditor);
   }, [activeEditor]);
 
   const handleStrikethrough = useCallback(() => {
+    debug('toolbar', `strikethrough (hasEditor=${!!activeEditor})`);
     if (activeEditor) toggleStrikethrough(activeEditor);
   }, [activeEditor]);
 

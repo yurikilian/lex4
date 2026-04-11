@@ -9,6 +9,7 @@ import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { MAX_FOOTER_HEIGHT_PX } from '../constants/dimensions';
+import { debug, shortId } from '../utils/debug';
 
 interface PageFooterProps {
   pageId: string;
@@ -42,11 +43,12 @@ export const PageFooter: React.FC<PageFooterProps> = ({
         const el = contentRef.current;
         if (el) {
           const height = Math.min(el.scrollHeight, MAX_FOOTER_HEIGHT_PX);
+          debug('footer', `page ${shortId(pageId)}: height=${height}px (scrollH=${el.scrollHeight})`);
           onHeightChange?.(height);
         }
       });
     },
-    [onFooterChange, onHeightChange],
+    [onFooterChange, onHeightChange, pageId],
   );
 
   return (

@@ -20,6 +20,13 @@ export type DocumentAction =
   | { type: 'SET_FOOTER_HEIGHT'; pageId: string; height: number }
   | { type: 'SET_DOCUMENT'; document: Lex4Document };
 
+/** Registry of page editors for direct cross-page content manipulation */
+export interface EditorRegistry {
+  register(pageId: string, editor: LexicalEditor): void;
+  unregister(pageId: string): void;
+  get(pageId: string): LexicalEditor | undefined;
+}
+
 /** Shape of the document context value */
 export interface DocumentContextValue {
   document: Lex4Document;
@@ -28,6 +35,7 @@ export interface DocumentContextValue {
   setActivePageId: (id: string | null) => void;
   activeEditor: LexicalEditor | null;
   setActiveEditor: (editor: LexicalEditor | null) => void;
+  editorRegistry: EditorRegistry;
 }
 
 export const DocumentContext = createContext<DocumentContextValue | null>(null);

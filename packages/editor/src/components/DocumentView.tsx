@@ -3,6 +3,7 @@ import { useDocument } from '../context/document-context';
 import { PageView } from './PageView';
 import { createEmptyPage } from '../types/document';
 import type { SerializedEditorState } from 'lexical';
+import { debug, shortId } from '../utils/debug';
 
 /**
  * DocumentView — Scrollable container rendering all pages vertically.
@@ -12,38 +13,51 @@ import type { SerializedEditorState } from 'lexical';
  * creating new pages or prepending to existing next pages.
  */
 export const DocumentView: React.FC = () => {
-  const { document, dispatch } = useDocument();
+  const { document, dispatch, editorRegistry } = useDocument();
 
   const handlePageOverflow = useCallback(
     (pageIndex: number, overflowContent: SerializedEditorState) => {
       const nextPageIndex = pageIndex + 1;
+      const overflowChildCount = overflowContent.root?.children?.length ?? 0;
+
+      debug('page', `handlePageOverflow: pageIndex=${pageIndex} overflowChildren=${overflowChildCount} totalPages=${document.pages.length}`);
 
       if (nextPageIndex < document.pages.length) {
-        // Prepend overflow content to the next page's body
+        // Prepend overflow content to the next page's editor directly
         const nextPage = document.pages[nextPageIndex];
-        const existingChildren = nextPage.bodyState?.root?.children ?? [];
-        const overflowChildren = overflowContent.root?.children ?? [];
+        const nextEditor = editorRegistry.get(nextPage.id);
 
-        const mergedState: SerializedEditorState = {
-          root: {
-            ...overflowContent.root,
-            children: [...overflowChildren, ...existingChildren],
-          },
-        } as SerializedEditorState;
+        if (nextEditor) {
+          const currentState = nextEditor.getEditorState().toJSON();
+          const existingChildren = currentState.root?.children ?? [];
+          const overflowChildren = overflowContent.root?.children ?? [];
 
-        dispatch({
-          type: 'UPDATE_PAGE_BODY',
-          pageId: nextPage.id,
-          bodyState: mergedState,
-        });
+          debug('page', `prepending ${overflowChildren.length} nodes to existing page ${shortId(nextPage.id)} (had ${existingChildren.length} children)`);
+
+          const mergedState: SerializedEditorState = {
+            root: {
+              ...currentState.root,
+              children: [...overflowChildren, ...existingChildren],
+            },
+          } as SerializedEditorState;
+
+          const newEditorState = nextEditor.parseEditorState(JSON.stringify(mergedState));
+          nextEditor.setEditorState(newEditorState);
+        } else {
+          debug('page', `editor not found in registry for page ${shortId(nextPage.id)} — falling back to ADD_PAGE`);
+          const newPage = createEmptyPage();
+          newPage.bodyState = overflowContent;
+          dispatch({ type: 'ADD_PAGE', afterIndex: pageIndex, page: newPage });
+        }
       } else {
-        // Create a new page with the overflow content
+        // Create a new page with the overflow content as initial state
         const newPage = createEmptyPage();
         newPage.bodyState = overflowContent;
+        debug('page', `creating new page ${shortId(newPage.id)} with ${overflowChildCount} overflow children`);
         dispatch({ type: 'ADD_PAGE', page: newPage });
       }
     },
-    [document.pages, dispatch],
+    [document.pages, dispatch, editorRegistry],
   );
 
   return (

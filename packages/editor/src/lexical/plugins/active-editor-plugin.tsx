@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { COMMAND_PRIORITY_LOW, FOCUS_COMMAND } from 'lexical';
 import type { LexicalEditor } from 'lexical';
+import { debug } from '../../utils/debug';
 
 interface ActiveEditorPluginProps {
   onFocus: (editor: LexicalEditor) => void;
@@ -20,6 +21,7 @@ export const ActiveEditorPlugin: React.FC<ActiveEditorPluginProps> = ({ onFocus 
     return editor.registerCommand(
       FOCUS_COMMAND,
       () => {
+        debug('focus', `editor focused (ns=${editor.getKey()})`);
         onFocus(editor);
         return false;
       },
