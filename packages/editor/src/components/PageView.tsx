@@ -10,6 +10,8 @@ import type { SerializedEditorState } from 'lexical';
 interface PageViewProps {
   pageId: string;
   pageIndex: number;
+  onOverflow?: () => void;
+  onUnderflow?: () => void;
 }
 
 /**
@@ -18,7 +20,7 @@ interface PageViewProps {
  * Dimensions are always exactly A4 (794 × 1123 px).
  * Header and footer are only rendered when the global toggle is on.
  */
-export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex }) => {
+export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex, onOverflow, onUnderflow }) => {
   const { document, dispatch, setActivePageId } = useDocument();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
@@ -32,8 +34,10 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   const handleBodyChange = useCallback(
     (bodyState: SerializedEditorState) => {
       dispatch({ type: 'UPDATE_PAGE_BODY', pageId, bodyState });
+      // After content change, check if we can pull content from next page
+      onUnderflow?.();
     },
-    [dispatch, pageId],
+    [dispatch, pageId, onUnderflow],
   );
 
   const handleHeaderChange = useCallback(
@@ -69,9 +73,8 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   }, [setActivePageId, pageId]);
 
   const handleOverflow = useCallback(() => {
-    // When body content overflows, add a new page after this one
-    dispatch({ type: 'ADD_PAGE', afterIndex: pageIndex });
-  }, [dispatch, pageIndex]);
+    onOverflow?.();
+  }, [onOverflow]);
 
   return (
     <div
