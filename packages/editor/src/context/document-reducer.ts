@@ -78,6 +78,7 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
           ...p,
           headerState: source.headerState,
           headerHeight: source.headerHeight,
+          headerSyncVersion: p.headerSyncVersion + 1,
         })),
       };
     }
@@ -92,6 +93,7 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
           ...p,
           footerState: source.footerState,
           footerHeight: source.footerHeight,
+          footerSyncVersion: p.footerSyncVersion + 1,
         })),
       };
     }
@@ -101,7 +103,9 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       return {
         ...state,
         pages: state.pages.map(p =>
-          p.id === action.pageId ? { ...p, headerState: null, headerHeight: 0 } : p,
+          p.id === action.pageId
+            ? { ...p, headerState: null, headerHeight: 0, headerSyncVersion: p.headerSyncVersion + 1 }
+            : p,
         ),
       };
     }
@@ -111,7 +115,9 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       return {
         ...state,
         pages: state.pages.map(p =>
-          p.id === action.pageId ? { ...p, footerState: null, footerHeight: 0 } : p,
+          p.id === action.pageId
+            ? { ...p, footerState: null, footerHeight: 0, footerSyncVersion: p.footerSyncVersion + 1 }
+            : p,
         ),
       };
     }
@@ -120,7 +126,9 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       debug('reducer', 'CLEAR_ALL_HEADERS');
       return {
         ...state,
-        pages: state.pages.map(p => ({ ...p, headerState: null, headerHeight: 0 })),
+        pages: state.pages.map(p => ({
+          ...p, headerState: null, headerHeight: 0, headerSyncVersion: p.headerSyncVersion + 1,
+        })),
       };
     }
 
@@ -128,7 +136,9 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       debug('reducer', 'CLEAR_ALL_FOOTERS');
       return {
         ...state,
-        pages: state.pages.map(p => ({ ...p, footerState: null, footerHeight: 0 })),
+        pages: state.pages.map(p => ({
+          ...p, footerState: null, footerHeight: 0, footerSyncVersion: p.footerSyncVersion + 1,
+        })),
       };
     }
 

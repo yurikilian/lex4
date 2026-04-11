@@ -8,6 +8,10 @@ export interface PageState {
   footerState: SerializedEditorState | null;
   headerHeight: number;
   footerHeight: number;
+  /** Incremented on external header state changes (copy/clear) to force editor remount */
+  headerSyncVersion: number;
+  /** Incremented on external footer state changes (copy/clear) to force editor remount */
+  footerSyncVersion: number;
 }
 
 /** Top-level document state */
@@ -25,6 +29,8 @@ export function createEmptyPage(id?: string): PageState {
     footerState: null,
     headerHeight: 0,
     footerHeight: 0,
+    headerSyncVersion: 0,
+    footerSyncVersion: 0,
   };
 }
 

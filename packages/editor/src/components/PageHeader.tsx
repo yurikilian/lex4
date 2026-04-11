@@ -9,10 +9,12 @@ import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { MAX_HEADER_HEIGHT_PX } from '../constants/dimensions';
+import { HeightLimitPlugin } from '../lexical/plugins/height-limit-plugin';
 import { debug, shortId } from '../utils/debug';
 
 interface PageHeaderProps {
   pageId: string;
+  initialHeaderState?: SerializedEditorState | null;
   onHeaderChange?: (state: SerializedEditorState) => void;
   onHeightChange?: (height: number) => void;
 }
@@ -20,16 +22,25 @@ interface PageHeaderProps {
 /**
  * PageHeader — Mini Lexical editor for a page's header region.
  *
- * Constrained to MAX_HEADER_HEIGHT_PX. Reports height changes
- * so the pagination engine can adjust the body area.
+ * Constrained to MAX_HEADER_HEIGHT_PX. Uses overflow: clip to prevent
+ * the browser from scrolling the container to follow the cursor.
+ * Remounts via key={syncVersion} when content is copied/cleared externally.
  */
 export const PageHeader: React.FC<PageHeaderProps> = ({
   pageId,
+  initialHeaderState,
   onHeaderChange,
   onHeightChange,
 }) => {
   const config = useMemo(
-    () => createEditorConfig('header', pageId),
+    () => {
+      const baseConfig = createEditorConfig('header', pageId);
+      if (initialHeaderState) {
+        return { ...baseConfig, editorState: JSON.stringify(initialHeaderState) };
+      }
+      return baseConfig;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncVersion forces remount via key, only used at init
     [pageId],
   );
 
@@ -55,7 +66,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <div
       className="lex4-page-header border-b border-dashed border-gray-300 relative flex-shrink-0"
-      style={{ maxHeight: MAX_HEADER_HEIGHT_PX, overflow: 'hidden' }}
+      style={{ maxHeight: MAX_HEADER_HEIGHT_PX, overflow: 'clip' }}
       data-testid={`page-header-${pageId}`}
     >
       <LexicalComposer initialConfig={config}>
@@ -74,6 +85,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           ErrorBoundary={LexicalErrorBoundary}
         />
         <HistoryPlugin />
+        <HeightLimitPlugin maxHeight={MAX_HEADER_HEIGHT_PX} channel="header" />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
     </div>

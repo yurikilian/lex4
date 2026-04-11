@@ -189,4 +189,55 @@ describe('documentReducer', () => {
       expect(next).toEqual(newDoc);
     });
   });
+
+  describe('sync version tracking', () => {
+    it('initializes headerSyncVersion and footerSyncVersion to 0', () => {
+      const page = createEmptyPage();
+      expect(page.headerSyncVersion).toBe(0);
+      expect(page.footerSyncVersion).toBe(0);
+    });
+
+    it('COPY_HEADER_TO_ALL increments headerSyncVersion on target pages', () => {
+      const state = docWithPages(3);
+      state.pages[0].headerState = { root: { children: [], direction: null, format: '', indent: 0, type: 'root', version: 1 } };
+      const next = documentReducer(state, { type: 'COPY_HEADER_TO_ALL', sourcePageId: state.pages[0].id });
+      // Source page stays the same version, targets get incremented
+      expect(next.pages[1].headerSyncVersion).toBe(1);
+      expect(next.pages[2].headerSyncVersion).toBe(1);
+    });
+
+    it('COPY_FOOTER_TO_ALL increments footerSyncVersion on target pages', () => {
+      const state = docWithPages(2);
+      state.pages[0].footerState = { root: { children: [], direction: null, format: '', indent: 0, type: 'root', version: 1 } };
+      const next = documentReducer(state, { type: 'COPY_FOOTER_TO_ALL', sourcePageId: state.pages[0].id });
+      expect(next.pages[1].footerSyncVersion).toBe(1);
+    });
+
+    it('CLEAR_HEADER increments headerSyncVersion on targeted page', () => {
+      const state = docWithPages(2);
+      state.pages[0].headerState = { root: { children: [], direction: null, format: '', indent: 0, type: 'root', version: 1 } };
+      const next = documentReducer(state, { type: 'CLEAR_HEADER', pageId: state.pages[0].id });
+      expect(next.pages[0].headerSyncVersion).toBe(1);
+      expect(next.pages[1].headerSyncVersion).toBe(0); // untouched
+    });
+
+    it('CLEAR_ALL_HEADERS increments headerSyncVersion on all pages', () => {
+      const state = docWithPages(3);
+      const next = documentReducer(state, { type: 'CLEAR_ALL_HEADERS' });
+      next.pages.forEach(p => expect(p.headerSyncVersion).toBe(1));
+    });
+
+    it('CLEAR_FOOTER increments footerSyncVersion on targeted page', () => {
+      const state = docWithPages(1);
+      state.pages[0].footerState = { root: { children: [], direction: null, format: '', indent: 0, type: 'root', version: 1 } };
+      const next = documentReducer(state, { type: 'CLEAR_FOOTER', pageId: state.pages[0].id });
+      expect(next.pages[0].footerSyncVersion).toBe(1);
+    });
+
+    it('CLEAR_ALL_FOOTERS increments footerSyncVersion on all pages', () => {
+      const state = docWithPages(2);
+      const next = documentReducer(state, { type: 'CLEAR_ALL_FOOTERS' });
+      next.pages.forEach(p => expect(p.footerSyncVersion).toBe(1));
+    });
+  });
 });

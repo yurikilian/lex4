@@ -405,4 +405,132 @@ test.describe('Bug Fix Regressions', () => {
       expect(text.trim().length).toBeGreaterThan(0);
     }
   });
+
+  // ───── Bug: Copy header/footer buttons must actually sync content ─────
+
+  test('copy header to all pages copies content to other pages', async ({ page }) => {
+    // Enable header/footer
+    const switchEl = page.getByTestId('header-footer-switch');
+    await switchEl.click();
+    await page.waitForSelector('[data-testid^="page-header-"]');
+
+    // First, create a second page by pasting a lot of content
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+    const paragraphs = Array.from({ length: 60 }, (_, i) =>
+      `Row ${i + 1}: Sed gravida sit amet enim vel fermentum. Aenean ut ante a mi pulvinar placerat in eu odio. Phasellus ac posuere neque. Vestibulum ante ipsum primis in faucibus orci luctus.`
+    );
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[data-testid^="page-body-"] [contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        editor.dispatchEvent(new ClipboardEvent('paste', {
+          clipboardData: dt, bubbles: true, cancelable: true,
+        }));
+      }
+    }, paragraphs.join('\n'));
+
+    await page.waitForTimeout(5000);
+
+    // Verify we have at least 2 pages
+    const pageCount = await page.locator('[data-page-id]').count();
+    expect(pageCount).toBeGreaterThanOrEqual(2);
+
+    // Type into the first page's header
+    const firstHeader = page.locator('[data-testid^="page-header-"] [contenteditable="true"]').first();
+    await firstHeader.click();
+    await firstHeader.type('HEADER TEXT', { delay: 50 });
+    await page.waitForTimeout(500);
+
+    // Click the first body to set active page
+    await body.click();
+    await page.waitForTimeout(300);
+
+    // Click "Copy Header → All"
+    await page.getByTestId('copy-header-all').click();
+    await page.waitForTimeout(1000);
+
+    // Verify second page's header has the same content
+    const secondHeader = page.locator('[data-testid^="page-header-"] [contenteditable="true"]').nth(1);
+    const secondHeaderText = await secondHeader.innerText();
+    expect(secondHeaderText).toContain('HEADER TEXT');
+  });
+
+  test('clear all headers removes content from all pages', async ({ page }) => {
+    // Enable header/footer
+    const switchEl = page.getByTestId('header-footer-switch');
+    await switchEl.click();
+    await page.waitForSelector('[data-testid^="page-header-"]');
+
+    // Type into header
+    const firstHeader = page.locator('[data-testid^="page-header-"] [contenteditable="true"]').first();
+    await firstHeader.click();
+    await firstHeader.type('Header content to clear', { delay: 30 });
+    await page.waitForTimeout(500);
+
+    // Click "Clear All Headers"
+    await page.getByTestId('clear-all-headers').click();
+    await page.waitForTimeout(1000);
+
+    // Verify header is now empty (just whitespace/empty paragraph)
+    const headerText = await firstHeader.innerText();
+    expect(headerText.trim()).toBe('');
+  });
+
+  // ───── Bug: Header/footer must not scroll — must use overflow: clip ─────
+
+  test('header container uses overflow clip, not hidden', async ({ page }) => {
+    // Enable header/footer
+    const switchEl = page.getByTestId('header-footer-switch');
+    await switchEl.click();
+    await page.waitForSelector('[data-testid^="page-header-"]');
+
+    const headerContainer = page.locator('[data-testid^="page-header-"]').first();
+    const overflow = await headerContainer.evaluate(el => getComputedStyle(el).overflow);
+    expect(overflow).toBe('clip');
+  });
+
+  test('footer container uses overflow clip, not hidden', async ({ page }) => {
+    // Enable header/footer
+    const switchEl = page.getByTestId('header-footer-switch');
+    await switchEl.click();
+    await page.waitForSelector('[data-testid^="page-footer-"]');
+
+    const footerContainer = page.locator('[data-testid^="page-footer-"]').first();
+    const overflow = await footerContainer.evaluate(el => getComputedStyle(el).overflow);
+    expect(overflow).toBe('clip');
+  });
+
+  // ───── Bug: Header/footer must prevent typing past max height ─────
+
+  test('header blocks typing that exceeds max height', async ({ page }) => {
+    // Enable header/footer
+    const switchEl = page.getByTestId('header-footer-switch');
+    await switchEl.click();
+    await page.waitForSelector('[data-testid^="page-header-"]');
+
+    const headerEditor = page.locator('[data-testid^="page-header-"] [contenteditable="true"]').first();
+    await headerEditor.click();
+
+    // Type many lines of text to exceed max header height (225px)
+    // Each Enter adds ~24px, so ~15 Enters should exceed 225px
+    for (let i = 0; i < 20; i++) {
+      await headerEditor.type(`Line ${i + 1}`, { delay: 10 });
+      await headerEditor.press('Enter');
+    }
+    await page.waitForTimeout(500);
+
+    // The header container's scrollHeight should not exceed maxHeight significantly
+    const headerContainer = page.locator('[data-testid^="page-header-"]').first();
+    const { scrollHeight, clientHeight } = await headerContainer.evaluate(el => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
+
+    // scrollHeight should be at or near clientHeight (no hidden overflow)
+    // Allow small tolerance for one extra line that gets reverted asynchronously
+    expect(scrollHeight).toBeLessThanOrEqual(clientHeight + 48);
+  });
 });

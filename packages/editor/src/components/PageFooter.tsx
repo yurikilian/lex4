@@ -9,10 +9,12 @@ import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { MAX_FOOTER_HEIGHT_PX } from '../constants/dimensions';
+import { HeightLimitPlugin } from '../lexical/plugins/height-limit-plugin';
 import { debug, shortId } from '../utils/debug';
 
 interface PageFooterProps {
   pageId: string;
+  initialFooterState?: SerializedEditorState | null;
   onFooterChange?: (state: SerializedEditorState) => void;
   onHeightChange?: (height: number) => void;
 }
@@ -20,16 +22,25 @@ interface PageFooterProps {
 /**
  * PageFooter — Mini Lexical editor for a page's footer region.
  *
- * Constrained to MAX_FOOTER_HEIGHT_PX. Reports height changes
- * so the pagination engine can adjust the body area.
+ * Constrained to MAX_FOOTER_HEIGHT_PX. Uses overflow: clip to prevent
+ * the browser from scrolling the container to follow the cursor.
+ * Remounts via key={syncVersion} when content is copied/cleared externally.
  */
 export const PageFooter: React.FC<PageFooterProps> = ({
   pageId,
+  initialFooterState,
   onFooterChange,
   onHeightChange,
 }) => {
   const config = useMemo(
-    () => createEditorConfig('footer', pageId),
+    () => {
+      const baseConfig = createEditorConfig('footer', pageId);
+      if (initialFooterState) {
+        return { ...baseConfig, editorState: JSON.stringify(initialFooterState) };
+      }
+      return baseConfig;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncVersion forces remount via key, only used at init
     [pageId],
   );
 
@@ -54,7 +65,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
   return (
     <div
       className="lex4-page-footer border-t border-dashed border-gray-300 relative flex-shrink-0"
-      style={{ maxHeight: MAX_FOOTER_HEIGHT_PX, overflow: 'hidden' }}
+      style={{ maxHeight: MAX_FOOTER_HEIGHT_PX, overflow: 'clip' }}
       data-testid={`page-footer-${pageId}`}
     >
       <LexicalComposer initialConfig={config}>
@@ -73,6 +84,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
           ErrorBoundary={LexicalErrorBoundary}
         />
         <HistoryPlugin />
+        <HeightLimitPlugin maxHeight={MAX_FOOTER_HEIGHT_PX} channel="footer" />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
     </div>

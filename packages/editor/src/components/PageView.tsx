@@ -93,7 +93,9 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
     >
       {showHeaderFooter && (
         <PageHeader
+          key={`header-${page.headerSyncVersion}`}
           pageId={pageId}
+          initialHeaderState={page.headerState}
           onHeaderChange={handleHeaderChange}
           onHeightChange={handleHeaderHeight}
         />
@@ -110,7 +112,9 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
 
       {showHeaderFooter && (
         <PageFooter
+          key={`footer-${page.footerSyncVersion}`}
           pageId={pageId}
+          initialFooterState={page.footerState}
           onFooterChange={handleFooterChange}
           onHeightChange={handleFooterHeight}
         />
