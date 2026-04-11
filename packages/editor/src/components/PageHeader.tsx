@@ -53,6 +53,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       requestAnimationFrame(() => {
         const el = contentRef.current;
         if (el) {
+          if (el.scrollHeight > MAX_HEADER_HEIGHT_PX) {
+            debug(
+              'header',
+              `page ${shortId(pageId)}: skipped external sync at ${el.scrollHeight}px > max ${MAX_HEADER_HEIGHT_PX}px`,
+            );
+            return;
+          }
           const height = Math.min(el.scrollHeight, MAX_HEADER_HEIGHT_PX);
           debug('header', `page ${shortId(pageId)}: height=${height}px (scrollH=${el.scrollHeight})`);
           onHeaderChange?.(editorState.toJSON(), height);

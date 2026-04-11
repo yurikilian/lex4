@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import type { SerializedEditorState } from 'lexical';
+import { $getRoot } from 'lexical';
+import type { SerializedEditorState, LexicalEditor } from 'lexical';
 
 import { useDocument } from '../context/document-context';
 import { computeBodyHeight } from '../constants/page-layout';
@@ -16,8 +17,16 @@ import { debug, shortId } from '../utils/debug';
  * creating new pages or prepending to existing next pages.
  */
 export const DocumentView: React.FC = () => {
-  const { document, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction } = useDocument();
-  const { reflowAll } = usePagination(document, dispatch);
+  const {
+    document,
+    dispatch,
+    editorRegistry,
+    requestFocusAtEnd,
+    runHistoryAction,
+    setActiveEditor,
+    setActivePageId,
+  } = useDocument();
+  const { handlePageUnderflow, reflowAll } = usePagination(document, dispatch);
   const previousBodyHeightsRef = useRef<number[] | null>(null);
   const pasteOverflowSequenceRef = useRef(false);
   const pasteOverflowReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,6 +79,39 @@ export const DocumentView: React.FC = () => {
       }
     },
     [],
+  );
+
+  const focusBodyEditor = useCallback(
+    (pageId: string, boundary: 'start' | 'end') => {
+      let attempts = 0;
+
+      const focusWhenReady = () => {
+        const editor = editorRegistry.get(pageId);
+        if (!editor) {
+          if (attempts < 4) {
+            attempts += 1;
+            requestAnimationFrame(focusWhenReady);
+          }
+          return;
+        }
+
+        const caretPosition = { pageId, region: 'body' as const };
+        setActivePageId(pageId);
+        setActiveEditor(editor as LexicalEditor, caretPosition);
+        editor.focus(() => {
+          editor.update(() => {
+            if (boundary === 'start') {
+              $getRoot().selectStart();
+            } else {
+              $getRoot().selectEnd();
+            }
+          });
+        });
+      };
+
+      requestAnimationFrame(focusWhenReady);
+    },
+    [editorRegistry, setActiveEditor, setActivePageId],
   );
 
   const handlePageOverflow = useCallback(
@@ -161,6 +203,87 @@ export const DocumentView: React.FC = () => {
     [defaultPageTemplate, document.pages, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction],
   );
 
+  const handleBackspaceAtPageStart = useCallback(
+    (pageIndex: number, pageId: string) => {
+      if (pageIndex <= 0) {
+        return;
+      }
+
+      const previousPage = document.pages[pageIndex - 1];
+      if (!previousPage) {
+        return;
+      }
+
+      runHistoryAction(
+        {
+          label: `Deleted backward - Page ${pageIndex + 1}`,
+          source: 'body',
+          pageId,
+          region: 'body',
+        },
+        () => {
+          handlePageUnderflow(pageIndex - 1);
+        },
+      );
+
+      focusBodyEditor(previousPage.id, 'end');
+    },
+    [document.pages, focusBodyEditor, handlePageUnderflow, runHistoryAction],
+  );
+
+  const handleDeleteAtPageEnd = useCallback(
+    (pageIndex: number, pageId: string) => {
+      const currentPage = document.pages[pageIndex];
+      const nextPage = document.pages[pageIndex + 1];
+      if (!currentPage || !nextPage) {
+        return;
+      }
+
+      runHistoryAction(
+        {
+          label: `Deleted forward - Page ${pageIndex + 1}`,
+          source: 'body',
+          pageId,
+          region: 'body',
+        },
+        () => {
+          handlePageUnderflow(pageIndex);
+        },
+      );
+
+      focusBodyEditor(currentPage.id, 'end');
+    },
+    [document.pages, focusBodyEditor, handlePageUnderflow, runHistoryAction],
+  );
+
+  const handleMoveToPreviousPage = useCallback(
+    (pageIndex: number) => {
+      if (pageIndex <= 0) {
+        return;
+      }
+
+      const previousPage = document.pages[pageIndex - 1];
+      if (!previousPage) {
+        return;
+      }
+
+      focusBodyEditor(previousPage.id, 'end');
+    },
+    [document.pages, focusBodyEditor],
+  );
+
+  const handleMoveToNextPage = useCallback(
+    (pageIndex: number) => {
+      const nextPage = document.pages[pageIndex + 1];
+      if (!nextPage) {
+        return;
+      }
+
+      focusBodyEditor(nextPage.id, 'start');
+    },
+    [document.pages, focusBodyEditor],
+  );
+
   return (
     <div
       className="lex4-document-view flex flex-col items-center gap-8 py-8 min-h-full"
@@ -173,6 +296,10 @@ export const DocumentView: React.FC = () => {
           pageId={page.id}
           pageIndex={index}
           onOverflow={(content, cause) => handlePageOverflow(index, content, cause)}
+          onBackspaceAtStart={handleBackspaceAtPageStart}
+          onDeleteAtEnd={handleDeleteAtPageEnd}
+          onMoveToPreviousPage={handleMoveToPreviousPage}
+          onMoveToNextPage={handleMoveToNextPage}
         />
       ))}
     </div>
