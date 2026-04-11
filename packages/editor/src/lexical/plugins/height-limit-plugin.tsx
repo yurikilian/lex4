@@ -61,10 +61,14 @@ export function HeightLimitPlugin({ maxHeight, channel }: { maxHeight: number; c
       requestAnimationFrame(() => {
         if (root.scrollHeight > maxHeight) {
           debug(channel, `reverting — scrollHeight ${root.scrollHeight}px > max ${maxHeight}px`);
+          const restoreState =
+            JSON.stringify(prevEditorState.toJSON()) || lastGoodStateRef.current;
+          if (!restoreState) {
+            return;
+          }
           isRevertingRef.current = true;
 
-          // Revert to previous state
-          editor.setEditorState(prevEditorState);
+          editor.setEditorState(editor.parseEditorState(restoreState));
 
           isRevertingRef.current = false;
         } else {

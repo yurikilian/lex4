@@ -10,6 +10,10 @@ interface PageViewProps {
   pageId: string;
   pageIndex: number;
   onOverflow?: (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => void;
+  onBackspaceAtStart?: (pageIndex: number, pageId: string) => void;
+  onDeleteAtEnd?: (pageIndex: number, pageId: string) => void;
+  onMoveToPreviousPage?: (pageIndex: number) => void;
+  onMoveToNextPage?: (pageIndex: number) => void;
 }
 
 /**
@@ -19,7 +23,15 @@ interface PageViewProps {
  * Header and footer are only rendered when the global toggle is on.
  * Uses CSS flexbox: header/footer are flex-shrink-0, body is flex-1.
  */
-export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex, onOverflow }) => {
+export const PageView: React.FC<PageViewProps> = React.memo(({
+  pageId,
+  pageIndex,
+  onOverflow,
+  onBackspaceAtStart,
+  onDeleteAtEnd,
+  onMoveToPreviousPage,
+  onMoveToNextPage,
+}) => {
   const { document, dispatch, setActivePageId } = useDocument();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
@@ -88,6 +100,10 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
         onBodyChange={handleBodyChange}
         onOverflow={handleOverflow}
         onFocus={handleFocus}
+        onBackspaceAtStart={() => onBackspaceAtStart?.(pageIndex, pageId)}
+        onDeleteAtEnd={() => onDeleteAtEnd?.(pageIndex, pageId)}
+        onMoveToPreviousPage={() => onMoveToPreviousPage?.(pageIndex)}
+        onMoveToNextPage={() => onMoveToNextPage?.(pageIndex)}
       />
 
       {showHeaderFooter && (

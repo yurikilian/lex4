@@ -53,6 +53,13 @@ export const PageFooter: React.FC<PageFooterProps> = ({
       requestAnimationFrame(() => {
         const el = contentRef.current;
         if (el) {
+          if (el.scrollHeight > MAX_FOOTER_HEIGHT_PX) {
+            debug(
+              'footer',
+              `page ${shortId(pageId)}: skipped external sync at ${el.scrollHeight}px > max ${MAX_FOOTER_HEIGHT_PX}px`,
+            );
+            return;
+          }
           const height = Math.min(el.scrollHeight, MAX_FOOTER_HEIGHT_PX);
           debug('footer', `page ${shortId(pageId)}: height=${height}px (scrollH=${el.scrollHeight})`);
           onFooterChange?.(editorState.toJSON(), height);

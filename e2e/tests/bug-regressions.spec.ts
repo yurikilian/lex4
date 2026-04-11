@@ -533,4 +533,340 @@ test.describe('Bug Fix Regressions', () => {
     // Allow small tolerance for one extra line that gets reverted asynchronously
     expect(scrollHeight).toBeLessThanOrEqual(clientHeight + 48);
   });
+
+  test('footer overflow keeps existing footer content and focus on later pages', async ({ page }) => {
+    const switchEl = page.getByTestId('header-footer-switch');
+    await switchEl.click();
+    await page.waitForSelector('[data-testid^="page-footer-"]');
+
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    const paragraphs = Array.from({ length: 40 }, (_, i) =>
+      `Paragraph ${i + 1}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec ligula sollicitudin, congue dolor eget, sagittis orci. Aliquam dolor ante, hendrerit nec neque non, porta consectetur sem.`
+    );
+    const largeText = paragraphs.join('\n');
+
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[data-testid^="page-body-"] [contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(3000);
+
+    const pages = page.locator('[data-page-id]');
+    const pageCountBeforeFooterPaste = await pages.count();
+    expect(pageCountBeforeFooterPaste).toBeGreaterThan(1);
+
+    const secondFooterContainer = page.locator('[data-testid^="page-footer-"]').nth(1);
+    const secondFooterEditor = secondFooterContainer.locator('[contenteditable="true"]');
+    const secondFooterTestId = await secondFooterContainer.getAttribute('data-testid');
+
+    await secondFooterEditor.scrollIntoViewIfNeeded();
+    await secondFooterEditor.click();
+    await secondFooterEditor.type('Persistent footer intro');
+    await secondFooterEditor.press('Enter');
+    await expect(secondFooterEditor).toContainText('Persistent footer intro');
+
+    await page.evaluate(async (text) => {
+      const footerEditors = document.querySelectorAll('[data-testid^="page-footer-"] [contenteditable="true"]');
+      const editor = footerEditors.item(1);
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(1000);
+
+    await expect(secondFooterEditor).toContainText('Persistent footer intro');
+
+    const activeFooterTestId = await page.evaluate(() =>
+      document.activeElement
+        ?.closest('[data-testid^="page-footer-"]')
+        ?.getAttribute('data-testid') ?? null
+    );
+
+    expect(activeFooterTestId).toBe(secondFooterTestId);
+    expect(await pages.count()).toBe(pageCountBeforeFooterPaste);
+  });
+
+  test('backspace at the start of page 2 pulls the leading block back to page 1', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    const paragraphs = Array.from({ length: 90 }, (_, i) => `p${i + 1}`);
+    const largeText = paragraphs.join('\n');
+
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[data-testid^="page-body-"] [contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(2000);
+
+    const pages = page.locator('[data-page-id]');
+    expect(await pages.count()).toBeGreaterThan(1);
+
+    const firstBody = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').first();
+    const secondBody = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').nth(1);
+
+    await firstBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    for (let i = 0; i < 24; i++) {
+      await page.keyboard.press('Backspace');
+    }
+
+    await page.waitForTimeout(300);
+
+    const secondBodyTextBefore = await secondBody.innerText();
+    const movedParagraph = secondBodyTextBefore.split('\n').find(Boolean);
+    expect(movedParagraph).toBeTruthy();
+
+    await secondBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    await page.keyboard.press('Backspace');
+    await page.waitForTimeout(500);
+
+    expect(await firstBody.innerText()).toContain(movedParagraph!);
+    const secondBodyTextAfter = await secondBody.innerText();
+    expect(secondBodyTextAfter.split('\n').find(Boolean)).not.toBe(movedParagraph);
+  });
+
+  test('delete at the end of page 1 pulls the leading block forward from page 2', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    const paragraphs = Array.from({ length: 90 }, (_, i) => `d${i + 1}`);
+    const largeText = paragraphs.join('\n');
+
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[data-testid^="page-body-"] [contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(2000);
+
+    const pages = page.locator('[data-page-id]');
+    expect(await pages.count()).toBeGreaterThan(1);
+
+    const firstBody = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').first();
+    const secondBody = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').nth(1);
+
+    await firstBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    for (let i = 0; i < 24; i++) {
+      await page.keyboard.press('Backspace');
+    }
+
+    await page.waitForTimeout(300);
+
+    const secondBodyTextBefore = await secondBody.innerText();
+    const movedParagraph = secondBodyTextBefore.split('\n').find(Boolean);
+    expect(movedParagraph).toBeTruthy();
+
+    await firstBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    await page.keyboard.press('Delete');
+    await page.waitForTimeout(500);
+
+    expect(await firstBody.innerText()).toContain(movedParagraph!);
+    const secondBodyTextAfter = await secondBody.innerText();
+    expect(secondBodyTextAfter.split('\n').find(Boolean)).not.toBe(movedParagraph);
+  });
+
+  test('arrow keys move between adjacent pages at body boundaries', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    const paragraphs = Array.from({ length: 90 }, (_, i) => `row ${i + 1}`);
+    const largeText = paragraphs.join('\n');
+
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[data-testid^="page-body-"] [contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        });
+        editor.dispatchEvent(pasteEvent);
+      }
+    }, largeText);
+
+    await page.waitForTimeout(2000);
+
+    const bodyEditors = page.locator('[data-testid^="page-body-"] [contenteditable="true"]');
+    expect(await bodyEditors.count()).toBeGreaterThan(1);
+
+    const firstBody = bodyEditors.first();
+    const secondBody = bodyEditors.nth(1);
+
+    const getActiveBodyTestId = () => page.evaluate(() =>
+      document.activeElement?.closest('[data-testid^="page-body-"]')?.getAttribute('data-testid') ?? null
+    );
+
+    const secondBodyTestId = await page.locator('[data-testid^="page-body-"]').nth(1).getAttribute('data-testid');
+    const firstBodyTestId = await page.locator('[data-testid^="page-body-"]').first().getAttribute('data-testid');
+
+    await firstBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(150);
+    expect(await getActiveBodyTestId()).toBe(secondBodyTestId);
+
+    await secondBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    await page.keyboard.press('ArrowLeft');
+    await page.waitForTimeout(150);
+    expect(await getActiveBodyTestId()).toBe(firstBodyTestId);
+
+    await firstBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    await page.keyboard.press('ArrowDown');
+    await page.waitForTimeout(150);
+    expect(await getActiveBodyTestId()).toBe(secondBodyTestId);
+
+    await secondBody.evaluate(element => {
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element as HTMLElement).focus();
+    });
+
+    await page.keyboard.press('ArrowUp');
+    await page.waitForTimeout(150);
+    expect(await getActiveBodyTestId()).toBe(firstBodyTestId);
+  });
 });

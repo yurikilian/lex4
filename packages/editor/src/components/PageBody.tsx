@@ -14,6 +14,7 @@ import { PastePlugin } from '../lexical/plugins/paste-plugin';
 import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { OverflowPlugin } from '../lexical/plugins/overflow-plugin';
 import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
+import { PageBoundaryPlugin } from '../lexical/plugins/page-boundary-plugin';
 import { useDocument } from '../context/document-context';
 import { debug, shortId } from '../utils/debug';
 
@@ -23,6 +24,10 @@ interface PageBodyProps {
   onBodyChange?: (state: SerializedEditorState) => void;
   onOverflow?: (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => void;
   onFocus?: () => void;
+  onBackspaceAtStart?: () => void;
+  onDeleteAtEnd?: () => void;
+  onMoveToPreviousPage?: () => void;
+  onMoveToNextPage?: () => void;
   readOnly?: boolean;
 }
 
@@ -61,6 +66,10 @@ export const PageBody: React.FC<PageBodyProps> = ({
   onBodyChange,
   onOverflow,
   onFocus,
+  onBackspaceAtStart,
+  onDeleteAtEnd,
+  onMoveToPreviousPage,
+  onMoveToNextPage,
   readOnly = false,
 }) => {
   const config = useMemo(
@@ -130,6 +139,14 @@ export const PageBody: React.FC<PageBodyProps> = ({
         <EditorRegistryPlugin pageId={pageId} />
         <ActiveEditorPlugin pageId={pageId} region="body" />
         {!readOnly && <HistoryCapturePlugin pageId={pageId} region="body" />}
+        {!readOnly && onBackspaceAtStart && onDeleteAtEnd && onMoveToPreviousPage && onMoveToNextPage && (
+          <PageBoundaryPlugin
+            onBackspaceAtStart={onBackspaceAtStart}
+            onDeleteAtEnd={onDeleteAtEnd}
+            onMoveToPreviousPage={onMoveToPreviousPage}
+            onMoveToNextPage={onMoveToNextPage}
+          />
+        )}
         <OverflowPlugin onOverflow={handleOverflow} />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
