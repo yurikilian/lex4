@@ -1,1 +1,9 @@
 export { Lex4Editor } from './Lex4Editor';
+export { DocumentView } from './DocumentView';
+export { PageView } from './PageView';
+export { PageBody } from './PageBody';
+export { PageHeader } from './PageHeader';
+export { PageFooter } from './PageFooter';
+export { Toolbar } from './Toolbar';
+export { HeaderFooterToggle } from './HeaderFooterToggle';
+export { HeaderFooterActions } from './HeaderFooterActions';
