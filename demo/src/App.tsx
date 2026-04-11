@@ -6,6 +6,8 @@ export const App: React.FC = () => {
   const handleChange = useCallback((doc: Lex4Document) => {
     console.log(`Document changed: ${doc.pages.length} page(s)`);
   }, []);
+  const searchParams = new URLSearchParams(window.location.search);
+  const captureHistoryShortcutsOnWindow = searchParams.get('captureHistoryShortcutsOnWindow') !== 'false';
 
   return (
     <div className="h-screen flex flex-col bg-gray-300">
@@ -14,7 +16,10 @@ export const App: React.FC = () => {
         <span className="text-gray-400 text-sm">— Document Editor</span>
       </header>
       <main className="flex-1 overflow-hidden">
-        <Lex4Editor onDocumentChange={handleChange} />
+        <Lex4Editor
+          captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+          onDocumentChange={handleChange}
+        />
       </main>
     </div>
   );

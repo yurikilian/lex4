@@ -8,15 +8,16 @@ import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { MAX_HEADER_HEIGHT_PX } from '../constants/dimensions';
+import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { HeightLimitPlugin } from '../lexical/plugins/height-limit-plugin';
+import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
 import { debug, shortId } from '../utils/debug';
 
 interface PageHeaderProps {
   pageId: string;
   initialHeaderState?: SerializedEditorState | null;
   pageCounterLabel?: string;
-  onHeaderChange?: (state: SerializedEditorState) => void;
-  onHeightChange?: (height: number) => void;
+  onHeaderChange?: (state: SerializedEditorState, height: number) => void;
 }
 
 /**
@@ -31,7 +32,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   initialHeaderState,
   pageCounterLabel,
   onHeaderChange,
-  onHeightChange,
 }) => {
   const hasPageCounter = !!pageCounterLabel;
   const config = useMemo(
@@ -50,19 +50,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   const handleChange = useCallback(
     (editorState: EditorState) => {
-      onHeaderChange?.(editorState.toJSON());
-
-      // Report current height
       requestAnimationFrame(() => {
         const el = contentRef.current;
         if (el) {
           const height = Math.min(el.scrollHeight, MAX_HEADER_HEIGHT_PX);
           debug('header', `page ${shortId(pageId)}: height=${height}px (scrollH=${el.scrollHeight})`);
-          onHeightChange?.(height);
+          onHeaderChange?.(editorState.toJSON(), height);
         }
       });
     },
-    [onHeaderChange, onHeightChange, pageId],
+    [onHeaderChange, pageId],
   );
 
   return (
@@ -86,6 +83,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
+        <ActiveEditorPlugin pageId={pageId} region="header" />
+        <HistoryCapturePlugin pageId={pageId} region="header" />
         <HeightLimitPlugin maxHeight={MAX_HEADER_HEIGHT_PX} channel="header" />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>

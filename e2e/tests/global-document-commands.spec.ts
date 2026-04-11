@@ -45,6 +45,16 @@ function modifierKey(): 'Meta' | 'Control' {
   return process.platform === 'darwin' ? 'Meta' : 'Control';
 }
 
+async function readGlobalSelection(page: Page) {
+  return page.locator('[data-testid="global-selection-buffer"]').evaluate((element) => {
+    const buffer = element as HTMLTextAreaElement;
+    return {
+      value: buffer.value,
+      selectedText: buffer.value.slice(buffer.selectionStart ?? 0, buffer.selectionEnd ?? 0),
+    };
+  });
+}
+
 test.describe('Global Document Commands', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -84,10 +94,7 @@ test.describe('Global Document Commands', () => {
     await page.keyboard.press(`${modifierKey()}+A`);
     await page.waitForTimeout(100);
 
-    const selectedText = await page.locator('[data-testid="global-selection-buffer"]').evaluate((element) => {
-      const buffer = element as HTMLTextAreaElement;
-      return buffer.value.slice(buffer.selectionStart ?? 0, buffer.selectionEnd ?? 0);
-    });
+    const { selectedText } = await readGlobalSelection(page);
     expect(selectedText).toContain('Row 1');
     expect(selectedText).toContain('Row 60');
     expect(selectedText).not.toContain('HEADER line 1');
@@ -166,5 +173,29 @@ test.describe('Global Document Commands', () => {
 
     await expect(page.locator('[data-page-id]')).toHaveCount(1);
     await expect(firstBody).not.toContainText('Row 1');
+  });
+
+  test('cmd/ctrl+a keeps selecting only the document body after toolbar commands on a single page', async ({ page }) => {
+    const bodyEditor = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').first();
+
+    await bodyEditor.click();
+    await page.keyboard.type('Single page body');
+    await page.waitForTimeout(200);
+
+    await page.keyboard.press(`${modifierKey()}+A`);
+    await page.waitForTimeout(100);
+    let selection = await readGlobalSelection(page);
+    expect(selection.selectedText).toContain('Single page body');
+    await expect(page.getByTestId('lex4-editor')).toHaveAttribute('data-global-selection-active', 'true');
+
+    await page.getByTestId('btn-bold').click();
+    await page.waitForTimeout(200);
+
+    await page.keyboard.press(`${modifierKey()}+A`);
+    await page.waitForTimeout(100);
+    selection = await readGlobalSelection(page);
+    expect(selection.selectedText).toContain('Single page body');
+    expect(selection.selectedText).not.toContain('Bold');
+    await expect(page.getByTestId('lex4-editor')).toHaveAttribute('data-global-selection-active', 'true');
   });
 });

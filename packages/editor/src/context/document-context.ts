@@ -1,12 +1,30 @@
 import { createContext, useContext } from 'react';
 import type { Lex4Document, PageCounterMode } from '../types/document';
 import type { LexicalEditor } from 'lexical';
+import type {
+  CaretPosition,
+  CaretSelection,
+  HistoryActionDescriptor,
+  HistoryEntry,
+} from '../types/history';
 
 /** All actions the document reducer can handle */
 export type DocumentAction =
   | { type: 'ADD_PAGE'; afterIndex?: number; page?: import('../types/document').PageState }
   | { type: 'REMOVE_PAGE'; pageId: string }
   | { type: 'UPDATE_PAGE_BODY'; pageId: string; bodyState: import('lexical').SerializedEditorState | null }
+  | {
+    type: 'UPDATE_PAGE_HEADER_CONTENT';
+    pageId: string;
+    headerState: import('lexical').SerializedEditorState | null;
+    height: number;
+  }
+  | {
+    type: 'UPDATE_PAGE_FOOTER_CONTENT';
+    pageId: string;
+    footerState: import('lexical').SerializedEditorState | null;
+    height: number;
+  }
   | { type: 'UPDATE_PAGE_HEADER'; pageId: string; headerState: import('lexical').SerializedEditorState | null }
   | { type: 'UPDATE_PAGE_FOOTER'; pageId: string; footerState: import('lexical').SerializedEditorState | null }
   | { type: 'SET_HEADER_FOOTER_ENABLED'; enabled: boolean }
@@ -37,9 +55,20 @@ export interface DocumentContextValue {
   activePageId: string | null;
   setActivePageId: (id: string | null) => void;
   activeEditor: LexicalEditor | null;
-  setActiveEditor: (editor: LexicalEditor | null) => void;
+  setActiveEditor: (editor: LexicalEditor | null, caretPosition?: CaretPosition | null) => void;
+  consumePendingCaretPosition: (caretPosition: CaretPosition) => CaretSelection | null | undefined;
   globalSelectionActive: boolean;
   setGlobalSelectionActive: (active: boolean) => void;
+  historyEntries: HistoryEntry[];
+  historyCursor: number;
+  canUndo: boolean;
+  canRedo: boolean;
+  queueHistoryAction: (action: HistoryActionDescriptor | null) => void;
+  runHistoryAction: (action: HistoryActionDescriptor, callback: () => void) => void;
+  jumpToHistoryEntry: (entryIndex: number) => void;
+  clearHistory: (reason?: string) => void;
+  historySidebarOpen: boolean;
+  setHistorySidebarOpen: (open: boolean) => void;
   undo: () => void;
   redo: () => void;
   editorRegistry: EditorRegistry;

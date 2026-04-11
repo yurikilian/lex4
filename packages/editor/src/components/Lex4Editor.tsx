@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import type { Lex4EditorProps } from '../types/editor-props';
 import { DocumentProvider } from '../context/document-provider';
 import { useDocument } from '../context/document-context';
+import { HistorySidebar } from './HistorySidebar';
 import { Toolbar } from './Toolbar';
 import { DocumentView } from './DocumentView';
 import '../styles.css';
@@ -33,7 +34,19 @@ function selectEntireDocument(
 const GLOBAL_SELECTION_BACKGROUND = 'rgb(191, 219, 254)';
 const GLOBAL_SELECTION_FOREGROUND = 'rgb(30, 64, 175)';
 
-const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
+function isFormFieldTarget(target: EventTarget | null): boolean {
+  const element = target as HTMLElement | null;
+  const tagName = element?.tagName;
+  return tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT';
+}
+
+const EditorChrome: React.FC<{
+  captureHistoryShortcutsOnWindow: boolean;
+  className?: string;
+}> = ({
+  captureHistoryShortcutsOnWindow,
+  className,
+}) => {
   const {
     document,
     dispatch,
@@ -50,12 +63,37 @@ const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
     selectionBufferRef.current?.blur();
   }, [setGlobalSelectionActive]);
 
+  const handleHistoryShortcut = useCallback((event: { key: string; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; preventDefault: () => void; stopPropagation?: () => void }) => {
+    const key = event.key.toLowerCase();
+
+    if (key === 'z') {
+      event.preventDefault();
+      event.stopPropagation?.();
+      clearGlobalSelection();
+      if (event.shiftKey) {
+        redo();
+      } else {
+        undo();
+      }
+      return true;
+    }
+
+    if (key === 'y') {
+      event.preventDefault();
+      event.stopPropagation?.();
+      clearGlobalSelection();
+      redo();
+      return true;
+    }
+
+    return false;
+  }, [clearGlobalSelection, redo, undo]);
+
   const handleKeyDownCapture = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement | null;
-    const tagName = target?.tagName;
     const isGlobalSelectionBufferTarget = target === selectionBufferRef.current;
 
-    if (!isGlobalSelectionBufferTarget && (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT')) {
+    if (!isGlobalSelectionBufferTarget && isFormFieldTarget(target)) {
       return;
     }
 
@@ -75,10 +113,6 @@ const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
     }
 
     if (key === 'a') {
-      if (document.pages.length <= 1) {
-        return;
-      }
-
       event.preventDefault();
       event.stopPropagation();
       requestAnimationFrame(() => {
@@ -92,25 +126,14 @@ const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
       return;
     }
 
-    if (key === 'z') {
-      event.preventDefault();
-      event.stopPropagation();
-      clearGlobalSelection();
-      if (event.shiftKey) {
-        redo();
-      } else {
-        undo();
-      }
+    if (handleHistoryShortcut(event)) {
       return;
     }
-
-    if (!event.metaKey && key === 'y') {
-      event.preventDefault();
-      event.stopPropagation();
-      clearGlobalSelection();
-      redo();
-    }
-  }, [clearGlobalSelection, dispatch, document.pages.length, redo, setGlobalSelectionActive, undo]);
+  }, [
+    dispatch,
+    handleHistoryShortcut,
+    setGlobalSelectionActive,
+  ]);
 
   const handleMouseDownCapture = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!globalSelectionActive) {
@@ -138,6 +161,40 @@ const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
     });
   }, [globalSelectionActive, document.pages.length]);
 
+  useEffect(() => {
+    if (!captureHistoryShortcutsOnWindow) {
+      return;
+    }
+
+    const handleWindowKeyDown = (event: KeyboardEvent) => {
+      const hasModifier = event.metaKey || event.ctrlKey;
+      if (!hasModifier) {
+        return;
+      }
+
+      handleHistoryShortcut(event);
+    };
+
+    window.addEventListener('keydown', handleWindowKeyDown, { capture: true });
+    const handleWindowBeforeInput = (event: InputEvent) => {
+      if (event.inputType === 'historyUndo') {
+        event.preventDefault();
+        clearGlobalSelection();
+        undo();
+      } else if (event.inputType === 'historyRedo') {
+        event.preventDefault();
+        clearGlobalSelection();
+        redo();
+      }
+    };
+
+    window.addEventListener('beforeinput', handleWindowBeforeInput, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', handleWindowKeyDown, { capture: true });
+      window.removeEventListener('beforeinput', handleWindowBeforeInput, { capture: true });
+    };
+  }, [captureHistoryShortcutsOnWindow, clearGlobalSelection, handleHistoryShortcut, redo, undo]);
+
   return (
     <div
       ref={rootRef}
@@ -156,8 +213,11 @@ const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
         className="pointer-events-none fixed -left-[9999px] top-0 h-0 w-0 opacity-0"
       />
       <Toolbar />
-      <div className="flex-1 overflow-auto bg-gray-200">
-        <DocumentView />
+      <div className="flex min-h-0 flex-1 overflow-hidden bg-gray-200">
+        <div className="min-w-0 flex-1 overflow-auto">
+          <DocumentView />
+        </div>
+        <HistorySidebar />
       </div>
     </div>
   );
@@ -170,6 +230,7 @@ const EditorChrome: React.FC<{ className?: string }> = ({ className }) => {
  * Each page is a true discrete A4 page with its own Lexical editor instance.
  */
 export const Lex4Editor: React.FC<Lex4EditorProps> = ({
+  captureHistoryShortcutsOnWindow = true,
   initialDocument,
   onDocumentChange,
   className,
@@ -179,7 +240,10 @@ export const Lex4Editor: React.FC<Lex4EditorProps> = ({
       initialDocument={initialDocument}
       onDocumentChange={onDocumentChange}
     >
-      <EditorChrome className={className} />
+      <EditorChrome
+        captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+        className={className}
+      />
     </DocumentProvider>
   );
 };

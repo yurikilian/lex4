@@ -8,15 +8,16 @@ import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { MAX_FOOTER_HEIGHT_PX } from '../constants/dimensions';
+import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { HeightLimitPlugin } from '../lexical/plugins/height-limit-plugin';
+import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
 import { debug, shortId } from '../utils/debug';
 
 interface PageFooterProps {
   pageId: string;
   initialFooterState?: SerializedEditorState | null;
   pageCounterLabel?: string;
-  onFooterChange?: (state: SerializedEditorState) => void;
-  onHeightChange?: (height: number) => void;
+  onFooterChange?: (state: SerializedEditorState, height: number) => void;
 }
 
 /**
@@ -31,7 +32,6 @@ export const PageFooter: React.FC<PageFooterProps> = ({
   initialFooterState,
   pageCounterLabel,
   onFooterChange,
-  onHeightChange,
 }) => {
   const hasPageCounter = !!pageCounterLabel;
   const config = useMemo(
@@ -50,18 +50,16 @@ export const PageFooter: React.FC<PageFooterProps> = ({
 
   const handleChange = useCallback(
     (editorState: EditorState) => {
-      onFooterChange?.(editorState.toJSON());
-
       requestAnimationFrame(() => {
         const el = contentRef.current;
         if (el) {
           const height = Math.min(el.scrollHeight, MAX_FOOTER_HEIGHT_PX);
           debug('footer', `page ${shortId(pageId)}: height=${height}px (scrollH=${el.scrollHeight})`);
-          onHeightChange?.(height);
+          onFooterChange?.(editorState.toJSON(), height);
         }
       });
     },
-    [onFooterChange, onHeightChange, pageId],
+    [onFooterChange, pageId],
   );
 
   return (
@@ -85,6 +83,8 @@ export const PageFooter: React.FC<PageFooterProps> = ({
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
+        <ActiveEditorPlugin pageId={pageId} region="footer" />
+        <HistoryCapturePlugin pageId={pageId} region="footer" />
         <HeightLimitPlugin maxHeight={MAX_FOOTER_HEIGHT_PX} channel="footer" />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>

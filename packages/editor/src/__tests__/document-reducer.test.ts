@@ -223,6 +223,25 @@ describe('documentReducer', () => {
     });
   });
 
+  describe('UPDATE_PAGE_HEADER_CONTENT', () => {
+    it('updates header state and height in a single action', () => {
+      const state = docWithPages(1);
+      const headerState = {
+        root: { children: [], direction: null, format: '', indent: 0, type: 'root', version: 1 },
+      };
+
+      const next = documentReducer(state, {
+        type: 'UPDATE_PAGE_HEADER_CONTENT',
+        pageId: state.pages[0].id,
+        headerState,
+        height: 80,
+      });
+
+      expect(next.pages[0].headerState).toEqual(headerState);
+      expect(next.pages[0].headerHeight).toBe(80);
+    });
+  });
+
   describe('SET_FOOTER_HEIGHT', () => {
     it('sets footer height on the specified page', () => {
       const state = docWithPages(1);
@@ -234,6 +253,25 @@ describe('documentReducer', () => {
       const state = docWithPages(1);
       const next = documentReducer(state, { type: 'SET_FOOTER_HEIGHT', pageId: state.pages[0].id, height: 9999 });
       expect(next.pages[0].footerHeight).toBe(MAX_FOOTER_HEIGHT_PX);
+    });
+  });
+
+  describe('UPDATE_PAGE_FOOTER_CONTENT', () => {
+    it('updates footer state and height in a single action', () => {
+      const state = docWithPages(1);
+      const footerState = {
+        root: { children: [], direction: null, format: '', indent: 0, type: 'root', version: 1 },
+      };
+
+      const next = documentReducer(state, {
+        type: 'UPDATE_PAGE_FOOTER_CONTENT',
+        pageId: state.pages[0].id,
+        footerState,
+        height: 70,
+      });
+
+      expect(next.pages[0].footerState).toEqual(footerState);
+      expect(next.pages[0].footerHeight).toBe(70);
     });
   });
 

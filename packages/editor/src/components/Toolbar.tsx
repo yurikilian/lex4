@@ -23,8 +23,16 @@ export const Toolbar: React.FC = () => {
     dispatch,
     activePageId,
     activeEditor,
+    canRedo,
+    canUndo,
+    clearHistory,
     editorRegistry,
     globalSelectionActive,
+    historySidebarOpen,
+    redo,
+    runHistoryAction,
+    setHistorySidebarOpen,
+    undo,
   } = useDocument();
 
   const withBodySelection = useCallback(
@@ -56,85 +64,152 @@ export const Toolbar: React.FC = () => {
     [activeEditor, editorRegistry, globalSelectionActive, withBodySelection],
   );
 
+  const runToolbarAction = useCallback(
+    (label: string, callback: () => void) => {
+      runHistoryAction(
+        {
+          label,
+          source: 'toolbar',
+          region: 'document',
+        },
+        callback,
+      );
+    },
+    [runHistoryAction],
+  );
+
   const handleToggle = (enabled: boolean) => {
-    dispatch({ type: 'SET_HEADER_FOOTER_ENABLED', enabled });
+    runToolbarAction(
+      enabled ? 'Enabled headers and footers' : 'Disabled headers and footers',
+      () => {
+        dispatch({ type: 'SET_HEADER_FOOTER_ENABLED', enabled });
+      },
+    );
   };
 
   const handleCopyHeaderToAll = () => {
-    if (activePageId) dispatch({ type: 'COPY_HEADER_TO_ALL', sourcePageId: activePageId });
+    if (activePageId) {
+      runToolbarAction('Copied header to all pages', () => {
+        dispatch({ type: 'COPY_HEADER_TO_ALL', sourcePageId: activePageId });
+      });
+    }
   };
   const handleCopyFooterToAll = () => {
-    if (activePageId) dispatch({ type: 'COPY_FOOTER_TO_ALL', sourcePageId: activePageId });
+    if (activePageId) {
+      runToolbarAction('Copied footer to all pages', () => {
+        dispatch({ type: 'COPY_FOOTER_TO_ALL', sourcePageId: activePageId });
+      });
+    }
   };
   const handleClearHeader = () => {
-    if (activePageId) dispatch({ type: 'CLEAR_HEADER', pageId: activePageId });
+    if (activePageId) {
+      runToolbarAction('Cleared header', () => {
+        dispatch({ type: 'CLEAR_HEADER', pageId: activePageId });
+      });
+    }
   };
   const handleClearFooter = () => {
-    if (activePageId) dispatch({ type: 'CLEAR_FOOTER', pageId: activePageId });
+    if (activePageId) {
+      runToolbarAction('Cleared footer', () => {
+        dispatch({ type: 'CLEAR_FOOTER', pageId: activePageId });
+      });
+    }
   };
-  const handleClearAllHeaders = () => dispatch({ type: 'CLEAR_ALL_HEADERS' });
-  const handleClearAllFooters = () => dispatch({ type: 'CLEAR_ALL_FOOTERS' });
+  const handleClearAllHeaders = () => runToolbarAction('Cleared all headers', () => {
+    dispatch({ type: 'CLEAR_ALL_HEADERS' });
+  });
+  const handleClearAllFooters = () => runToolbarAction('Cleared all footers', () => {
+    dispatch({ type: 'CLEAR_ALL_FOOTERS' });
+  });
   const handlePageCounterModeChange = useCallback((mode: PageCounterMode) => {
-    dispatch({ type: 'SET_PAGE_COUNTER_MODE', mode });
-  }, [dispatch]);
+    runToolbarAction(`Page counter set to ${mode}`, () => {
+      dispatch({ type: 'SET_PAGE_COUNTER_MODE', mode });
+    });
+  }, [dispatch, runToolbarAction]);
 
   const handleBold = useCallback(() => {
     debug('toolbar', `bold (globalSelection=${globalSelectionActive}, editors=${editorRegistry.all().length}, hasEditor=${!!activeEditor})`);
-    applyToBodyEditors(toggleBold);
-  }, [activeEditor, applyToBodyEditors, editorRegistry, globalSelectionActive]);
+    runToolbarAction('Bold applied', () => {
+      applyToBodyEditors(toggleBold);
+    });
+  }, [activeEditor, applyToBodyEditors, editorRegistry, globalSelectionActive, runToolbarAction]);
 
   const handleItalic = useCallback(() => {
     debug('toolbar', `italic (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
-    applyToBodyEditors(toggleItalic);
-  }, [activeEditor, applyToBodyEditors, globalSelectionActive]);
+    runToolbarAction('Italic applied', () => {
+      applyToBodyEditors(toggleItalic);
+    });
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction]);
 
   const handleUnderline = useCallback(() => {
     debug('toolbar', `underline (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
-    applyToBodyEditors(toggleUnderline);
-  }, [activeEditor, applyToBodyEditors, globalSelectionActive]);
+    runToolbarAction('Underline applied', () => {
+      applyToBodyEditors(toggleUnderline);
+    });
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction]);
 
   const handleStrikethrough = useCallback(() => {
     debug('toolbar', `strikethrough (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
-    applyToBodyEditors(toggleStrikethrough);
-  }, [activeEditor, applyToBodyEditors, globalSelectionActive]);
+    runToolbarAction('Strikethrough applied', () => {
+      applyToBodyEditors(toggleStrikethrough);
+    });
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction]);
 
   const handleAlignLeft = useCallback(() => {
-    applyToBodyEditors(editor => setAlignment(editor, 'left'));
-  }, [applyToBodyEditors]);
+    runToolbarAction('Aligned left', () => {
+      applyToBodyEditors(editor => setAlignment(editor, 'left'));
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleAlignCenter = useCallback(() => {
-    applyToBodyEditors(editor => setAlignment(editor, 'center'));
-  }, [applyToBodyEditors]);
+    runToolbarAction('Aligned center', () => {
+      applyToBodyEditors(editor => setAlignment(editor, 'center'));
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleAlignRight = useCallback(() => {
-    applyToBodyEditors(editor => setAlignment(editor, 'right'));
-  }, [applyToBodyEditors]);
+    runToolbarAction('Aligned right', () => {
+      applyToBodyEditors(editor => setAlignment(editor, 'right'));
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleAlignJustify = useCallback(() => {
-    applyToBodyEditors(editor => setAlignment(editor, 'justify'));
-  }, [applyToBodyEditors]);
+    runToolbarAction('Justified text', () => {
+      applyToBodyEditors(editor => setAlignment(editor, 'justify'));
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleListNumber = useCallback(() => {
-    applyToBodyEditors(editor => insertList(editor, 'number'));
-  }, [applyToBodyEditors]);
+    runToolbarAction('Inserted numbered list', () => {
+      applyToBodyEditors(editor => insertList(editor, 'number'));
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleListBullet = useCallback(() => {
-    applyToBodyEditors(editor => insertList(editor, 'bullet'));
-  }, [applyToBodyEditors]);
+    runToolbarAction('Inserted bullet list', () => {
+      applyToBodyEditors(editor => insertList(editor, 'bullet'));
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleIndent = useCallback(() => {
-    applyToBodyEditors(indentContent);
-  }, [applyToBodyEditors]);
+    runToolbarAction('Indented content', () => {
+      applyToBodyEditors(indentContent);
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleOutdent = useCallback(() => {
-    applyToBodyEditors(outdentContent);
-  }, [applyToBodyEditors]);
+    runToolbarAction('Outdented content', () => {
+      applyToBodyEditors(outdentContent);
+    });
+  }, [applyToBodyEditors, runToolbarAction]);
 
   const handleFontChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      applyToBodyEditors(editor => applyFontFamily(editor, e.target.value as FontFamily));
+      runToolbarAction(`Font changed to ${e.target.value}`, () => {
+        applyToBodyEditors(editor => applyFontFamily(editor, e.target.value as FontFamily));
+      });
     },
-    [applyToBodyEditors],
+    [applyToBodyEditors, runToolbarAction],
   );
 
   return (
@@ -143,6 +218,49 @@ export const Toolbar: React.FC = () => {
                  flex flex-wrap items-center gap-4"
       data-testid="toolbar"
     >
+      <div className="flex items-center gap-1" data-testid="history-controls">
+        <IconButton
+          title="Undo"
+          ariaLabel="Undo"
+          testId="btn-undo"
+          disabled={!canUndo}
+          onClick={undo}
+        >
+          <UndoIcon />
+        </IconButton>
+        <IconButton
+          title="Redo"
+          ariaLabel="Redo"
+          testId="btn-redo"
+          disabled={!canRedo}
+          onClick={redo}
+        >
+          <RedoIcon />
+        </IconButton>
+        <button
+          type="button"
+          className={`rounded border px-2 py-1 text-xs transition-colors ${
+            historySidebarOpen
+              ? 'border-blue-300 bg-blue-50 text-blue-700'
+              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+          data-testid="toggle-history-sidebar"
+          onClick={() => setHistorySidebarOpen(!historySidebarOpen)}
+        >
+          History
+        </button>
+        <button
+          type="button"
+          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-100"
+          data-testid="clear-history"
+          onClick={() => clearHistory('manual')}
+        >
+          Clear History
+        </button>
+      </div>
+
+      <Divider />
+
       {/* Formatting group */}
       <div className="flex items-center gap-1" data-testid="format-group">
         <ToolbarButton label="B" title="Bold (Ctrl+B)" testId="btn-bold" className="font-bold" onClick={handleBold} />
@@ -222,6 +340,15 @@ interface ToolbarButtonProps {
   onClick?: () => void;
 }
 
+interface IconButtonProps {
+  title: string;
+  ariaLabel: string;
+  testId: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}
+
 const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   label,
   title,
@@ -244,6 +371,47 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   >
     {label}
   </button>
+);
+
+const IconButton: React.FC<IconButtonProps> = ({
+  title,
+  ariaLabel,
+  testId,
+  disabled = false,
+  onClick,
+  children,
+}) => (
+  <button
+    type="button"
+    title={title}
+    aria-label={ariaLabel}
+    disabled={disabled}
+    onClick={onClick}
+    className={`
+      flex h-8 w-8 items-center justify-center rounded border
+      transition-colors
+      ${disabled
+        ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'}
+    `}
+    data-testid={testId}
+  >
+    {children}
+  </button>
+);
+
+const UndoIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+    <path d="M9 7 4 12l5 5" />
+    <path d="M4 12h9a7 7 0 1 1 0 14" />
+  </svg>
+);
+
+const RedoIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+    <path d="m15 7 5 5-5 5" />
+    <path d="M20 12h-9a7 7 0 1 0 0 14" />
+  </svg>
 );
 
 const Divider: React.FC = () => (

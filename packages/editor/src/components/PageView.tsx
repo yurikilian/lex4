@@ -4,7 +4,7 @@ import { useDocument } from '../context/document-context';
 import { PageBody } from './PageBody';
 import { PageHeader } from './PageHeader';
 import { PageFooter } from './PageFooter';
-import type { LexicalEditor, SerializedEditorState } from 'lexical';
+import type { SerializedEditorState } from 'lexical';
 
 interface PageViewProps {
   pageId: string;
@@ -20,7 +20,7 @@ interface PageViewProps {
  * Uses CSS flexbox: header/footer are flex-shrink-0, body is flex-1.
  */
 export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex, onOverflow }) => {
-  const { document, dispatch, setActivePageId, setActiveEditor } = useDocument();
+  const { document, dispatch, setActivePageId } = useDocument();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
   const pageCounterMode = document.pageCounterMode;
@@ -36,29 +36,15 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   );
 
   const handleHeaderChange = useCallback(
-    (headerState: SerializedEditorState) => {
-      dispatch({ type: 'UPDATE_PAGE_HEADER', pageId, headerState });
+    (headerState: SerializedEditorState, height: number) => {
+      dispatch({ type: 'UPDATE_PAGE_HEADER_CONTENT', pageId, headerState, height });
     },
     [dispatch, pageId],
   );
 
   const handleFooterChange = useCallback(
-    (footerState: SerializedEditorState) => {
-      dispatch({ type: 'UPDATE_PAGE_FOOTER', pageId, footerState });
-    },
-    [dispatch, pageId],
-  );
-
-  const handleHeaderHeight = useCallback(
-    (height: number) => {
-      dispatch({ type: 'SET_HEADER_HEIGHT', pageId, height });
-    },
-    [dispatch, pageId],
-  );
-
-  const handleFooterHeight = useCallback(
-    (height: number) => {
-      dispatch({ type: 'SET_FOOTER_HEIGHT', pageId, height });
+    (footerState: SerializedEditorState, height: number) => {
+      dispatch({ type: 'UPDATE_PAGE_FOOTER_CONTENT', pageId, footerState, height });
     },
     [dispatch, pageId],
   );
@@ -66,14 +52,6 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   const handleFocus = useCallback(() => {
     setActivePageId(pageId);
   }, [setActivePageId, pageId]);
-
-  const handleEditorFocus = useCallback(
-    (editor: LexicalEditor) => {
-      setActivePageId(pageId);
-      setActiveEditor(editor);
-    },
-    [setActivePageId, setActiveEditor, pageId],
-  );
 
   const handleOverflow = useCallback(
     (overflowContent: SerializedEditorState) => {
@@ -100,7 +78,6 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
           initialHeaderState={page.headerState}
           pageCounterLabel={pageCounterMode === 'header' || pageCounterMode === 'both' ? pageCounterLabel : undefined}
           onHeaderChange={handleHeaderChange}
-          onHeightChange={handleHeaderHeight}
         />
       )}
 
@@ -111,7 +88,6 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
         onBodyChange={handleBodyChange}
         onOverflow={handleOverflow}
         onFocus={handleFocus}
-        onEditorFocus={handleEditorFocus}
       />
 
       {showHeaderFooter && (
@@ -121,7 +97,6 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
           initialFooterState={page.footerState}
           pageCounterLabel={pageCounterMode === 'footer' || pageCounterMode === 'both' ? pageCounterLabel : undefined}
           onFooterChange={handleFooterChange}
-          onHeightChange={handleFooterHeight}
         />
       )}
     </div>

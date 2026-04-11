@@ -16,7 +16,7 @@ import { debug, shortId } from '../utils/debug';
  * creating new pages or prepending to existing next pages.
  */
 export const DocumentView: React.FC = () => {
-  const { document, dispatch, editorRegistry } = useDocument();
+  const { document, dispatch, editorRegistry, runHistoryAction } = useDocument();
   const { reflowAll } = usePagination(document, dispatch);
   const previousBodyHeightsRef = useRef<number[] | null>(null);
   const defaultPageTemplate = useMemo(
@@ -92,17 +92,35 @@ export const DocumentView: React.FC = () => {
           debug('page', `editor not found in registry for page ${shortId(nextPage.id)} — falling back to ADD_PAGE`);
           const newPage = createPageFromTemplate(defaultPageTemplate);
           newPage.bodyState = overflowContent;
-          dispatch({ type: 'ADD_PAGE', afterIndex: pageIndex, page: newPage });
+          runHistoryAction(
+            {
+              label: 'Overflow created new page',
+              source: 'overflow',
+              region: 'document',
+            },
+            () => {
+              dispatch({ type: 'ADD_PAGE', afterIndex: pageIndex, page: newPage });
+            },
+          );
         }
       } else {
         // Create a new page with the overflow content as initial state
         const newPage = createPageFromTemplate(defaultPageTemplate);
         newPage.bodyState = overflowContent;
         debug('page', `creating new page ${shortId(newPage.id)} with ${overflowChildCount} overflow children`);
-        dispatch({ type: 'ADD_PAGE', page: newPage });
+        runHistoryAction(
+          {
+            label: 'Overflow created new page',
+            source: 'overflow',
+            region: 'document',
+          },
+          () => {
+            dispatch({ type: 'ADD_PAGE', page: newPage });
+          },
+        );
       }
     },
-    [defaultPageTemplate, document.pages, dispatch, editorRegistry],
+    [defaultPageTemplate, document.pages, dispatch, editorRegistry, runHistoryAction],
   );
 
   return (

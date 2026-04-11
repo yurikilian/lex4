@@ -7,3 +7,5 @@ export { PageFooter } from './PageFooter';
 export { Toolbar } from './Toolbar';
 export { HeaderFooterToggle } from './HeaderFooterToggle';
 export { HeaderFooterActions } from './HeaderFooterActions';
+export { EditorSidebar } from './EditorSidebar';
+export { HistorySidebar } from './HistorySidebar';

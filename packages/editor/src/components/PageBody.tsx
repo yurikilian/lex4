@@ -6,13 +6,14 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import type { EditorState, LexicalEditor, SerializedEditorState } from 'lexical';
+import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { TabIndentPlugin } from '../lexical/plugins/tab-indent-plugin';
 import { PastePlugin } from '../lexical/plugins/paste-plugin';
 import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { OverflowPlugin } from '../lexical/plugins/overflow-plugin';
+import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
 import { useDocument } from '../context/document-context';
 import { debug, shortId } from '../utils/debug';
 
@@ -22,7 +23,6 @@ interface PageBodyProps {
   onBodyChange?: (state: SerializedEditorState) => void;
   onOverflow?: (overflowContent: SerializedEditorState) => void;
   onFocus?: () => void;
-  onEditorFocus?: (editor: LexicalEditor) => void;
   readOnly?: boolean;
 }
 
@@ -61,7 +61,6 @@ export const PageBody: React.FC<PageBodyProps> = ({
   onBodyChange,
   onOverflow,
   onFocus,
-  onEditorFocus,
   readOnly = false,
 }) => {
   const config = useMemo(
@@ -103,13 +102,6 @@ export const PageBody: React.FC<PageBodyProps> = ({
     [onOverflow, pageId],
   );
 
-  const handleEditorFocus = useCallback(
-    (editor: LexicalEditor) => {
-      onEditorFocus?.(editor);
-    },
-    [onEditorFocus],
-  );
-
   return (
     <div
       className="lex4-page-body flex-1 min-h-0 relative"
@@ -136,7 +128,8 @@ export const PageBody: React.FC<PageBodyProps> = ({
         <TabIndentPlugin />
         <PastePlugin />
         <EditorRegistryPlugin pageId={pageId} />
-        <ActiveEditorPlugin onFocus={handleEditorFocus} />
+        <ActiveEditorPlugin pageId={pageId} region="body" />
+        {!readOnly && <HistoryCapturePlugin pageId={pageId} region="body" />}
         <OverflowPlugin onOverflow={handleOverflow} />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>

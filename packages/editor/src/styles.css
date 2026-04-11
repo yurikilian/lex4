@@ -2,27 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] {
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] {
   background-color: rgb(191 219 254) !important;
   caret-color: transparent;
   color: rgb(30 64 175) !important;
 }
 
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] p,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] li,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] h1,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] h2,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] h3,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] h4,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] h5,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] h6,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] blockquote,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] pre,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] code,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] span,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] strong,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] em,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] u,
-.lex4-editor[data-global-selection-active="true"] [contenteditable="true"] s {
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] p,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] li,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] h1,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] h2,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] h3,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] h4,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] h5,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] h6,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] blockquote,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] pre,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] code,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] span,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] strong,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] em,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] u,
+.lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] s {
   color: inherit !important;
 }

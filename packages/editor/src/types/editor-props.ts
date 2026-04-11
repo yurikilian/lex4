@@ -17,6 +17,9 @@ export interface Lex4EditorProps {
   /** Whether the editor is read-only */
   readOnly?: boolean;
 
+  /** Capture undo/redo shortcuts at the window level, even when focus is outside the document. Defaults to true. */
+  captureHistoryShortcutsOnWindow?: boolean;
+
   /** Additional CSS class for the editor root element */
   className?: string;
 }

@@ -92,12 +92,38 @@ export function documentReducer(state: Lex4Document, action: DocumentAction): Le
       };
     }
 
+    case 'UPDATE_PAGE_HEADER_CONTENT': {
+      const clamped = Math.min(action.height, MAX_HEADER_HEIGHT_PX);
+      debug('reducer', `UPDATE_PAGE_HEADER_CONTENT id=${shortId(action.pageId)} height=${clamped}`);
+      return {
+        ...state,
+        pages: state.pages.map(p =>
+          p.id === action.pageId
+            ? { ...p, headerState: action.headerState, headerHeight: clamped }
+            : p,
+        ),
+      };
+    }
+
     case 'UPDATE_PAGE_FOOTER': {
       debug('reducer', `UPDATE_PAGE_FOOTER id=${shortId(action.pageId)}`);
       return {
         ...state,
         pages: state.pages.map(p =>
           p.id === action.pageId ? { ...p, footerState: action.footerState } : p,
+        ),
+      };
+    }
+
+    case 'UPDATE_PAGE_FOOTER_CONTENT': {
+      const clamped = Math.min(action.height, MAX_FOOTER_HEIGHT_PX);
+      debug('reducer', `UPDATE_PAGE_FOOTER_CONTENT id=${shortId(action.pageId)} height=${clamped}`);
+      return {
+        ...state,
+        pages: state.pages.map(p =>
+          p.id === action.pageId
+            ? { ...p, footerState: action.footerState, footerHeight: clamped }
+            : p,
         ),
       };
     }
