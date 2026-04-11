@@ -26,6 +26,30 @@ describe('documentReducer', () => {
       expect(next.pages[0].id).toBe(firstId);
       expect(next.pages[1].id).not.toBe(firstId);
     });
+
+    it('accepts a pre-built page with body content', () => {
+      const state = docWithPages(1);
+      const customPage = createEmptyPage();
+      customPage.bodyState = {
+        root: {
+          children: [{ type: 'paragraph', children: [], direction: null, format: '', indent: 0, version: 1, textFormat: 0, textStyle: '' }],
+          direction: null, format: '', indent: 0, type: 'root', version: 1,
+        },
+      } as any;
+
+      const next = documentReducer(state, { type: 'ADD_PAGE', page: customPage });
+      expect(next.pages).toHaveLength(2);
+      expect(next.pages[1].id).toBe(customPage.id);
+      expect(next.pages[1].bodyState).toBe(customPage.bodyState);
+    });
+
+    it('inserts pre-built page at specified index', () => {
+      const state = docWithPages(3);
+      const customPage = createEmptyPage();
+      const next = documentReducer(state, { type: 'ADD_PAGE', page: customPage, afterIndex: 0 });
+      expect(next.pages).toHaveLength(4);
+      expect(next.pages[1].id).toBe(customPage.id);
+    });
   });
 
   describe('REMOVE_PAGE', () => {
