@@ -32,7 +32,6 @@ interface PageBodyProps {
  */
 export const PageBody: React.FC<PageBodyProps> = ({
   pageId,
-  bodyHeight,
   onBodyChange,
   onOverflow,
   onFocus,
@@ -95,7 +94,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
         <TabIndentPlugin />
         <PastePlugin />
         <ActiveEditorPlugin onFocus={handleEditorFocus} />
-        <OverflowPlugin bodyHeight={bodyHeight} onOverflow={handleOverflow} />
+        <OverflowPlugin onOverflow={handleOverflow} />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
     </div>

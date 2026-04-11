@@ -3,8 +3,6 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getRoot, type SerializedEditorState, type SerializedLexicalNode } from 'lexical';
 
 interface OverflowPluginProps {
-  /** Available height for this page body (px) */
-  bodyHeight: number;
   /** Called with the serialized overflow content that must go to the next page */
   onOverflow: (overflowContent: SerializedEditorState) => void;
 }
@@ -13,53 +11,56 @@ interface OverflowPluginProps {
  * OverflowPlugin — Detects content overflow inside a Lexical editor
  * and automatically extracts overflow nodes.
  *
- * This runs inside each PageBody's LexicalComposer. When the rendered
- * content exceeds the available bodyHeight, it:
- * 1. Identifies which root children overflow the boundary
- * 2. Removes them from the editor
- * 3. Serializes them and calls onOverflow() with the overflow content
+ * Uses the actual rendered container height (from CSS flexbox) rather
+ * than a prop, so it correctly handles header/footer size changes.
  *
- * The parent component then creates/updates the next page with that content.
+ * Observes both the root element (content changes) and its container
+ * (layout changes from header/footer resizing) to catch all overflow.
  */
 export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
-  bodyHeight,
   onOverflow,
 }) => {
   const [editor] = useLexicalComposerContext();
   const processingRef = useRef(false);
   const onOverflowRef = useRef(onOverflow);
   onOverflowRef.current = onOverflow;
-  const bodyHeightRef = useRef(bodyHeight);
-  bodyHeightRef.current = bodyHeight;
 
   useEffect(() => {
     const rootElement = editor.getRootElement();
     if (!rootElement) return;
 
+    const container = rootElement.closest('.lex4-page-body') as HTMLElement | null;
+    if (!container) return;
+
     const checkOverflow = () => {
       if (processingRef.current) return;
 
-      const root = rootElement;
-      if (root.scrollHeight <= bodyHeightRef.current + 2) return; // +2 for sub-pixel
+      // Use the actual rendered container height — this correctly reflects
+      // the flex layout including header/footer space changes
+      const availableHeight = container.clientHeight;
+      if (availableHeight <= 0) return;
+
+      if (rootElement.scrollHeight <= availableHeight + 2) return; // +2 for sub-pixel
 
       processingRef.current = true;
 
       // Find the split point by measuring DOM children
-      const children = Array.from(root.children) as HTMLElement[];
+      const children = Array.from(rootElement.children) as HTMLElement[];
       if (children.length <= 1) {
         processingRef.current = false;
         return;
       }
 
-      let cumulativeHeight = 0;
+      // Measure relative to the container top for accuracy
+      const containerTop = container.getBoundingClientRect().top;
       let splitIndex = children.length;
 
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
         const rect = child.getBoundingClientRect();
-        cumulativeHeight += rect.height;
+        const bottomRelative = rect.bottom - containerTop;
 
-        if (cumulativeHeight > bodyHeightRef.current && i > 0) {
+        if (bottomRelative > availableHeight && i > 0) {
           splitIndex = i;
           break;
         }
@@ -81,7 +82,6 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
             return;
           }
 
-          // Get the overflow nodes' serialized form
           const overflowNodes: SerializedLexicalNode[] = [];
           const toRemove = allChildren.slice(splitIndex);
 
@@ -89,12 +89,10 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
             overflowNodes.push(node.exportJSON());
           }
 
-          // Remove overflow nodes from this editor
           for (const node of toRemove) {
             node.remove();
           }
 
-          // Build a serialized state for the overflow content
           const overflowState: SerializedEditorState = {
             root: {
               children: overflowNodes,
@@ -106,7 +104,6 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
             },
           } as SerializedEditorState;
 
-          // Notify parent (schedule after this update completes)
           setTimeout(() => {
             onOverflowRef.current(overflowState);
             processingRef.current = false;
@@ -116,16 +113,16 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       );
     };
 
-    // Watch for content changes that might cause overflow
     const observer = new ResizeObserver(() => {
-      // Debounce slightly to batch rapid changes
       requestAnimationFrame(checkOverflow);
     });
-    observer.observe(rootElement);
 
-    // Also check after editor updates
+    // Watch the root element for content size changes
+    observer.observe(rootElement);
+    // Watch the container for layout changes (header/footer resize)
+    observer.observe(container);
+
     const unregister = editor.registerUpdateListener(({ tags }) => {
-      // Don't re-trigger on our own overflow-split updates
       if (tags.has('overflow-split')) return;
       requestAnimationFrame(checkOverflow);
     });

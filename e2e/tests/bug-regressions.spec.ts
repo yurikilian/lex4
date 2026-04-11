@@ -258,4 +258,58 @@ test.describe('Bug Fix Regressions', () => {
     // Page should still be stable
     await expect(page.getByTestId('page-0')).toBeVisible();
   });
+
+  // ───── Bug 4: Mid-page edits and header/footer growth must trigger overflow ─────
+
+  test('adding enters mid-page pushes content to next page', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    // Fill page with enough lines to be nearly full
+    for (let i = 0; i < 35; i++) {
+      await page.keyboard.type(`Line ${i + 1}`);
+      await page.keyboard.press('Enter');
+    }
+    await page.waitForTimeout(2000);
+
+    // Now go back to the top and insert several blank lines
+    await page.keyboard.press('Meta+Home');
+    for (let i = 0; i < 15; i++) {
+      await page.keyboard.press('Enter');
+    }
+    await page.waitForTimeout(2000);
+
+    // Overflow should have created a second page
+    const pages = page.locator('[data-page-id]');
+    const count = await pages.count();
+    expect(count).toBeGreaterThan(1);
+  });
+
+  test('expanding header pushes body overflow to next page', async ({ page }) => {
+    // Enable header/footer
+    await page.getByTestId('header-footer-switch').click();
+    await page.waitForSelector('[data-testid^="page-header-"]');
+
+    // Fill body with content
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+    for (let i = 0; i < 35; i++) {
+      await page.keyboard.type(`Line ${i + 1}`);
+      await page.keyboard.press('Enter');
+    }
+    await page.waitForTimeout(2000);
+
+    // Now expand the header with enters
+    const header = page.locator('[data-testid^="page-header-"]').first();
+    await header.click();
+    for (let i = 0; i < 8; i++) {
+      await page.keyboard.press('Enter');
+    }
+    await page.waitForTimeout(2000);
+
+    // Body should have overflowed to create another page
+    const pages = page.locator('[data-page-id]');
+    const count = await pages.count();
+    expect(count).toBeGreaterThan(1);
+  });
 });
