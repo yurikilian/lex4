@@ -1,5 +1,6 @@
-import React, { useReducer, useState, useCallback, useEffect } from 'react';
+import React, { useReducer, useState, useCallback, useEffect, useRef } from 'react';
 import type { Lex4Document } from '../types/document';
+import type { LexicalEditor } from 'lexical';
 import { createEmptyDocument } from '../types/document';
 import { DocumentContext } from './document-context';
 import { documentReducer } from './document-reducer';
@@ -22,9 +23,16 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
   const [activePageId, setActivePageIdRaw] = useState<string | null>(
     initialDocument?.pages[0]?.id ?? null,
   );
+  const activeEditorRef = useRef<LexicalEditor | null>(null);
+  const [, forceUpdate] = useState(0);
 
   const setActivePageId = useCallback((id: string | null) => {
     setActivePageIdRaw(id);
+  }, []);
+
+  const setActiveEditor = useCallback((editor: LexicalEditor | null) => {
+    activeEditorRef.current = editor;
+    forceUpdate(n => n + 1);
   }, []);
 
   useEffect(() => {
@@ -32,7 +40,14 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
   }, [document, onDocumentChange]);
 
   return (
-    <DocumentContext.Provider value={{ document, dispatch, activePageId, setActivePageId }}>
+    <DocumentContext.Provider value={{
+      document,
+      dispatch,
+      activePageId,
+      setActivePageId,
+      activeEditor: activeEditorRef.current,
+      setActiveEditor,
+    }}>
       {children}
     </DocumentContext.Provider>
   );

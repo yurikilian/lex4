@@ -5,13 +5,12 @@ import { useDocument } from '../context/document-context';
 import { PageBody } from './PageBody';
 import { PageHeader } from './PageHeader';
 import { PageFooter } from './PageFooter';
-import type { SerializedEditorState } from 'lexical';
+import type { LexicalEditor, SerializedEditorState } from 'lexical';
 
 interface PageViewProps {
   pageId: string;
   pageIndex: number;
-  onOverflow?: () => void;
-  onUnderflow?: () => void;
+  onOverflow?: (overflowContent: SerializedEditorState) => void;
 }
 
 /**
@@ -19,9 +18,10 @@ interface PageViewProps {
  *
  * Dimensions are always exactly A4 (794 × 1123 px).
  * Header and footer are only rendered when the global toggle is on.
+ * Uses CSS flexbox: header/footer are flex-shrink-0, body is flex-1.
  */
-export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex, onOverflow, onUnderflow }) => {
-  const { document, dispatch, setActivePageId } = useDocument();
+export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex, onOverflow }) => {
+  const { document, dispatch, setActivePageId, setActiveEditor } = useDocument();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
 
@@ -34,10 +34,8 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
   const handleBodyChange = useCallback(
     (bodyState: SerializedEditorState) => {
       dispatch({ type: 'UPDATE_PAGE_BODY', pageId, bodyState });
-      // After content change, check if we can pull content from next page
-      onUnderflow?.();
     },
-    [dispatch, pageId, onUnderflow],
+    [dispatch, pageId],
   );
 
   const handleHeaderChange = useCallback(
@@ -72,9 +70,20 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
     setActivePageId(pageId);
   }, [setActivePageId, pageId]);
 
-  const handleOverflow = useCallback(() => {
-    onOverflow?.();
-  }, [onOverflow]);
+  const handleEditorFocus = useCallback(
+    (editor: LexicalEditor) => {
+      setActivePageId(pageId);
+      setActiveEditor(editor);
+    },
+    [setActivePageId, setActiveEditor, pageId],
+  );
+
+  const handleOverflow = useCallback(
+    (overflowContent: SerializedEditorState) => {
+      onOverflow?.(overflowContent);
+    },
+    [onOverflow],
+  );
 
   return (
     <div
@@ -101,6 +110,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({ pageId, pageIndex
         onBodyChange={handleBodyChange}
         onOverflow={handleOverflow}
         onFocus={handleFocus}
+        onEditorFocus={handleEditorFocus}
       />
 
       {showHeaderFooter && (

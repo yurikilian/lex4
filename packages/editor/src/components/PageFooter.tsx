@@ -51,7 +51,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
 
   return (
     <div
-      className="lex4-page-footer border-t border-dashed border-gray-300 mt-auto"
+      className="lex4-page-footer border-t border-dashed border-gray-300 relative flex-shrink-0"
       style={{ maxHeight: MAX_FOOTER_HEIGHT_PX, overflow: 'hidden' }}
       data-testid={`page-footer-${pageId}`}
     >
@@ -64,7 +64,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
             />
           }
           placeholder={
-            <div className="absolute text-gray-400 pointer-events-none select-none p-2 text-sm">
+            <div className="absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 text-sm">
               Footer
             </div>
           }

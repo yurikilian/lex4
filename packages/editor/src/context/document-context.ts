@@ -1,9 +1,10 @@
 import { createContext, useContext } from 'react';
 import type { Lex4Document } from '../types/document';
+import type { LexicalEditor } from 'lexical';
 
 /** All actions the document reducer can handle */
 export type DocumentAction =
-  | { type: 'ADD_PAGE'; afterIndex?: number }
+  | { type: 'ADD_PAGE'; afterIndex?: number; page?: import('../types/document').PageState }
   | { type: 'REMOVE_PAGE'; pageId: string }
   | { type: 'UPDATE_PAGE_BODY'; pageId: string; bodyState: import('lexical').SerializedEditorState | null }
   | { type: 'UPDATE_PAGE_HEADER'; pageId: string; headerState: import('lexical').SerializedEditorState | null }
@@ -25,6 +26,8 @@ export interface DocumentContextValue {
   dispatch: React.Dispatch<DocumentAction>;
   activePageId: string | null;
   setActivePageId: (id: string | null) => void;
+  activeEditor: LexicalEditor | null;
+  setActiveEditor: (editor: LexicalEditor | null) => void;
 }
 
 export const DocumentContext = createContext<DocumentContextValue | null>(null);

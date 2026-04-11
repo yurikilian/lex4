@@ -52,7 +52,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   return (
     <div
-      className="lex4-page-header border-b border-dashed border-gray-300"
+      className="lex4-page-header border-b border-dashed border-gray-300 relative flex-shrink-0"
       style={{ maxHeight: MAX_HEADER_HEIGHT_PX, overflow: 'hidden' }}
       data-testid={`page-header-${pageId}`}
     >
@@ -65,7 +65,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             />
           }
           placeholder={
-            <div className="absolute text-gray-400 pointer-events-none select-none p-2 text-sm">
+            <div className="absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 text-sm">
               Header
             </div>
           }

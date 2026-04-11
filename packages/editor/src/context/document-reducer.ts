@@ -10,7 +10,7 @@ import { MAX_HEADER_HEIGHT_PX, MAX_FOOTER_HEIGHT_PX } from '../constants/dimensi
 export function documentReducer(state: Lex4Document, action: DocumentAction): Lex4Document {
   switch (action.type) {
     case 'ADD_PAGE': {
-      const newPage = createEmptyPage();
+      const newPage = action.page ?? createEmptyPage();
       const pages = [...state.pages];
       const insertAt = action.afterIndex !== undefined ? action.afterIndex + 1 : pages.length;
       pages.splice(insertAt, 0, newPage);

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -6,26 +6,29 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import type { EditorState, SerializedEditorState } from 'lexical';
+import type { EditorState, LexicalEditor, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { TabIndentPlugin } from '../lexical/plugins/tab-indent-plugin';
 import { PastePlugin } from '../lexical/plugins/paste-plugin';
+import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
+import { OverflowPlugin } from '../lexical/plugins/overflow-plugin';
 
 interface PageBodyProps {
   pageId: string;
   bodyHeight: number;
   onBodyChange?: (state: SerializedEditorState) => void;
-  onOverflow?: () => void;
+  onOverflow?: (overflowContent: SerializedEditorState) => void;
   onFocus?: () => void;
+  onEditorFocus?: (editor: LexicalEditor) => void;
   readOnly?: boolean;
 }
 
 /**
  * PageBody — Lexical editor instance for one page's body content.
  *
- * Each page gets its own Lexical editor. The pagination engine
- * coordinates content distribution across pages.
+ * Each page gets its own Lexical editor. The OverflowPlugin
+ * handles splitting content when it exceeds bodyHeight.
  */
 export const PageBody: React.FC<PageBodyProps> = ({
   pageId,
@@ -33,6 +36,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
   onBodyChange,
   onOverflow,
   onFocus,
+  onEditorFocus,
   readOnly = false,
 }) => {
   const config = useMemo(
@@ -43,8 +47,6 @@ export const PageBody: React.FC<PageBodyProps> = ({
     [pageId, readOnly],
   );
 
-  const contentRef = useRef<HTMLDivElement>(null);
-
   const handleChange = useCallback(
     (editorState: EditorState) => {
       const serialized = editorState.toJSON();
@@ -53,24 +55,24 @@ export const PageBody: React.FC<PageBodyProps> = ({
     [onBodyChange],
   );
 
-  // Overflow detection via ResizeObserver
-  useEffect(() => {
-    const el = contentRef.current;
-    if (!el || !onOverflow) return;
+  const handleOverflow = useCallback(
+    (overflowContent: SerializedEditorState) => {
+      onOverflow?.(overflowContent);
+    },
+    [onOverflow],
+  );
 
-    const observer = new ResizeObserver(() => {
-      if (el.scrollHeight > bodyHeight) {
-        onOverflow();
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [bodyHeight, onOverflow]);
+  const handleEditorFocus = useCallback(
+    (editor: LexicalEditor) => {
+      onEditorFocus?.(editor);
+    },
+    [onEditorFocus],
+  );
 
   return (
     <div
-      className="lex4-page-body relative"
-      style={{ height: bodyHeight, overflow: 'hidden' }}
+      className="lex4-page-body flex-1 min-h-0 relative"
+      style={{ overflow: 'hidden' }}
       data-testid={`page-body-${pageId}`}
       onFocus={onFocus}
     >
@@ -78,9 +80,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
         <RichTextPlugin
           contentEditable={
             <ContentEditable
-              ref={contentRef}
-              className="outline-none min-h-full p-0"
-              style={{ minHeight: bodyHeight }}
+              className="outline-none h-full p-0"
             />
           }
           placeholder={
@@ -93,7 +93,9 @@ export const PageBody: React.FC<PageBodyProps> = ({
         <HistoryPlugin />
         <ListPlugin />
         <TabIndentPlugin />
-        <PastePlugin onPasteComplete={onOverflow} />
+        <PastePlugin />
+        <ActiveEditorPlugin onFocus={handleEditorFocus} />
+        <OverflowPlugin bodyHeight={bodyHeight} onOverflow={handleOverflow} />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
     </div>
