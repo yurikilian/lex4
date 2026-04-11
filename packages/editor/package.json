@@ -1,0 +1,59 @@
+{
+  "name": "@lex4/editor",
+  "version": "0.1.0",
+  "description": "A Microsoft Word-like paginated document editor — reusable React library built on Meta Lexical",
+  "type": "module",
+  "main": "./dist/lex4-editor.cjs",
+  "module": "./dist/lex4-editor.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/lex4-editor.js",
+      "require": "./dist/lex4-editor.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "lexical": "^0.22.0",
+    "@lexical/react": "^0.22.0",
+    "@lexical/list": "^0.22.0",
+    "@lexical/rich-text": "^0.22.0",
+    "@lexical/selection": "^0.22.0",
+    "@lexical/utils": "^0.22.0",
+    "@lexical/history": "^0.22.0",
+    "@lexical/clipboard": "^0.22.0",
+    "@lexical/html": "^0.22.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.0.0",
+    "vitest": "^2.0.0",
+    "jsdom": "^25.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.0.0"
+  }
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Remove Co-authored-by Copilot trailers from commit messages
+sed -i '' '/^Co-authored-by: Copilot/d' "$1"

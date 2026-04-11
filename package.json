@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "lex4-workspace",
+  "scripts": {
+    "dev": "pnpm --filter demo dev",
+    "build": "pnpm --filter @lex4/editor build",
+    "test": "pnpm --filter @lex4/editor test",
+    "test:e2e": "pnpm --filter e2e test",
+    "lint": "pnpm -r lint",
+    "prepare": "git config core.hooksPath hooks"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9"
+  }
+}

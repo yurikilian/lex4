@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test results
+test-results/
+playwright-report/
+coverage/
+
+# NOTE: Do NOT ignore *.db or *.sqlite files.
+# The project memory database (lex4-memory.db) is an intentional
+# committed artifact for development continuity.
