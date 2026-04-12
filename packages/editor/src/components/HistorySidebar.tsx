@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Trash2 } from 'lucide-react';
 import { useDocument } from '../context/document-context';
 import { EditorSidebar } from './EditorSidebar';
 
@@ -14,6 +14,7 @@ function formatTimestamp(timestamp: string): string {
 
 export const HistorySidebar: React.FC = () => {
   const {
+    clearHistory,
     historyEntries,
     historyCursor,
     historySidebarOpen,
@@ -23,12 +24,28 @@ export const HistorySidebar: React.FC = () => {
 
   const visibleEntries = historyEntries.slice().reverse();
 
+  const headerActions = (
+    <button
+      type="button"
+      title="Clear History"
+      aria-label="Clear History"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => clearHistory('manual')}
+      className="flex h-6 w-6 items-center justify-center rounded text-gray-400
+                 transition-colors hover:bg-gray-100 hover:text-gray-600"
+      data-testid="clear-history"
+    >
+      <Trash2 size={13} />
+    </button>
+  );
+
   return (
     <EditorSidebar
       title="History"
       subtitle="Word-style session history (last 100 actions)"
       open={historySidebarOpen}
       onClose={() => setHistorySidebarOpen(false)}
+      headerActions={headerActions}
     >
       {visibleEntries.length === 0 ? (
         <div

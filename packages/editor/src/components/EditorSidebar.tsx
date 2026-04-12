@@ -6,6 +6,7 @@ interface EditorSidebarProps {
   subtitle?: string;
   open: boolean;
   onClose?: () => void;
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -14,6 +15,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   subtitle,
   open,
   onClose,
+  headerActions,
   children,
 }) => {
   if (!open) {
@@ -32,18 +34,21 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>
           )}
         </div>
-        {onClose && (
-          <button
-            type="button"
-            className="flex h-6 w-6 items-center justify-center rounded-sm text-gray-400
-                       transition-colors hover:bg-gray-100 hover:text-gray-600"
-            data-testid="close-editor-sidebar"
-            onClick={onClose}
-            aria-label="Close sidebar"
-          >
-            <X size={14} />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {headerActions}
+          {onClose && (
+            <button
+              type="button"
+              className="flex h-6 w-6 items-center justify-center rounded text-gray-400
+                         transition-colors hover:bg-gray-100 hover:text-gray-600"
+              data-testid="close-editor-sidebar"
+              onClick={onClose}
+              aria-label="Close sidebar"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
         {children}

@@ -15,8 +15,7 @@ import {
   List,
   IndentIncrease,
   IndentDecrease,
-  Clock,
-  Trash2,
+  PanelRight,
 } from 'lucide-react';
 import { useDocument } from '../context/document-context';
 import { HeaderFooterToggle } from './HeaderFooterToggle';
@@ -36,7 +35,6 @@ export const Toolbar: React.FC = () => {
     activeEditor,
     canRedo,
     canUndo,
-    clearHistory,
     editorRegistry,
     globalSelectionActive,
     historySidebarOpen,
@@ -225,130 +223,129 @@ export const Toolbar: React.FC = () => {
 
   return (
     <div
-      className="lex4-toolbar sticky top-0 z-10 bg-white border-b border-gray-200 px-3 py-1.5
-                 flex flex-wrap items-center gap-1"
+      className="lex4-toolbar sticky top-0 z-10 bg-white border-b border-gray-200"
       data-testid="toolbar"
     >
-      <div className="flex items-center gap-0.5" data-testid="history-controls">
-        <ToolbarIconButton
-          title="Undo"
-          testId="btn-undo"
-          disabled={!canUndo}
-          onClick={undo}
+      <div className="flex items-center gap-1 px-2 py-1.5">
+        <div className="flex items-center gap-0.5" data-testid="history-controls">
+          <ToolbarIconButton
+            title="Undo"
+            testId="btn-undo"
+            disabled={!canUndo}
+            onClick={undo}
+          >
+            <Undo2 size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton
+            title="Redo"
+            testId="btn-redo"
+            disabled={!canRedo}
+            onClick={redo}
+          >
+            <Redo2 size={15} />
+          </ToolbarIconButton>
+        </div>
+
+        <Divider />
+
+        <select
+          className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
+                     focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          data-testid="font-selector"
+          defaultValue="Arial"
+          onChange={handleFontChange}
         >
-          <Undo2 size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton
-          title="Redo"
-          testId="btn-redo"
-          disabled={!canRedo}
-          onClick={redo}
-        >
-          <Redo2 size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton
-          title="History"
-          testId="toggle-history-sidebar"
-          active={historySidebarOpen}
-          onClick={() => setHistorySidebarOpen(!historySidebarOpen)}
-        >
-          <Clock size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton
-          title="Clear History"
-          testId="clear-history"
-          onClick={() => clearHistory('manual')}
-        >
-          <Trash2 size={15} />
-        </ToolbarIconButton>
+          {SUPPORTED_FONTS.map(font => (
+            <option key={font} value={font} style={{ fontFamily: font }}>
+              {font}
+            </option>
+          ))}
+        </select>
+
+        <Divider />
+
+        <div className="flex items-center gap-0.5" data-testid="format-group">
+          <ToolbarIconButton title="Bold (Ctrl+B)" testId="btn-bold" onClick={handleBold}>
+            <Bold size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Italic (Ctrl+I)" testId="btn-italic" onClick={handleItalic}>
+            <Italic size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Underline (Ctrl+U)" testId="btn-underline" onClick={handleUnderline}>
+            <Underline size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Strikethrough" testId="btn-strike" onClick={handleStrikethrough}>
+            <Strikethrough size={15} />
+          </ToolbarIconButton>
+        </div>
+
+        <Divider />
+
+        <div className="flex items-center gap-0.5" data-testid="align-group">
+          <ToolbarIconButton title="Align Left" testId="btn-align-left" onClick={handleAlignLeft}>
+            <AlignLeft size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Align Center" testId="btn-align-center" onClick={handleAlignCenter}>
+            <AlignCenter size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Align Right" testId="btn-align-right" onClick={handleAlignRight}>
+            <AlignRight size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Justify" testId="btn-align-justify" onClick={handleAlignJustify}>
+            <AlignJustify size={15} />
+          </ToolbarIconButton>
+        </div>
+
+        <Divider />
+
+        <div className="flex items-center gap-0.5" data-testid="list-group">
+          <ToolbarIconButton title="Numbered List" testId="btn-list-number" onClick={handleListNumber}>
+            <ListOrdered size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Bullet List" testId="btn-list-bullet" onClick={handleListBullet}>
+            <List size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Indent" testId="btn-indent" onClick={handleIndent}>
+            <IndentIncrease size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title="Outdent" testId="btn-outdent" onClick={handleOutdent}>
+            <IndentDecrease size={15} />
+          </ToolbarIconButton>
+        </div>
+
+        <div className="ml-auto flex items-center gap-1">
+          <HeaderFooterToggle
+            enabled={document.headerFooterEnabled}
+            onToggle={handleToggle}
+          />
+
+          <Divider />
+
+          <ToolbarIconButton
+            title={historySidebarOpen ? 'Close History' : 'Open History'}
+            testId="toggle-history-sidebar"
+            active={historySidebarOpen}
+            onClick={() => setHistorySidebarOpen(!historySidebarOpen)}
+          >
+            <PanelRight size={15} />
+          </ToolbarIconButton>
+        </div>
       </div>
-
-      <Divider />
-
-      <div className="flex items-center gap-0.5" data-testid="format-group">
-        <ToolbarIconButton title="Bold (Ctrl+B)" testId="btn-bold" onClick={handleBold}>
-          <Bold size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Italic (Ctrl+I)" testId="btn-italic" onClick={handleItalic}>
-          <Italic size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Underline (Ctrl+U)" testId="btn-underline" onClick={handleUnderline}>
-          <Underline size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Strikethrough" testId="btn-strike" onClick={handleStrikethrough}>
-          <Strikethrough size={15} />
-        </ToolbarIconButton>
-      </div>
-
-      <Divider />
-
-      <select
-        className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
-                   focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-        data-testid="font-selector"
-        defaultValue="Arial"
-        onChange={handleFontChange}
-      >
-        {SUPPORTED_FONTS.map(font => (
-          <option key={font} value={font} style={{ fontFamily: font }}>
-            {font}
-          </option>
-        ))}
-      </select>
-
-      <Divider />
-
-      <div className="flex items-center gap-0.5" data-testid="align-group">
-        <ToolbarIconButton title="Align Left" testId="btn-align-left" onClick={handleAlignLeft}>
-          <AlignLeft size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Align Center" testId="btn-align-center" onClick={handleAlignCenter}>
-          <AlignCenter size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Align Right" testId="btn-align-right" onClick={handleAlignRight}>
-          <AlignRight size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Justify" testId="btn-align-justify" onClick={handleAlignJustify}>
-          <AlignJustify size={15} />
-        </ToolbarIconButton>
-      </div>
-
-      <Divider />
-
-      <div className="flex items-center gap-0.5" data-testid="list-group">
-        <ToolbarIconButton title="Numbered List" testId="btn-list-number" onClick={handleListNumber}>
-          <ListOrdered size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Bullet List" testId="btn-list-bullet" onClick={handleListBullet}>
-          <List size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Indent" testId="btn-indent" onClick={handleIndent}>
-          <IndentIncrease size={15} />
-        </ToolbarIconButton>
-        <ToolbarIconButton title="Outdent" testId="btn-outdent" onClick={handleOutdent}>
-          <IndentDecrease size={15} />
-        </ToolbarIconButton>
-      </div>
-
-      <Divider />
-
-      <HeaderFooterToggle
-        enabled={document.headerFooterEnabled}
-        onToggle={handleToggle}
-      />
 
       {document.headerFooterEnabled && (
-        <HeaderFooterActions
-          activePageId={activePageId}
-          pageCounterMode={document.pageCounterMode}
-          onPageCounterModeChange={handlePageCounterModeChange}
-          onCopyHeaderToAll={handleCopyHeaderToAll}
-          onCopyFooterToAll={handleCopyFooterToAll}
-          onClearHeader={handleClearHeader}
-          onClearFooter={handleClearFooter}
-          onClearAllHeaders={handleClearAllHeaders}
-          onClearAllFooters={handleClearAllFooters}
-        />
+        <div className="flex items-center gap-1 border-t border-gray-100 bg-gray-50/80 px-2 py-1">
+          <HeaderFooterActions
+            activePageId={activePageId}
+            pageCounterMode={document.pageCounterMode}
+            onPageCounterModeChange={handlePageCounterModeChange}
+            onCopyHeaderToAll={handleCopyHeaderToAll}
+            onCopyFooterToAll={handleCopyFooterToAll}
+            onClearHeader={handleClearHeader}
+            onClearFooter={handleClearFooter}
+            onClearAllHeaders={handleClearAllHeaders}
+            onClearAllFooters={handleClearAllFooters}
+          />
+        </div>
       )}
     </div>
   );
@@ -379,7 +376,7 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
     className={`
-      flex h-7 w-7 items-center justify-center rounded-sm transition-colors
+      flex h-7 w-7 items-center justify-center rounded transition-colors
       ${disabled
         ? 'cursor-not-allowed text-gray-300'
         : active
