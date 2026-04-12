@@ -313,14 +313,31 @@ export const Toolbar: React.FC = () => {
           </ToolbarIconButton>
         </div>
 
-        <div className="ml-auto flex items-center gap-1">
-          <HeaderFooterToggle
-            enabled={document.headerFooterEnabled}
-            onToggle={handleToggle}
-          />
+        <Divider />
 
-          <Divider />
+        <HeaderFooterToggle
+          enabled={document.headerFooterEnabled}
+          onToggle={handleToggle}
+        />
 
+        {document.headerFooterEnabled && (
+          <>
+            <Divider />
+            <HeaderFooterActions
+              activePageId={activePageId}
+              pageCounterMode={document.pageCounterMode}
+              onPageCounterModeChange={handlePageCounterModeChange}
+              onCopyHeaderToAll={handleCopyHeaderToAll}
+              onCopyFooterToAll={handleCopyFooterToAll}
+              onClearHeader={handleClearHeader}
+              onClearFooter={handleClearFooter}
+              onClearAllHeaders={handleClearAllHeaders}
+              onClearAllFooters={handleClearAllFooters}
+            />
+          </>
+        )}
+
+        <div className="ml-auto flex items-center">
           <ToolbarIconButton
             title={historySidebarOpen ? 'Close History' : 'Open History'}
             testId="toggle-history-sidebar"
@@ -331,22 +348,6 @@ export const Toolbar: React.FC = () => {
           </ToolbarIconButton>
         </div>
       </div>
-
-      {document.headerFooterEnabled && (
-        <div className="flex items-center gap-1 border-t border-gray-100 bg-gray-50/80 px-2 py-1">
-          <HeaderFooterActions
-            activePageId={activePageId}
-            pageCounterMode={document.pageCounterMode}
-            onPageCounterModeChange={handlePageCounterModeChange}
-            onCopyHeaderToAll={handleCopyHeaderToAll}
-            onCopyFooterToAll={handleCopyFooterToAll}
-            onClearHeader={handleClearHeader}
-            onClearFooter={handleClearFooter}
-            onClearAllHeaders={handleClearAllHeaders}
-            onClearAllFooters={handleClearAllFooters}
-          />
-        </div>
-      )}
     </div>
   );
 };

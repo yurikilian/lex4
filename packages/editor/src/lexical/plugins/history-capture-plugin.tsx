@@ -95,7 +95,11 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
 
     return editor.registerCommand(
       PASTE_COMMAND,
-      () => {
+      (event: ClipboardEvent) => {
+        const text = event.clipboardData?.getData('text/plain') ?? '';
+        if (text.trim().length === 0) {
+          return false;
+        }
         queueHistoryAction(buildDescriptor('Pasted content'));
         return false;
       },
