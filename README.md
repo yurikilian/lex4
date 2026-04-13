@@ -1,48 +1,170 @@
+<div align="center">
+
 # Lex4
 
-> **Lex** Luthor × Meta **Lex**ical × **A4** rules
+**A paginated A4 document editor for React**
 
-A Microsoft Word-like paginated document editor built as a reusable React library. Every page is a true discrete A4 page — no fake pages, no CSS hacks, no single-editor visual tricks.
+> Meta **Lex**ical × **A4** page rules
 
-## Quick Start
+[![CI](https://github.com/yurikilian/lex4/actions/workflows/ci.yml/badge.svg)](https://github.com/yurikilian/lex4/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@lex4/editor.svg)](https://www.npmjs.com/package/@lex4/editor)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18%2B-61DAFB.svg)](https://react.dev/)
+
+[Live Demo](https://yurikilian.github.io/lex4/) · [npm Package](https://www.npmjs.com/package/@lex4/editor) · [Report Bug](https://github.com/yurikilian/lex4/issues)
+
+</div>
+
+---
+
+A paginated document editor built as a **reusable React library** on top of [Meta Lexical](https://lexical.dev/). Every page is a true discrete A4 page — no fake pages, no CSS hacks, no single-editor visual tricks.
+
+<div align="center">
+
+![Editor with formatted content](docs/screenshots/editor-with-content.png)
+
+</div>
+
+## ✨ Features
+
+- **True A4 pagination** — every page is exactly 794 × 1123 CSS pixels (210mm × 297mm at 96 DPI)
+- **Automatic content flow** — overflow splits at block boundaries, underflow pulls content back
+- **Rich text formatting** — bold, italic, underline, strikethrough, alignment, lists, indentation
+- **Headers & footers** — global toggle with per-page editable regions and page counters
+- **Multiple font families** — Arial, Times New Roman, Courier New, Georgia, Verdana and more
+- **Session history sidebar** — Word-style action timeline with full undo/redo
+- **Serializable document model** — typed AST export/import for backend persistence
+- **Read-only mode** — disable editing while keeping the document viewable
+- **Zero config** — drop in the component and start editing
+
+## 📸 Screenshots
+
+<details>
+<summary><strong>Empty Editor</strong> — clean A4 page ready for editing</summary>
+
+![Empty editor](docs/screenshots/editor-empty.png)
+
+</details>
+
+<details>
+<summary><strong>Headers & Footers</strong> — global toggle with editable regions</summary>
+
+![Editor with headers and footers](docs/screenshots/editor-header-footer.png)
+
+</details>
+
+<details>
+<summary><strong>Multi-Page Document</strong> — automatic content flow across pages</summary>
+
+![Multi-page document](docs/screenshots/editor-multi-page.png)
+
+</details>
+
+<details>
+<summary><strong>Toolbar</strong> — full formatting controls</summary>
+
+![Toolbar](docs/screenshots/toolbar.png)
+
+</details>
+
+## 📦 Installation
 
 ```bash
-pnpm install
-pnpm --filter @lex4/editor build
-pnpm --filter demo dev
+npm install @lex4/editor
+# or
+pnpm add @lex4/editor
+# or
+yarn add @lex4/editor
 ```
 
-### Use in your React app
+### Peer Dependencies
+
+The library requires React 18+ and Lexical 0.22+ as peer dependencies:
+
+```bash
+npm install react react-dom lexical @lexical/react @lexical/rich-text @lexical/list @lexical/history @lexical/selection @lexical/utils @lexical/clipboard @lexical/html
+```
+
+## 🚀 Quick Start
 
 ```tsx
 import { Lex4Editor } from '@lex4/editor';
 import '@lex4/editor/style.css';
 
 function App() {
-  return <Lex4Editor onDocumentChange={(doc) => console.log(doc)} />;
+  return (
+    <Lex4Editor
+      onDocumentChange={(doc) => console.log(doc)}
+    />
+  );
 }
 ```
 
-## Public API
+### With Initial Document
+
+```tsx
+import { Lex4Editor, createEmptyDocument } from '@lex4/editor';
+import '@lex4/editor/style.css';
+
+function App() {
+  const initialDoc = createEmptyDocument();
+
+  return (
+    <Lex4Editor
+      initialDocument={initialDoc}
+      headerFooterEnabled={true}
+      onDocumentChange={(doc) => saveToBackend(doc)}
+      onHeaderFooterToggle={(enabled) => console.log('Headers:', enabled)}
+    />
+  );
+}
+```
+
+### Read-Only Viewer
+
+```tsx
+<Lex4Editor
+  initialDocument={savedDocument}
+  readOnly={true}
+/>
+```
+
+## 📖 API Reference
 
 ### `<Lex4Editor />` Component
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `initialDocument` | `Lex4Document` | Pre-populate the editor |
-| `onDocumentChange` | `(doc: Lex4Document) => void` | Fires on every document change |
-| `headerFooterEnabled` | `boolean` | Initial header/footer state |
-| `readOnly` | `boolean` | Disable editing |
-| `className` | `string` | Additional CSS class |
+The main editor component. Drop it into any React application.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `initialDocument` | `Lex4Document` | Empty document | Pre-populate the editor with saved content |
+| `onDocumentChange` | `(doc: Lex4Document) => void` | — | Called on every document mutation |
+| `headerFooterEnabled` | `boolean` | `false` | Initial header/footer toggle state |
+| `onHeaderFooterToggle` | `(enabled: boolean) => void` | — | Called when the user toggles headers/footers |
+| `readOnly` | `boolean` | `false` | Disable editing (view-only mode) |
+| `captureHistoryShortcutsOnWindow` | `boolean` | `true` | Capture ⌘Z/⌘⇧Z at the window level |
+| `className` | `string` | — | Additional CSS class for the editor root |
 
 ### Types
 
 ```ts
+import type { SerializedEditorState } from 'lexical';
+
+type PageCounterMode = 'none' | 'header' | 'footer' | 'both';
+
+/** Top-level document state — serialize this to persist documents */
 interface Lex4Document {
   pages: PageState[];
   headerFooterEnabled: boolean;
+  pageCounterMode: PageCounterMode;
+  defaultHeaderState: SerializedEditorState | null;
+  defaultFooterState: SerializedEditorState | null;
+  defaultHeaderHeight: number;
+  defaultFooterHeight: number;
 }
 
+/** State for a single page */
 interface PageState {
   id: string;
   bodyState: SerializedEditorState | null;
@@ -50,147 +172,216 @@ interface PageState {
   footerState: SerializedEditorState | null;
   headerHeight: number;
   footerHeight: number;
+  bodySyncVersion: number;
+  headerSyncVersion: number;
+  footerSyncVersion: number;
 }
 ```
+
+### Helper Functions
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `createEmptyDocument()` | `() => Lex4Document` | Creates a blank document with one empty A4 page |
+| `createEmptyPage()` | `(id?: string) => PageState` | Creates a single empty page |
 
 ### Constants
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `A4_WIDTH_PX` | 794 | A4 width at 96 DPI |
-| `A4_HEIGHT_PX` | 1123 | A4 height at 96 DPI |
-| `MAX_HEADER_HEIGHT_PX` | 225 | Max 20% of page height |
-| `MAX_FOOTER_HEIGHT_PX` | 225 | Max 20% of page height |
+| `A4_WIDTH_PX` | `794` | A4 width in CSS pixels at 96 DPI |
+| `A4_HEIGHT_PX` | `1123` | A4 height in CSS pixels at 96 DPI |
+| `A4_WIDTH_MM` | `210` | A4 width in millimeters |
+| `A4_HEIGHT_MM` | `297` | A4 height in millimeters |
+| `MAX_HEADER_HEIGHT_PX` | `225` | Maximum header height (20% of page) |
+| `MAX_FOOTER_HEIGHT_PX` | `225` | Maximum footer height (20% of page) |
 
-## Architecture
+### Hooks
+
+These hooks are exported for advanced use cases where you need to build custom page layouts:
+
+| Hook | Description |
+|------|-------------|
+| `usePagination` | Core pagination logic — overflow/underflow detection and page management |
+| `useOverflowDetection` | Monitors content height and triggers reflow when content exceeds the page body |
+| `useHeaderFooter` | Header/footer state management and chrome template application |
+
+## 🏗️ Architecture
 
 ### Multi-Editor Discrete Page Model
 
-Each page body has its own Lexical editor instance coordinated by unified document state:
+Unlike most web-based "paginated" editors that use a single editor with CSS visual breaks, Lex4 uses a **true multi-editor architecture** where each page body is an independent Lexical editor instance coordinated by a unified document state:
 
-```
-DocumentProvider (React Context)
-├── Toolbar
-└── DocumentView
-    ├── PageView (A4: 794×1123px)
-    │   ├── PageHeader (mini Lexical editor, ≤225px)
-    │   ├── PageBody (full Lexical editor)
-    │   └── PageFooter (mini Lexical editor, ≤225px)
-    ├── PageView
-    │   ├── ...
-    └── ...
-```
+<div align="center">
 
-### Content Flow
+![Component tree](docs/screenshots/arch-component-tree.png)
 
-1. **Overflow**: When content exceeds body height → split at block boundary → push to next page
-2. **Underflow**: When content is deleted → pull blocks back from next page
-3. **Cascade**: Overflow/underflow cascades forward through all subsequent pages
-4. **Toggle**: Header/footer toggle recalculates all body heights → full document reflow
+</div>
+
+### Content Flow Engine
+
+The pagination engine is built as **pure functions** that transform page state arrays:
+
+<div align="center">
+
+![Content flow](docs/screenshots/arch-content-flow.png)
+
+</div>
 
 ### Key Invariants
 
-- Every page is exactly A4 (794 × 1123 px at 96 DPI)
-- No dynamic page heights — every page is always full A4
-- Header/footer never overlap body content
-- Overflow always creates new full A4 pages, never partial pages
-- At least one page always exists
+- Every page is **exactly** A4 (794 × 1123 px at 96 DPI) — no dynamic heights
+- Header and footer regions **never** overlap body content
+- Overflow always creates **full A4 pages**, never partial pages
+- At least **one page** always exists — the document is never empty
+- Blocks move **whole** between pages (no mid-block splitting)
 
-## Failure Prevention
-
-| # | Problem | Solution |
-|---|---------|----------|
-| 1 | Paste doesn't create pages | `engine/reflow.ts` + `paste-plugin.tsx` — mandatory repagination after paste |
-| 2 | Paste distorts headers/footers | `engine/overflow.ts` — body-only reflow, header/footer are reserved zones |
-| 3 | Non-A4 pages created | `constants/dimensions.ts` — all pages use fixed A4_HEIGHT_PX |
-| 4 | Page 1 empty, page 2 full | `engine/paginate.ts` — fill each page to capacity before creating next |
-| 5 | Toggle corrupts layout | `hooks/use-pagination.ts` — full reflow after toggle change |
-| 6 | Dev context lost | `packages/memory/` — SQLite DB committed to repo |
-| 7 | Not reusable | `src/index.ts` — clean public API, Vite library build mode |
-| 8 | Tests only at end | 68 unit tests + 25 E2E tests built alongside features |
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 lex4/
 ├── packages/
-│   ├── editor/           # The reusable React library
-│   │   ├── src/
-│   │   │   ├── components/   # React components
-│   │   │   ├── constants/    # A4 dimensions, layout math
-│   │   │   ├── context/      # DocumentProvider + reducer
-│   │   │   ├── engine/       # Pagination logic (pure functions)
-│   │   │   ├── hooks/        # usePagination, useOverflowDetection
-│   │   │   ├── lexical/      # Editor config, plugins, commands
-│   │   │   ├── types/        # TypeScript interfaces
-│   │   │   └── utils/        # Editor state manipulation
-│   │   └── dist/             # Built library output
-│   └── memory/           # SQLite project memory (dev tool)
-├── demo/                 # Development harness app
-├── e2e/                  # Playwright E2E tests
-└── hooks/                # Git hooks
+│   └── editor/               # @lex4/editor — the publishable library
+│       ├── src/
+│       │   ├── components/   # React components (Lex4Editor, PageView, Toolbar, etc.)
+│       │   ├── constants/    # A4 dimensions, layout math
+│       │   ├── context/      # DocumentProvider, document reducer, actions
+│       │   ├── engine/       # Pagination logic — pure functions (reflow, overflow, paginate)
+│       │   ├── hooks/        # usePagination, useOverflowDetection, useHeaderFooter
+│       │   ├── lexical/      # Editor config, plugins (paste, history), custom commands
+│       │   ├── types/        # TypeScript interfaces (Lex4Document, PageState, etc.)
+│       │   └── utils/        # Editor state manipulation helpers
+│       └── dist/             # Built output (ESM + CJS + types + CSS)
+├── demo/                     # Demo app (deployed to GitHub Pages)
+├── e2e/                      # Playwright end-to-end tests
+├── .github/workflows/        # CI, npm publish, GitHub Pages deployment
+└── docs/screenshots/         # Auto-generated screenshots for README
 ```
 
-## Development
+## 🛠️ Development
+
+### Prerequisites
+
+- **Node.js** ≥ 18
+- **pnpm** ≥ 9
+
+### Setup
 
 ```bash
+# Clone the repo
+git clone https://github.com/yurikilian/lex4.git
+cd lex4
+
 # Install dependencies
 pnpm install
 
-# Run unit tests
-pnpm --filter @lex4/editor test
+# Build the library
+pnpm build
 
-# Run E2E tests (needs Playwright browsers)
-cd e2e && npx playwright install chromium
-pnpm --filter e2e test
-
-# Start demo app
-pnpm --filter demo dev
-
-# Build library
-pnpm --filter @lex4/editor build
-
-# Type check
-pnpm --filter @lex4/editor lint
+# Start the demo app at http://localhost:3000
+pnpm dev
 ```
 
-### Git Hooks
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start the demo app dev server |
+| `pnpm build` | Build the `@lex4/editor` library |
+| `pnpm test` | Run unit tests (Vitest) |
+| `pnpm test:e2e` | Run E2E tests (Playwright) |
+| `pnpm lint` | Type-check all packages |
+
+### Running E2E Tests
 
 ```bash
-git config core.hooksPath hooks
+# Install Playwright browsers (first time only)
+pnpm --filter e2e exec playwright install chromium
+
+# Run all E2E tests
+pnpm test:e2e
+
+# Run with headed browser
+pnpm --filter e2e test:headed
+
+# Run with Playwright UI
+pnpm --filter e2e test:ui
 ```
 
-The `commit-msg` hook strips the Co-authored-by Copilot trailer from commit messages.
+### Test Suite
 
-### Project Memory
+| Category | Framework | Count | Description |
+|----------|-----------|-------|-------------|
+| Unit | Vitest | 89 | Engine logic, reducers, utilities, component rendering |
+| E2E | Playwright | 80 | Full user flows — typing, formatting, pagination, header/footer, history |
 
-```bash
-# List memory entries
-pnpm --filter @lex4/memory cli list
+## 🔧 Build & Bundle
 
-# Add a memory entry
-pnpm --filter @lex4/memory cli add --type=note --title="..." --content="..."
+The library is built with **Vite in library mode**, producing:
 
-# Search entries
-pnpm --filter @lex4/memory cli search "keyword"
-```
+| Output | Path | Description |
+|--------|------|-------------|
+| ESM | `dist/lex4-editor.js` | ES module for modern bundlers |
+| CJS | `dist/lex4-editor.cjs` | CommonJS for Node.js / legacy bundlers |
+| Types | `dist/index.d.ts` | Full TypeScript declarations |
+| CSS | `dist/style.css` | Compiled Tailwind styles |
+| Source maps | `dist/*.map` | Debugging support |
 
-The `lex4-memory.db` file is committed intentionally — it preserves development context across sessions.
+React, ReactDOM, and all `@lexical/*` packages are **externalized** — they are not bundled and must be provided by the consuming application.
 
-## Stack
+## 🚢 Publishing to npm
 
-- **TypeScript** + **React** — type-safe UI
-- **Vite** — library build (ESM + CJS) + dev server
-- **Meta Lexical** — rich text editing engine
-- **Tailwind CSS** — styling
-- **Vitest** — unit tests (68 tests)
-- **Playwright** — E2E tests (25 tests)
-- **better-sqlite3** — project memory (dev-only)
-- **pnpm** — package manager
+Releases are automated via GitHub Actions. To publish a new version:
 
-## Known Limitations
+1. Update the version in `packages/editor/package.json`
+2. Commit and push to `main`
+3. Create a [GitHub Release](https://github.com/yurikilian/lex4/releases/new) with a tag matching the version (e.g. `v0.2.0`)
+4. The publish workflow runs CI, then publishes to npm with provenance
 
-1. **No mid-block splitting** — blocks move whole between pages
-2. **Heuristic pagination** — initial block height estimation (24px/line), corrected by ResizeObserver
-3. **No collaborative editing** — out of scope
-4. **No table support** — out of scope
+> **Note:** You need to add an `NPM_TOKEN` secret to the repository settings.
+
+## 🌐 Demo Deployment
+
+The demo app is automatically deployed to **GitHub Pages** on every push to `main`:
+
+🔗 **[https://yurikilian.github.io/lex4/](https://yurikilian.github.io/lex4/)**
+
+To deploy manually, trigger the workflow from the Actions tab.
+
+## 🧩 Tech Stack
+
+| Technology | Role |
+|------------|------|
+| [TypeScript](https://www.typescriptlang.org/) | Static typing |
+| [React 18](https://react.dev/) | UI framework |
+| [Meta Lexical](https://lexical.dev/) | Rich text editing engine |
+| [Vite](https://vitejs.dev/) | Library build (ESM + CJS) and dev server |
+| [Tailwind CSS](https://tailwindcss.com/) | Styling |
+| [Vitest](https://vitest.dev/) | Unit testing |
+| [Playwright](https://playwright.dev/) | End-to-end testing |
+| [pnpm](https://pnpm.io/) | Package manager (monorepo workspaces) |
+| [GitHub Actions](https://github.com/features/actions) | CI/CD, npm publish, Pages deployment |
+
+## ⚠️ Known Limitations
+
+| Limitation | Details |
+|------------|---------|
+| **No mid-block splitting** | Blocks (paragraphs, list items) move whole between pages. A single block larger than a page body will overflow visually. |
+| **Heuristic initial pagination** | Block heights are estimated at 24px per line until the first render. `ResizeObserver` corrects this on mount. |
+| **No collaborative editing** | The document model is designed for single-user editing. Real-time collaboration (e.g. CRDT/OT) is out of scope. |
+| **No table support** | Tables are not supported as block types. |
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes with clear messages
+4. Push to your fork and open a Pull Request
+
+Please ensure `pnpm lint && pnpm build && pnpm test` pass before submitting.
+
+## 📄 License
+
+[MIT](./LICENSE) © [Yuri Kilian](https://github.com/yurikilian)

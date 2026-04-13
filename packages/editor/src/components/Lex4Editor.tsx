@@ -226,7 +226,7 @@ const EditorChrome: React.FC<{
 /**
  * Lex4Editor — The main public component.
  *
- * A Microsoft Word-like paginated document editor built on Meta Lexical.
+ * A paginated A4 document editor built on Meta Lexical.
  * Each page is a true discrete A4 page with its own Lexical editor instance.
  */
 export const Lex4Editor: React.FC<Lex4EditorProps> = ({

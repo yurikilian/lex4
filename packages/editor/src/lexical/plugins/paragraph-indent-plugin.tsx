@@ -15,7 +15,7 @@ function visitElements(node: ElementNode, callback: (element: ElementNode) => vo
 }
 
 /**
- * Applies Word-like first-line paragraph indentation in the DOM while leaving
+ * Applies first-line paragraph indentation in the DOM while leaving
  * Lexical's serialized paragraph indent levels intact.
  */
 export const ParagraphIndentPlugin: React.FC = () => {

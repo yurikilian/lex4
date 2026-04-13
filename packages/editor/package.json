@@ -1,7 +1,27 @@
 {
   "name": "@lex4/editor",
   "version": "0.1.0",
-  "description": "A Microsoft Word-like paginated document editor — reusable React library built on Meta Lexical",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yurikilian/lex4.git",
+    "directory": "packages/editor"
+  },
+  "homepage": "https://yurikilian.github.io/lex4/",
+  "bugs": {
+    "url": "https://github.com/yurikilian/lex4/issues"
+  },
+  "keywords": [
+    "react",
+    "editor",
+    "lexical",
+    "document",
+    "paginated",
+    "a4",
+    "word-processor",
+    "rich-text"
+  ],
+  "description": "A paginated document editor — reusable React library built on Meta Lexical",
   "type": "module",
   "main": "./dist/lex4-editor.cjs",
   "module": "./dist/lex4-editor.js",

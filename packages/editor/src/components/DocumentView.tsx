@@ -12,7 +12,7 @@ import { debug, shortId } from '../utils/debug';
 /**
  * DocumentView — Scrollable container rendering all pages vertically.
  *
- * Provides the Word-like visual with pages centered on a gray background
+ * Provides the page-layout visual with pages centered on a gray background
  * with gaps between pages. Handles overflow content from pages by
  * creating new pages or prepending to existing next pages.
  */
