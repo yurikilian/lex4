@@ -30,6 +30,6 @@ jobs:
       - name: Copy README & LICENSE into package
         run: cp README.md LICENSE packages/editor/
       - name: Publish to npm
-        run: pnpm --filter @yurikilian/lex4 publish --no-git-checks --access public
+        run: pnpm --filter @yurikilian/lex4 publish --no-git-checks --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

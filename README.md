@@ -22,7 +22,7 @@ A paginated document editor built as a **reusable React library** on top of [Met
 
 <div align="center">
 
-![Editor with formatted content](docs/screenshots/editor-with-content.png)
+![Editor with formatted content](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/editor-with-content.png)
 
 </div>
 
@@ -43,28 +43,28 @@ A paginated document editor built as a **reusable React library** on top of [Met
 <details>
 <summary><strong>Empty Editor</strong> — clean A4 page ready for editing</summary>
 
-![Empty editor](docs/screenshots/editor-empty.png)
+![Empty editor](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/editor-empty.png)
 
 </details>
 
 <details>
 <summary><strong>Headers & Footers</strong> — global toggle with editable regions</summary>
 
-![Editor with headers and footers](docs/screenshots/editor-header-footer.png)
+![Editor with headers and footers](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/editor-header-footer.png)
 
 </details>
 
 <details>
 <summary><strong>Multi-Page Document</strong> — automatic content flow across pages</summary>
 
-![Multi-page document](docs/screenshots/editor-multi-page.png)
+![Multi-page document](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/editor-multi-page.png)
 
 </details>
 
 <details>
 <summary><strong>Toolbar</strong> — full formatting controls</summary>
 
-![Toolbar](docs/screenshots/toolbar.png)
+![Toolbar](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/toolbar.png)
 
 </details>
 
@@ -214,7 +214,7 @@ Unlike most web-based "paginated" editors that use a single editor with CSS visu
 
 <div align="center">
 
-![Component tree](docs/screenshots/arch-component-tree.png)
+![Component tree](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/arch-component-tree.png)
 
 </div>
 
@@ -224,7 +224,7 @@ The pagination engine is built as **pure functions** that transform page state a
 
 <div align="center">
 
-![Content flow](docs/screenshots/arch-content-flow.png)
+![Content flow](https://raw.githubusercontent.com/yurikilian/lex4/main/docs/screenshots/arch-content-flow.png)
 
 </div>
 
