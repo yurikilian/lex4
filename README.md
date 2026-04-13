@@ -35,6 +35,9 @@ A paginated document editor built as a **reusable React library** on top of [Met
 - **Multiple font families** — Arial, Times New Roman, Courier New, Georgia, Verdana and more
 - **Session history sidebar** — Word-style action timeline with full undo/redo
 - **Serializable document model** — typed AST export/import for backend persistence
+- **Document AST export** — clean, versioned, Lexical-independent AST for backend DOCX/PDF rendering
+- **Variables & placeholders** — insert dynamic tokens like `{{customer.name}}` with metadata export
+- **Font size control** — per-selection font size with AST-level preservation
 - **Read-only mode** — disable editing while keeping the document viewable
 - **Zero config** — drop in the component and start editing
 
@@ -143,6 +146,8 @@ The main editor component. Drop it into any React application.
 | `headerFooterEnabled` | `boolean` | `false` | Initial header/footer toggle state |
 | `onHeaderFooterToggle` | `(enabled: boolean) => void` | — | Called when the user toggles headers/footers |
 | `readOnly` | `boolean` | `false` | Disable editing (view-only mode) |
+| `variableDefinitions` | `VariableDefinition[]` | `[]` | Available variables for the variable picker |
+| `onSave` | `(payload: { ast: DocumentAst; json: string }) => void` | — | Called when the host app triggers a save |
 | `captureHistoryShortcutsOnWindow` | `boolean` | `true` | Capture ⌘Z/⌘⇧Z at the window level |
 | `className` | `string` | — | Additional CSS class for the editor root |
 
@@ -205,6 +210,79 @@ These hooks are exported for advanced use cases where you need to build custom p
 | `usePagination` | Core pagination logic — overflow/underflow detection and page management |
 | `useOverflowDetection` | Monitors content height and triggers reflow when content exceeds the page body |
 | `useHeaderFooter` | Header/footer state management and chrome template application |
+
+### Imperative Handle (`Lex4EditorHandle`)
+
+Use a `ref` to access the editor's imperative API:
+
+```tsx
+import { useRef } from 'react';
+import { Lex4Editor, Lex4EditorHandle } from '@yurikilian/lex4';
+
+function App() {
+  const editorRef = useRef<Lex4EditorHandle>(null);
+
+  const handleExport = () => {
+    const ast = editorRef.current?.getDocumentAst();
+    console.log(JSON.stringify(ast, null, 2));
+  };
+
+  return (
+    <>
+      <Lex4Editor ref={editorRef} />
+      <button onClick={handleExport}>Export AST</button>
+    </>
+  );
+}
+```
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `getDocumentAst()` | `() => DocumentAst` | Returns the document as a clean, typed AST |
+| `getDocumentJson()` | `() => string` | Returns the AST serialized as formatted JSON |
+| `insertVariable(key)` | `(key: string) => void` | Inserts a variable at the current cursor position |
+| `refreshVariables(defs)` | `(defs: VariableDefinition[]) => void` | Updates the available variable definitions |
+| `buildSavePayload(opts?)` | `(opts?) => SaveDocumentRequest` | Wraps the AST into a REST-ready payload |
+
+### Document AST
+
+The AST is a **clean, versioned, Lexical-independent** structure designed for backend consumption (e.g., DOCX/PDF generation). It preserves semantic structure, formatting marks, font choices, header/footer layout, A4 page metadata, and variable references.
+
+```ts
+import { serializeDocument, buildSavePayload } from '@yurikilian/lex4';
+
+// From a Lex4Document (e.g., from onDocumentChange)
+const ast = serializeDocument(document, variableDefinitions);
+
+// Wrap for REST API
+const payload = buildSavePayload(ast, {
+  exportTarget: 'pdf',
+  documentId: 'doc-123',
+});
+
+await fetch('/api/documents/export', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(payload),
+});
+```
+
+### Variables
+
+Variables are dynamic placeholders (e.g., `{{customer.name}}`) rendered as non-editable tokens in the editor and preserved as structured nodes in the AST.
+
+```tsx
+import { Lex4Editor, VariableDefinition } from '@yurikilian/lex4';
+
+const variables: VariableDefinition[] = [
+  { key: 'customer.name', label: 'Customer Name', group: 'Customer', valueType: 'string' },
+  { key: 'proposal.date', label: 'Proposal Date', group: 'Proposal', valueType: 'date' },
+];
+
+<Lex4Editor ref={editorRef} variableDefinitions={variables} />
+```
+
+In the exported AST, variables appear as `{ type: "variable", key: "customer.name" }` nodes within block content, and their definitions appear under `metadata.variables`.
 
 ## 🏗️ Architecture
 

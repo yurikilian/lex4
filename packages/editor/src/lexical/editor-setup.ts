@@ -3,6 +3,7 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { ListNode, ListItemNode } from '@lexical/list';
 
 import { lexicalTheme } from './theme';
+import { VariableNode } from '../variables/variable-node';
 
 export type EditorMode = 'body' | 'header' | 'footer';
 
@@ -21,7 +22,7 @@ export function createEditorConfig(
   return {
     namespace,
     theme: lexicalTheme,
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode],
+    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, VariableNode],
     onError: (error: Error) => {
       console.error(`[Lex4 ${mode} editor error]`, error);
     },

@@ -6,3 +6,5 @@ export { PastePlugin } from './paste-plugin';
 export { ActiveEditorPlugin } from './active-editor-plugin';
 export { OverflowPlugin } from './overflow-plugin';
 export { HeightLimitPlugin } from './height-limit-plugin';
+export { FontSizePlugin, applyFontSize, SUPPORTED_FONT_SIZES, DEFAULT_FONT_SIZE } from './font-size-plugin';
+export type { FontSize } from './font-size-plugin';

@@ -16,6 +16,7 @@ import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { OverflowPlugin } from '../lexical/plugins/overflow-plugin';
 import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
 import { PageBoundaryPlugin } from '../lexical/plugins/page-boundary-plugin';
+import { VariablePlugin } from '../variables/variable-plugin';
 import { useDocument } from '../context/document-context';
 import { debug, shortId } from '../utils/debug';
 
@@ -150,6 +151,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
           />
         )}
         <OverflowPlugin onOverflow={handleOverflow} />
+        <VariablePlugin />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
     </div>

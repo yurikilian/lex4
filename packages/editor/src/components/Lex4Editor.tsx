@@ -1,10 +1,15 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import type { Lex4EditorProps } from '../types/editor-props';
+import type { Lex4EditorHandle } from '../types/editor-handle';
 import { DocumentProvider } from '../context/document-provider';
+import { VariableProvider, useVariables } from '../variables/variable-context';
 import { useDocument } from '../context/document-context';
 import { HistorySidebar } from './HistorySidebar';
 import { Toolbar } from './Toolbar';
 import { DocumentView } from './DocumentView';
+import { serializeDocument } from '../ast/document-serializer';
+import { buildSavePayload, serializeDocumentJson } from '../ast/payload-builder';
+import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
 import '../styles.css';
 
 function selectEntireDocument(
@@ -224,26 +229,75 @@ const EditorChrome: React.FC<{
 };
 
 /**
+ * EditorWithHandle — Inner component that wires the imperative handle.
+ * Has access to DocumentProvider and VariableProvider contexts.
+ */
+const EditorWithHandle = forwardRef<Lex4EditorHandle, {
+  captureHistoryShortcutsOnWindow: boolean;
+  className?: string;
+}>(({ captureHistoryShortcutsOnWindow, className }, ref) => {
+  const { document: doc, activeEditor } = useDocument();
+  const { definitions, refreshDefinitions } = useVariables();
+
+  useImperativeHandle(ref, () => ({
+    getDocumentAst: () => serializeDocument(doc, definitions),
+    getDocumentJson: () => {
+      const ast = serializeDocument(doc, definitions);
+      return serializeDocumentJson(ast);
+    },
+    insertVariable: (key: string) => {
+      if (activeEditor) {
+        activeEditor.dispatchCommand(INSERT_VARIABLE_COMMAND, key);
+      }
+    },
+    refreshVariables: (newDefs) => {
+      refreshDefinitions(newDefs);
+    },
+    buildSavePayload: (options) => {
+      const ast = serializeDocument(doc, definitions);
+      return buildSavePayload(ast, options);
+    },
+  }), [doc, definitions, activeEditor, refreshDefinitions]);
+
+  return (
+    <EditorChrome
+      captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+      className={className}
+    />
+  );
+});
+
+EditorWithHandle.displayName = 'EditorWithHandle';
+
+/**
  * Lex4Editor — The main public component.
  *
  * A paginated A4 document editor built on Meta Lexical.
  * Each page is a true discrete A4 page with its own Lexical editor instance.
+ *
+ * Supports `ref` for imperative access to document AST, variables, and save/export.
  */
-export const Lex4Editor: React.FC<Lex4EditorProps> = ({
+export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
   captureHistoryShortcutsOnWindow = true,
   initialDocument,
   onDocumentChange,
+  variableDefinitions,
   className,
-}) => {
+}, ref) => {
   return (
     <DocumentProvider
       initialDocument={initialDocument}
       onDocumentChange={onDocumentChange}
     >
-      <EditorChrome
-        captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
-        className={className}
-      />
+      <VariableProvider initialDefinitions={variableDefinitions}>
+        <EditorWithHandle
+          ref={ref}
+          captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+          className={className}
+        />
+      </VariableProvider>
     </DocumentProvider>
   );
-};
+});
+
+Lex4Editor.displayName = 'Lex4Editor';
