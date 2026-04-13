@@ -74,7 +74,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
 
   return (
     <div
-      className="lex4-page bg-white shadow-lg flex flex-col"
+      className="lex4-page bg-white shadow-sm flex flex-col"
       style={{
         width: A4_WIDTH_PX,
         height: A4_HEIGHT_PX,

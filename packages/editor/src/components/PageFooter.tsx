@@ -71,7 +71,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
 
   return (
     <div
-      className="lex4-page-footer border-t border-dashed border-gray-300 relative flex-shrink-0"
+      className="lex4-page-footer border-t border-dashed border-gray-200 relative flex-shrink-0"
       style={{ maxHeight: MAX_FOOTER_HEIGHT_PX, overflow: 'clip' }}
       data-testid={`page-footer-${pageId}`}
     >

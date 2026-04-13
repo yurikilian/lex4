@@ -1,4 +1,10 @@
 import React from 'react';
+import {
+  Hash,
+  CopyPlus,
+  Eraser,
+  Trash2,
+} from 'lucide-react';
 import type { PageCounterMode } from '../types/document';
 
 interface HeaderFooterActionsProps {
@@ -13,10 +19,6 @@ interface HeaderFooterActionsProps {
   onClearAllFooters: () => void;
 }
 
-/**
- * HeaderFooterActions — Buttons for copy/clear operations
- * on headers and footers.
- */
 export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   activePageId,
   pageCounterMode,
@@ -38,14 +40,15 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center gap-2 text-xs"
       data-testid="header-footer-actions"
     >
-      <label className="flex items-center gap-2 text-xs text-gray-600" htmlFor="page-counter-mode">
-        <span>Page counter</span>
+      <label className="flex items-center gap-1 text-gray-500" htmlFor="page-counter-mode">
+        <Hash size={13} className="text-gray-400" />
         <select
           id="page-counter-mode"
-          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+          className="h-6 rounded border border-gray-200 bg-white px-1.5 text-xs text-gray-600
+                     focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
           data-testid="page-counter-mode"
           value={pageCounterMode}
           onChange={handlePageCounterModeChange}
@@ -57,37 +60,50 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
         </select>
       </label>
 
-      <ActionButton
-        label="Copy Header → All"
+      <ActionDivider />
+
+      <span className="text-gray-400 font-medium">Header</span>
+      <ActionIconButton
+        title="Copy header to all pages"
+        icon={<CopyPlus size={13} />}
         onClick={onCopyHeaderToAll}
         disabled={!hasActivePage}
         testId="copy-header-all"
       />
-      <ActionButton
-        label="Copy Footer → All"
-        onClick={onCopyFooterToAll}
-        disabled={!hasActivePage}
-        testId="copy-footer-all"
-      />
-      <ActionButton
-        label="Clear Header"
+      <ActionIconButton
+        title="Clear header on this page"
+        icon={<Eraser size={13} />}
         onClick={onClearHeader}
         disabled={!hasActivePage}
         testId="clear-header"
       />
-      <ActionButton
-        label="Clear Footer"
+      <ActionIconButton
+        title="Clear all headers"
+        icon={<Trash2 size={13} />}
+        onClick={onClearAllHeaders}
+        testId="clear-all-headers"
+      />
+
+      <ActionDivider />
+
+      <span className="text-gray-400 font-medium">Footer</span>
+      <ActionIconButton
+        title="Copy footer to all pages"
+        icon={<CopyPlus size={13} />}
+        onClick={onCopyFooterToAll}
+        disabled={!hasActivePage}
+        testId="copy-footer-all"
+      />
+      <ActionIconButton
+        title="Clear footer on this page"
+        icon={<Eraser size={13} />}
         onClick={onClearFooter}
         disabled={!hasActivePage}
         testId="clear-footer"
       />
-      <ActionButton
-        label="Clear All Headers"
-        onClick={onClearAllHeaders}
-        testId="clear-all-headers"
-      />
-      <ActionButton
-        label="Clear All Footers"
+      <ActionIconButton
+        title="Clear all footers"
+        icon={<Trash2 size={13} />}
         onClick={onClearAllFooters}
         testId="clear-all-footers"
       />
@@ -95,22 +111,31 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   );
 };
 
-interface ActionButtonProps {
-  label: string;
+interface ActionIconButtonProps {
+  title: string;
+  icon: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
   testId: string;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ label, onClick, disabled, testId }) => (
+const ActionIconButton: React.FC<ActionIconButtonProps> = ({ title, icon, onClick, disabled, testId }) => (
   <button
     type="button"
+    title={title}
+    aria-label={title}
+    onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
     disabled={disabled}
-    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300
-               disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    className="flex h-6 w-6 items-center justify-center rounded text-gray-500 transition-colors
+               hover:bg-gray-200/60 hover:text-gray-700
+               disabled:cursor-not-allowed disabled:text-gray-300"
     data-testid={testId}
   >
-    {label}
+    {icon}
   </button>
+);
+
+const ActionDivider: React.FC = () => (
+  <div className="mx-0.5 h-4 w-px bg-gray-300/60" />
 );

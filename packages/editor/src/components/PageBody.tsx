@@ -10,6 +10,7 @@ import type { EditorState, SerializedEditorState } from 'lexical';
 
 import { createEditorConfig } from '../lexical/editor-setup';
 import { TabIndentPlugin } from '../lexical/plugins/tab-indent-plugin';
+import { ParagraphIndentPlugin } from '../lexical/plugins/paragraph-indent-plugin';
 import { PastePlugin } from '../lexical/plugins/paste-plugin';
 import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { OverflowPlugin } from '../lexical/plugins/overflow-plugin';
@@ -134,6 +135,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
           ErrorBoundary={LexicalErrorBoundary}
         />
         <ListPlugin />
+        <ParagraphIndentPlugin />
         <TabIndentPlugin />
         <PastePlugin />
         <EditorRegistryPlugin pageId={pageId} />

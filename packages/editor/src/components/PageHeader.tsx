@@ -71,7 +71,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   return (
     <div
-      className="lex4-page-header border-b border-dashed border-gray-300 relative flex-shrink-0"
+      className="lex4-page-header border-b border-dashed border-gray-200 relative flex-shrink-0"
       style={{ maxHeight: MAX_HEADER_HEIGHT_PX, overflow: 'clip' }}
       data-testid={`page-header-${pageId}`}
     >

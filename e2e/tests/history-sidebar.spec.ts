@@ -236,4 +236,15 @@ test.describe('History Sidebar', () => {
     expect(firstBodyText).not.toContain('ENDMARK');
     expect(lastBodyText.trimEnd().endsWith('ENDMARK')).toBe(true);
   });
+
+  test('pasting empty content does not create a history entry', async ({ page }) => {
+    await pasteInto('[data-testid^="page-body-"] [contenteditable="true"]', page, '');
+    await page.waitForTimeout(300);
+
+    const entryList = page.getByTestId('history-entry-list');
+    const isVisible = await entryList.isVisible().catch(() => false);
+    expect(isVisible).toBe(false);
+
+    await expect(page.getByTestId('history-empty')).toBeVisible();
+  });
 });
