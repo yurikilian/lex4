@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lex4": "workspace:*",
+    "@yurikilian/lex4": "workspace:*",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "lexical": "^0.22.0",

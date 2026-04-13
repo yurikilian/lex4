@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import { Lex4Editor } from 'lex4';
-import type { Lex4Document } from 'lex4';
+import { Lex4Editor } from '@yurikilian/lex4';
+import type { Lex4Document } from '@yurikilian/lex4';
 
 export const App: React.FC = () => {
   const handleChange = useCallback((doc: Lex4Document) => {

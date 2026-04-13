@@ -3,8 +3,8 @@
   "name": "lex4-workspace",
   "scripts": {
     "dev": "pnpm --filter demo dev",
-    "build": "pnpm --filter lex4 build",
-    "test": "pnpm --filter lex4 test",
+    "build": "pnpm --filter @yurikilian/lex4 build",
+    "test": "pnpm --filter @yurikilian/lex4 test",
     "test:e2e": "pnpm --filter e2e test",
     "lint": "pnpm -r lint",
     "prepare": "git config core.hooksPath hooks"

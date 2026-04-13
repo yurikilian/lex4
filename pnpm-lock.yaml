@@ -34,7 +34,7 @@ importers:
       '@lexical/utils':
         specifier: ^0.22.0
         version: 0.22.0
-      lex4:
+      '@yurikilian/lex4':
         specifier: workspace:*
         version: link:../packages/editor
       lexical:
