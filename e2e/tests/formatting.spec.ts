@@ -47,9 +47,38 @@ test.describe('Toolbar & Formatting', () => {
   });
 
   test('typing in the editor works', async ({ page }) => {
-    const body = page.locator('[data-testid^="page-body-"]').first();
-    await body.click();
+    const editable = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').first();
+    await editable.click();
     await page.keyboard.type('Hello, Lex4!');
-    await expect(body).toContainText('Hello, Lex4!');
+    await expect(editable).toContainText('Hello, Lex4!');
+  });
+
+  test('indent button applies a first-line paragraph indent', async ({ page }) => {
+    const editable = page.locator('[data-testid^="page-body-"] [contenteditable="true"]').first();
+    await editable.click();
+    await page.keyboard.type(
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(8),
+    );
+
+    await page.getByTestId('btn-indent').click();
+
+    const paragraphStyles = await editable.evaluate(el => {
+      const paragraph = el.querySelector('p');
+      if (!paragraph) {
+        return null;
+      }
+
+      const styles = getComputedStyle(paragraph);
+      return {
+        textIndent: Number.parseFloat(styles.textIndent || '0'),
+        paddingInlineStart: Number.parseFloat(styles.paddingInlineStart || '0'),
+        paddingLeft: Number.parseFloat(styles.paddingLeft || '0'),
+      };
+    });
+
+    expect(paragraphStyles).not.toBeNull();
+    expect(paragraphStyles?.textIndent).toBe(40);
+    expect(paragraphStyles?.paddingInlineStart).toBe(0);
+    expect(paragraphStyles?.paddingLeft).toBe(0);
   });
 });

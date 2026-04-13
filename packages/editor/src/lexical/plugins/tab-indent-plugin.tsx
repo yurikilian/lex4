@@ -4,10 +4,10 @@ import { COMMAND_PRIORITY_LOW, KEY_TAB_COMMAND } from 'lexical';
 import { indentContent, outdentContent } from '../commands/list-commands';
 
 /**
- * TabIndentPlugin — handles Tab and Shift+Tab for list indentation.
+ * TabIndentPlugin — handles Tab and Shift+Tab for indentation shortcuts.
  *
- * Tab = indent (up to 4 levels managed by Lexical's indent logic)
- * Shift+Tab = outdent
+ * List items use Lexical's native nesting behavior. Regular paragraphs use the
+ * editor's first-line indent behavior.
  */
 export const TabIndentPlugin: React.FC = () => {
   const [editor] = useLexicalComposerContext();

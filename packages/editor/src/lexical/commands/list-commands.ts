@@ -3,7 +3,11 @@ import {
   INSERT_UNORDERED_LIST_COMMAND,
   REMOVE_LIST_COMMAND,
 } from '@lexical/list';
-import { INDENT_CONTENT_COMMAND, OUTDENT_CONTENT_COMMAND, type LexicalEditor } from 'lexical';
+import {
+  INDENT_CONTENT_COMMAND,
+  OUTDENT_CONTENT_COMMAND,
+  type LexicalEditor,
+} from 'lexical';
 
 export type ListType = 'number' | 'bullet';
 
@@ -26,16 +30,20 @@ export function removeList(editor: LexicalEditor): void {
 }
 
 /**
- * Indents the current selection (used for list nesting).
- * Maps to Tab key behavior.
+ * Indents the current selection.
+ *
+ * Paragraphs are rendered as first-line indents by the paragraph indent plugin,
+ * while list items keep Lexical's native nesting behavior.
  */
 export function indentContent(editor: LexicalEditor): void {
   editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
 }
 
 /**
- * Outdents the current selection (used for list un-nesting).
- * Maps to Shift+Tab key behavior.
+ * Outdents the current selection.
+ *
+ * Paragraphs are rendered as first-line indents by the paragraph indent plugin,
+ * while list items keep Lexical's native un-nesting behavior.
  */
 export function outdentContent(editor: LexicalEditor): void {
   editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
