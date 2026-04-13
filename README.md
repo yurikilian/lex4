@@ -7,12 +7,12 @@
 > Meta **Lex**ical × **A4** page rules
 
 [![CI](https://github.com/yurikilian/lex4/actions/workflows/ci.yml/badge.svg)](https://github.com/yurikilian/lex4/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@lex4/editor.svg)](https://www.npmjs.com/package/@lex4/editor)
+[![npm version](https://img.shields.io/npm/v/lex4.svg)](https://www.npmjs.com/package/lex4)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18%2B-61DAFB.svg)](https://react.dev/)
 
-[Live Demo](https://yurikilian.github.io/lex4/) · [npm Package](https://www.npmjs.com/package/@lex4/editor) · [Report Bug](https://github.com/yurikilian/lex4/issues)
+[Live Demo](https://yurikilian.github.io/lex4/) · [npm Package](https://www.npmjs.com/package/lex4) · [Report Bug](https://github.com/yurikilian/lex4/issues)
 
 </div>
 
@@ -71,11 +71,11 @@ A paginated document editor built as a **reusable React library** on top of [Met
 ## 📦 Installation
 
 ```bash
-npm install @lex4/editor
+npm install lex4
 # or
-pnpm add @lex4/editor
+pnpm add lex4
 # or
-yarn add @lex4/editor
+yarn add lex4
 ```
 
 ### Peer Dependencies
@@ -89,8 +89,8 @@ npm install react react-dom lexical @lexical/react @lexical/rich-text @lexical/l
 ## 🚀 Quick Start
 
 ```tsx
-import { Lex4Editor } from '@lex4/editor';
-import '@lex4/editor/style.css';
+import { Lex4Editor } from 'lex4';
+import 'lex4/style.css';
 
 function App() {
   return (
@@ -104,8 +104,8 @@ function App() {
 ### With Initial Document
 
 ```tsx
-import { Lex4Editor, createEmptyDocument } from '@lex4/editor';
-import '@lex4/editor/style.css';
+import { Lex4Editor, createEmptyDocument } from 'lex4';
+import 'lex4/style.css';
 
 function App() {
   const initialDoc = createEmptyDocument();
@@ -241,7 +241,7 @@ The pagination engine is built as **pure functions** that transform page state a
 ```
 lex4/
 ├── packages/
-│   └── editor/               # @lex4/editor — the publishable library
+│   └── editor/               # lex4 — the publishable library
 │       ├── src/
 │       │   ├── components/   # React components (Lex4Editor, PageView, Toolbar, etc.)
 │       │   ├── constants/    # A4 dimensions, layout math
@@ -287,7 +287,7 @@ pnpm dev
 | Command | Description |
 |---------|-------------|
 | `pnpm dev` | Start the demo app dev server |
-| `pnpm build` | Build the `@lex4/editor` library |
+| `pnpm build` | Build the `lex4` library |
 | `pnpm test` | Run unit tests (Vitest) |
 | `pnpm test:e2e` | Run E2E tests (Playwright) |
 | `pnpm lint` | Type-check all packages |

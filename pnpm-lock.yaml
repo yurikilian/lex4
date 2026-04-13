@@ -10,9 +10,6 @@ importers:
 
   demo:
     dependencies:
-      '@lex4/editor':
-        specifier: workspace:*
-        version: link:../packages/editor
       '@lexical/clipboard':
         specifier: ^0.22.0
         version: 0.22.0
@@ -37,6 +34,9 @@ importers:
       '@lexical/utils':
         specifier: ^0.22.0
         version: 0.22.0
+      lex4:
+        specifier: workspace:*
+        version: link:../packages/editor
       lexical:
         specifier: ^0.22.0
         version: 0.22.0
