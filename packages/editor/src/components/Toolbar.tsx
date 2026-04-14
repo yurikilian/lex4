@@ -15,6 +15,8 @@ import {
   List,
   IndentIncrease,
   IndentDecrease,
+  Type,
+  ALargeSmall,
   PanelRight,
 } from 'lucide-react';
 import { useDocument } from '../context/document-context';
@@ -263,33 +265,39 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
-        <select
-          className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
-                     focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-          data-testid="font-selector"
-          defaultValue="Calibri"
-          onChange={handleFontChange}
-        >
-          {SUPPORTED_FONTS.map(font => (
-            <option key={font} value={font} style={{ fontFamily: font }}>
-              {font}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1">
+          <Type size={14} className="text-gray-500" />
+          <select
+            className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
+                       focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            data-testid="font-selector"
+            defaultValue="Calibri"
+            onChange={handleFontChange}
+          >
+            {SUPPORTED_FONTS.map(font => (
+              <option key={font} value={font} style={{ fontFamily: font }}>
+                {font}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          className="h-7 w-16 rounded border border-gray-200 bg-white px-1 text-xs text-gray-700
-                     focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-          data-testid="font-size-selector"
-          defaultValue="12"
-          onChange={handleFontSizeChange}
-        >
-          {SUPPORTED_FONT_SIZES.map(size => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1">
+          <ALargeSmall size={14} className="text-gray-500" />
+          <select
+            className="h-7 w-16 rounded border border-gray-200 bg-white px-1 text-xs text-gray-700
+                       focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            data-testid="font-size-selector"
+            defaultValue="12"
+            onChange={handleFontSizeChange}
+          >
+            {SUPPORTED_FONT_SIZES.map(size => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <Divider />
 

@@ -1,6 +1,13 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { Lex4Editor, astExtension, variablesExtension } from '@yurikilian/lex4';
-import type { Lex4Document, Lex4EditorHandle, VariableDefinition } from '@yurikilian/lex4';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Lex4Editor, astExtension, variablesExtension, PT_BR_TRANSLATIONS } from '@yurikilian/lex4';
+import type { Lex4Document, Lex4EditorHandle, VariableDefinition, Lex4Translations } from '@yurikilian/lex4';
+
+type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
+
+const LANGUAGES: { code: string; label: string; flag: string; translations?: DeepPartial<Lex4Translations> }[] = [
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'pt-BR', label: 'Português', flag: '🇧🇷', translations: PT_BR_TRANSLATIONS },
+];
 
 const DEMO_VARIABLES: VariableDefinition[] = [
   { key: 'customer.name', label: 'Customer Name', description: 'Full name', valueType: 'string', group: 'Customer' },
@@ -14,6 +21,9 @@ const DEMO_VARIABLES: VariableDefinition[] = [
 
 export const App: React.FC = () => {
   const editorRef = useRef<Lex4EditorHandle>(null);
+  const [langCode, setLangCode] = useState('en');
+
+  const currentLang = LANGUAGES.find(l => l.code === langCode) ?? LANGUAGES[0];
 
   const extensions = useMemo(() => [
     astExtension(),
@@ -65,6 +75,19 @@ export const App: React.FC = () => {
         >
           Export AST
         </button>
+        <select
+          value={langCode}
+          onChange={(e) => setLangCode(e.target.value)}
+          className="rounded bg-gray-700 px-2 py-1 text-sm text-white border border-gray-600
+                     hover:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          data-testid="language-selector"
+        >
+          {LANGUAGES.map(lang => (
+            <option key={lang.code} value={lang.code}>
+              {lang.flag} {lang.label}
+            </option>
+          ))}
+        </select>
       </header>
       <main className="flex-1 overflow-hidden">
         <Lex4Editor
@@ -72,6 +95,7 @@ export const App: React.FC = () => {
           captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
           onDocumentChange={handleChange}
           extensions={extensions}
+          translations={currentLang.translations}
         />
       </main>
     </div>

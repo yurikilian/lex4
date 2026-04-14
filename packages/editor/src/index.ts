@@ -50,4 +50,4 @@ export { VariableNode, $createVariableNode, $isVariableNode, INSERT_VARIABLE_COM
 
 // i18n exports
 export type { Lex4Translations } from './i18n';
-export { DEFAULT_TRANSLATIONS } from './i18n';
+export { DEFAULT_TRANSLATIONS, PT_BR_TRANSLATIONS } from './i18n';
