@@ -10,10 +10,10 @@ import {
 } from 'lexical';
 
 const SUPPORTED_FONTS = [
+  'Calibri',
   'Inter',
   'Times New Roman',
   'Arial',
-  'Calibri',
   'Georgia',
   'Courier New',
 ] as const;
@@ -60,7 +60,7 @@ export const FontPlugin: React.FC<FontPluginProps> = ({ onFontChange }) => {
       if ($isTextNode(node)) {
         const style = node.getStyle();
         const match = style.match(/font-family:\s*([^;]+)/);
-        onFontChange?.(match ? match[1].trim() : 'Arial');
+        onFontChange?.(match ? match[1].trim() : 'Calibri');
       }
     });
   }, [editor, onFontChange]);

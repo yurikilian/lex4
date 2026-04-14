@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { A4_WIDTH_PX, A4_HEIGHT_PX, PAGE_MARGIN_PX } from '../constants/dimensions';
+import { A4_WIDTH_PX, A4_HEIGHT_PX, PAGE_MARGIN_X_PX, PAGE_MARGIN_Y_PX } from '../constants/dimensions';
 import { useDocument } from '../context/document-context';
 import { PageBody } from './PageBody';
 import { PageHeader } from './PageHeader';
@@ -78,7 +78,10 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
       style={{
         width: A4_WIDTH_PX,
         height: A4_HEIGHT_PX,
-        padding: PAGE_MARGIN_PX,
+        paddingTop: PAGE_MARGIN_Y_PX,
+        paddingBottom: PAGE_MARGIN_Y_PX,
+        paddingLeft: PAGE_MARGIN_X_PX,
+        paddingRight: PAGE_MARGIN_X_PX,
       }}
       data-testid={`page-${pageIndex}`}
       data-page-id={pageId}

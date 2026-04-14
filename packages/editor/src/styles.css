@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 .lex4-editor {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Calibri', 'Carlito', sans-serif;
 }
 
 .lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] {

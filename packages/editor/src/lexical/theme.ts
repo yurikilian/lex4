@@ -6,7 +6,7 @@ import type { EditorThemeClasses } from 'lexical';
  */
 export const lexicalTheme: EditorThemeClasses = {
   root: 'lex4-root outline-none',
-  paragraph: 'lex4-paragraph mb-1',
+  paragraph: 'lex4-paragraph text-justify',
   heading: {
     h1: 'text-3xl font-bold mb-2',
     h2: 'text-2xl font-bold mb-2',

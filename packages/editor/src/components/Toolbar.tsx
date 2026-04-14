@@ -267,7 +267,7 @@ export const Toolbar: React.FC = () => {
           className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
                      focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
           data-testid="font-selector"
-          defaultValue="Inter"
+          defaultValue="Calibri"
           onChange={handleFontChange}
         >
           {SUPPORTED_FONTS.map(font => (
