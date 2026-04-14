@@ -8,6 +8,7 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical';
+import { useVariables } from './variable-context';
 
 export type SerializedVariableNode = Spread<
   { variableKey: string },
@@ -102,17 +103,26 @@ export class VariableNode extends DecoratorNode<JSX.Element> {
 
   decorate(): JSX.Element {
     return (
-      <span
-        className="lex4-variable-chip inline-flex items-center rounded bg-white px-1.5 py-0.5
-                   text-xs font-medium text-blue-700 border border-blue-300 select-none
-                   cursor-default whitespace-nowrap mx-0.5"
-        data-testid={`variable-chip-${this.__variableKey}`}
-        title={this.__variableKey}
-      >
-        {`{{${this.__variableKey}}}`}
-      </span>
+      <VariableChip variableKey={this.__variableKey} />
     );
   }
+}
+
+function VariableChip({ variableKey }: { variableKey: string }): JSX.Element {
+  const { getDefinition } = useVariables();
+  const label = getDefinition(variableKey)?.label ?? variableKey;
+
+  return (
+    <span
+      className="lex4-variable-chip inline-flex items-center rounded-full border border-blue-300
+                 bg-white px-2 py-0.5 text-[11px] font-medium text-blue-700 select-none
+                 cursor-default whitespace-nowrap mx-0.5"
+      data-testid={`variable-chip-${variableKey}`}
+      title={variableKey}
+    >
+      {label}
+    </span>
+  );
 }
 
 export function $createVariableNode(variableKey: string): VariableNode {

@@ -52,6 +52,8 @@ test.describe('Variable Insert', () => {
     await expect(page.getByTestId('variable-picker-dropdown')).not.toBeVisible();
 
     // The variable chip should appear in the editor
-    await expect(page.locator('[data-testid="variable-chip-customer.name"]')).toBeVisible();
+    const chip = page.locator('[data-testid="variable-chip-customer.name"]');
+    await expect(chip).toBeVisible();
+    await expect(chip).toHaveText('Customer Name');
   });
 });
