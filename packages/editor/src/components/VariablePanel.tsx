@@ -15,11 +15,13 @@ import type { VariableDefinition } from '../variables/types';
  * - Click-to-insert into the active editor
  * - Refresh button for reloading definitions
  */
-export const VariablePanel: React.FC = () => {
+export const VariablePanel: React.FC<{
+  open: boolean;
+  onClose: () => void;
+}> = ({ open, onClose }) => {
   const { definitions } = useVariables();
   const { activeEditor, runHistoryAction } = useDocument();
   const [filter, setFilter] = useState('');
-  const [open, setOpen] = useState(true);
 
   const filtered = useMemo(() => {
     if (!filter) return definitions;
@@ -59,7 +61,7 @@ export const VariablePanel: React.FC = () => {
       title="Variables"
       subtitle={`${definitions.length} available`}
       open={open}
-      onClose={() => setOpen(false)}
+      onClose={onClose}
       testId="variable-panel"
       headerActions={
         <button

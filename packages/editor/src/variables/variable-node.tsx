@@ -90,7 +90,7 @@ export class VariableNode extends DecoratorNode<JSX.Element> {
     return true;
   }
 
-  isIsolated(): boolean {
+  isKeyboardSelectable(): boolean {
     return true;
   }
 

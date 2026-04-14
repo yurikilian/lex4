@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Braces } from 'lucide-react';
 import type { Lex4Extension, ExtensionContext } from './types';
 import type { VariableDefinition } from '../variables/types';
 import { VariableNode } from '../variables/variable-node';
@@ -9,6 +10,31 @@ import { VariablePanel } from '../components/VariablePanel';
 import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
 import { useDocument } from '../context/document-context';
 import { useExtensionState } from './extension-context';
+
+// --- Variable panel open/close context ---
+
+interface VariablePanelState {
+  panelOpen: boolean;
+  setPanelOpen: (open: boolean) => void;
+}
+
+const VariablePanelContext = createContext<VariablePanelState>({
+  panelOpen: false,
+  setPanelOpen: () => {},
+});
+
+export function useVariablePanelState(): VariablePanelState {
+  return useContext(VariablePanelContext);
+}
+
+const VariablePanelStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [panelOpen, setPanelOpen] = useState(false);
+  return (
+    <VariablePanelContext.Provider value={{ panelOpen, setPanelOpen }}>
+      {children}
+    </VariablePanelContext.Provider>
+  );
+};
 
 /**
  * Toolbar item contributed by the variables extension.
@@ -37,6 +63,40 @@ const VariableToolbarItem: React.FC = () => {
 };
 
 /**
+ * Toolbar toggle button for the Variables side panel.
+ */
+const VariablePanelToggle: React.FC = () => {
+  const { panelOpen, setPanelOpen } = useVariablePanelState();
+
+  return (
+    <button
+      type="button"
+      title={panelOpen ? 'Close Variables' : 'Open Variables'}
+      aria-label={panelOpen ? 'Close Variables' : 'Open Variables'}
+      onMouseDown={e => e.preventDefault()}
+      onClick={() => setPanelOpen(!panelOpen)}
+      className={`
+        flex h-7 w-7 items-center justify-center rounded transition-colors
+        ${panelOpen
+          ? 'bg-blue-50 text-blue-600'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
+      `}
+      data-testid="toggle-variable-panel"
+    >
+      <Braces size={15} />
+    </button>
+  );
+};
+
+/**
+ * Wrapped VariablePanel that reads open/close state from VariablePanelContext.
+ */
+const VariablePanelWithState: React.FC = () => {
+  const { panelOpen, setPanelOpen } = useVariablePanelState();
+  return <VariablePanel open={panelOpen} onClose={() => setPanelOpen(false)} />;
+};
+
+/**
  * Syncs the VariableProvider definitions into the extension state store
  * so astExtension can access them when building the AST.
  */
@@ -58,7 +118,8 @@ const VariableDefinitionsSync: React.FC<{ children: React.ReactNode }> = ({ chil
  * - VariableNode (custom Lexical node)
  * - VariablePlugin (body plugin for insert command handling)
  * - VariableProvider (context provider for variable catalog)
- * - VariablePicker toolbar item
+ * - VariablePicker toolbar item + panel toggle button
+ * - VariablePanel side panel with toggle state
  * - Handle methods: insertVariable, refreshVariables
  *
  * @param definitions Initial variable definitions to load
@@ -74,11 +135,13 @@ const VariableDefinitionsSync: React.FC<{ children: React.ReactNode }> = ({ chil
 export function variablesExtension(definitions: VariableDefinition[] = []): Lex4Extension {
   const ProviderWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
-      <VariableProvider initialDefinitions={definitions}>
-        <VariableDefinitionsSync>
-          {children}
-        </VariableDefinitionsSync>
-      </VariableProvider>
+      <VariablePanelStateProvider>
+        <VariableProvider initialDefinitions={definitions}>
+          <VariableDefinitionsSync>
+            {children}
+          </VariableDefinitionsSync>
+        </VariableProvider>
+      </VariablePanelStateProvider>
     );
   };
 
@@ -86,8 +149,8 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
     name: 'variables',
     nodes: [VariableNode],
     bodyPlugins: [VariablePlugin],
-    toolbarItems: [VariableToolbarItem],
-    sidePanel: VariablePanel,
+    toolbarItems: [VariableToolbarItem, VariablePanelToggle],
+    sidePanel: VariablePanelWithState,
     provider: ProviderWrapper,
     handleMethods: (ctx: ExtensionContext) => ({
       insertVariable: (key: string) => {
