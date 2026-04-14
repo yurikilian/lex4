@@ -8,6 +8,12 @@
   font-family: 'Calibri', 'Carlito', sans-serif;
 }
 
+.lex4-page,
+.lex4-page [contenteditable],
+.lex4-page .pointer-events-none {
+  font-family: inherit;
+}
+
 .lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] {
   background-color: rgb(191 219 254) !important;
   caret-color: transparent;

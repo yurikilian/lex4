@@ -84,13 +84,12 @@ export const PageFooter: React.FC<PageFooterProps> = ({
           contentEditable={
             <ContentEditable
               ref={contentRef}
-              className={`outline-none p-2 text-sm text-gray-600 min-h-[24px] ${hasPageCounter ? 'pr-24' : ''}`}
+              className={`outline-none p-2 text-gray-600 min-h-[24px] ${hasPageCounter ? 'pr-24' : ''}`}
             />
           }
           placeholder={
-            <div className={`absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 text-sm ${hasPageCounter ? 'pr-24' : ''}`}>
-              {t.footer.placeholder}
-            </div>
+            <div className={`absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 ${hasPageCounter ? 'pr-24' : ''}`}>
+              {t.footer.placeholder}</div>
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
