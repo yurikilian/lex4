@@ -1,6 +1,6 @@
 import {
   A4_HEIGHT_PX,
-  PAGE_MARGIN_Y_PX,
+  PAGE_MARGIN_PX,
 } from './dimensions';
 
 /**
@@ -11,7 +11,7 @@ export function computeBodyHeight(
   headerHeight: number,
   footerHeight: number,
 ): number {
-  const verticalMargins = PAGE_MARGIN_Y_PX * 2;
+  const verticalMargins = PAGE_MARGIN_PX * 2;
   return A4_HEIGHT_PX - headerHeight - footerHeight - verticalMargins;
 }
 

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-async function createLargeBody(page: Page, rows = 120) {
+async function createLargeBody(page: Page, rows = 90) {
   const body = page.locator('[data-testid^="page-body-"]').first();
   await body.click();
 

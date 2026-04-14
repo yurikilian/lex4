@@ -4,8 +4,7 @@ import {
   A4_HEIGHT_PX,
   MAX_HEADER_HEIGHT_PX,
   MAX_FOOTER_HEIGHT_PX,
-  PAGE_MARGIN_X_PX,
-  PAGE_MARGIN_Y_PX,
+  PAGE_MARGIN_PX,
   MAX_HEADER_RATIO,
   MAX_FOOTER_RATIO,
 } from '../constants/dimensions';
@@ -34,17 +33,17 @@ describe('A4 dimensions', () => {
 describe('computeBodyHeight', () => {
   it('returns full body area when header and footer are zero', () => {
     const body = computeBodyHeight(0, 0);
-    expect(body).toBe(A4_HEIGHT_PX - PAGE_MARGIN_Y_PX * 2);
+    expect(body).toBe(A4_HEIGHT_PX - PAGE_MARGIN_PX * 2);
   });
 
   it('subtracts header and footer heights', () => {
     const body = computeBodyHeight(100, 80);
-    expect(body).toBe(A4_HEIGHT_PX - 100 - 80 - PAGE_MARGIN_Y_PX * 2);
+    expect(body).toBe(A4_HEIGHT_PX - 100 - 80 - PAGE_MARGIN_PX * 2);
   });
 
   it('subtracts max header + footer correctly', () => {
     const body = computeBodyHeight(MAX_HEADER_HEIGHT_PX, MAX_FOOTER_HEIGHT_PX);
-    expect(body).toBe(A4_HEIGHT_PX - MAX_HEADER_HEIGHT_PX - MAX_FOOTER_HEIGHT_PX - PAGE_MARGIN_Y_PX * 2);
+    expect(body).toBe(A4_HEIGHT_PX - MAX_HEADER_HEIGHT_PX - MAX_FOOTER_HEIGHT_PX - PAGE_MARGIN_PX * 2);
     expect(body).toBeGreaterThan(0);
   });
 });
