@@ -20,12 +20,11 @@ import {
 import { useDocument } from '../context/document-context';
 import { HeaderFooterToggle } from './HeaderFooterToggle';
 import { HeaderFooterActions } from './HeaderFooterActions';
-import { VariablePicker } from './VariablePicker';
+import { useExtensions } from '../extensions/extension-context';
 import type { PageCounterMode } from '../types/document';
 import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
 import { applyFontSize, SUPPORTED_FONT_SIZES, type FontSize } from '../lexical/plugins/font-size-plugin';
-import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
 import { toggleBold, toggleItalic, toggleUnderline, toggleStrikethrough, setAlignment } from '../lexical/commands/format-commands';
 import { insertList, indentContent, outdentContent } from '../lexical/commands/list-commands';
 import { debug } from '../utils/debug';
@@ -46,6 +45,7 @@ export const Toolbar: React.FC = () => {
     setHistorySidebarOpen,
     undo,
   } = useDocument();
+  const { toolbarItems } = useExtensions();
 
   const withBodySelection = useCallback(
     (editor: LexicalEditor, action: (targetEditor: LexicalEditor) => void) => {
@@ -265,7 +265,7 @@ export const Toolbar: React.FC = () => {
           className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
                      focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
           data-testid="font-selector"
-          defaultValue="Arial"
+          defaultValue="Inter"
           onChange={handleFontChange}
         >
           {SUPPORTED_FONTS.map(font => (
@@ -364,18 +364,14 @@ export const Toolbar: React.FC = () => {
           </>
         )}
 
-        <Divider />
-
-        <VariablePicker
-          onInsert={(variableKey) => {
-            runToolbarAction(`Insert variable ${variableKey}`, () => {
-              if (activeEditor) {
-                activeEditor.dispatchCommand(INSERT_VARIABLE_COMMAND, variableKey);
-              }
-            });
-          }}
-          disabled={!activeEditor}
-        />
+        {toolbarItems.length > 0 && (
+          <>
+            <Divider />
+            {toolbarItems.map((ToolbarItem, idx) => (
+              <ToolbarItem key={idx} />
+            ))}
+          </>
+        )}
 
         <div className="ml-auto flex items-center">
           <ToolbarIconButton

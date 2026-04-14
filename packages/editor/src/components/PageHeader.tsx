@@ -11,6 +11,7 @@ import { MAX_HEADER_HEIGHT_PX } from '../constants/dimensions';
 import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { HeightLimitPlugin } from '../lexical/plugins/height-limit-plugin';
 import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
+import { useExtensions } from '../extensions/extension-context';
 import { debug, shortId } from '../utils/debug';
 
 interface PageHeaderProps {
@@ -34,16 +35,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   onHeaderChange,
 }) => {
   const hasPageCounter = !!pageCounterLabel;
+  const { nodes, themeOverrides } = useExtensions();
   const config = useMemo(
     () => {
-      const baseConfig = createEditorConfig('header', pageId);
+      const baseConfig = createEditorConfig('header', pageId, nodes, themeOverrides);
       if (initialHeaderState) {
         return { ...baseConfig, editorState: JSON.stringify(initialHeaderState) };
       }
       return baseConfig;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- syncVersion forces remount via key, only used at init
-    [pageId],
+    [pageId, nodes, themeOverrides],
   );
 
   const contentRef = useRef<HTMLDivElement>(null);

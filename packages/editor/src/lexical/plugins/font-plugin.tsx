@@ -10,6 +10,7 @@ import {
 } from 'lexical';
 
 const SUPPORTED_FONTS = [
+  'Inter',
   'Times New Roman',
   'Arial',
   'Calibri',

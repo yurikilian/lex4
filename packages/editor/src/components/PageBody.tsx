@@ -16,8 +16,8 @@ import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { OverflowPlugin } from '../lexical/plugins/overflow-plugin';
 import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
 import { PageBoundaryPlugin } from '../lexical/plugins/page-boundary-plugin';
-import { VariablePlugin } from '../variables/variable-plugin';
 import { useDocument } from '../context/document-context';
+import { useExtensions } from '../extensions/extension-context';
 import { debug, shortId } from '../utils/debug';
 
 interface PageBodyProps {
@@ -59,8 +59,7 @@ const EditorRegistryPlugin: React.FC<{ pageId: string }> = ({ pageId }) => {
  * Each page gets its own Lexical editor. The OverflowPlugin
  * handles splitting content when it exceeds the available height.
  *
- * When created with initialBodyState (e.g. from overflow), the
- * LexicalComposer is initialized with that content.
+ * Extension-contributed body plugins are rendered inside the LexicalComposer.
  */
 export const PageBody: React.FC<PageBodyProps> = ({
   pageId,
@@ -74,14 +73,15 @@ export const PageBody: React.FC<PageBodyProps> = ({
   onMoveToNextPage,
   readOnly = false,
 }) => {
+  const { nodes, bodyPlugins, themeOverrides } = useExtensions();
+
   const config = useMemo(
     () => {
       const baseConfig = {
-        ...createEditorConfig('body', pageId),
+        ...createEditorConfig('body', pageId, nodes, themeOverrides),
         editable: !readOnly,
       };
 
-      // Set initial editor state for new pages with overflow content
       if (initialBodyState) {
         debug('page', `PageBody ${shortId(pageId)}: initializing with ${initialBodyState.root?.children?.length ?? 0} children`);
         return {
@@ -94,7 +94,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
       return baseConfig;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only use initialBodyState at mount time
-    [pageId, readOnly],
+    [pageId, readOnly, nodes, themeOverrides],
   );
 
   const handleChange = useCallback(
@@ -151,7 +151,9 @@ export const PageBody: React.FC<PageBodyProps> = ({
           />
         )}
         <OverflowPlugin onOverflow={handleOverflow} />
-        <VariablePlugin />
+        {bodyPlugins.map((Plugin, idx) => (
+          <Plugin key={idx} />
+        ))}
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
       </LexicalComposer>
     </div>

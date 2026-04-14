@@ -1,6 +1,12 @@
+@import url('https://rsms.me/inter/inter.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.lex4-editor {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
 
 .lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] {
   background-color: rgb(191 219 254) !important;

@@ -2,14 +2,16 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef 
 import type { Lex4EditorProps } from '../types/editor-props';
 import type { Lex4EditorHandle } from '../types/editor-handle';
 import { DocumentProvider } from '../context/document-provider';
-import { VariableProvider, useVariables } from '../variables/variable-context';
 import { useDocument } from '../context/document-context';
 import { HistorySidebar } from './HistorySidebar';
 import { Toolbar } from './Toolbar';
 import { DocumentView } from './DocumentView';
-import { serializeDocument } from '../ast/document-serializer';
-import { buildSavePayload, serializeDocumentJson } from '../ast/payload-builder';
-import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
+import {
+  ExtensionProvider,
+  ExtensionStateProvider,
+  useExtensions,
+  useExtensionContext,
+} from '../extensions/extension-context';
 import '../styles.css';
 
 function selectEntireDocument(
@@ -60,6 +62,7 @@ const EditorChrome: React.FC<{
     undo,
     redo,
   } = useDocument();
+  const { sidePanels } = useExtensions();
   const rootRef = useRef<HTMLDivElement>(null);
   const selectionBufferRef = useRef<HTMLTextAreaElement>(null);
 
@@ -222,6 +225,9 @@ const EditorChrome: React.FC<{
         <div className="min-w-0 flex-1 overflow-auto">
           <DocumentView />
         </div>
+        {sidePanels.map((Panel, idx) => (
+          <Panel key={idx} />
+        ))}
         <HistorySidebar />
       </div>
     </div>
@@ -230,34 +236,29 @@ const EditorChrome: React.FC<{
 
 /**
  * EditorWithHandle — Inner component that wires the imperative handle.
- * Has access to DocumentProvider and VariableProvider contexts.
+ * Has access to DocumentProvider and extension contexts.
  */
 const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   captureHistoryShortcutsOnWindow: boolean;
   className?: string;
 }>(({ captureHistoryShortcutsOnWindow, className }, ref) => {
   const { document: doc, activeEditor } = useDocument();
-  const { definitions, refreshDefinitions } = useVariables();
+  const { handleFactories } = useExtensions();
 
-  useImperativeHandle(ref, () => ({
-    getDocumentAst: () => serializeDocument(doc, definitions),
-    getDocumentJson: () => {
-      const ast = serializeDocument(doc, definitions);
-      return serializeDocumentJson(ast);
-    },
-    insertVariable: (key: string) => {
-      if (activeEditor) {
-        activeEditor.dispatchCommand(INSERT_VARIABLE_COMMAND, key);
-      }
-    },
-    refreshVariables: (newDefs) => {
-      refreshDefinitions(newDefs);
-    },
-    buildSavePayload: (options) => {
-      const ast = serializeDocument(doc, definitions);
-      return buildSavePayload(ast, options);
-    },
-  }), [doc, definitions, activeEditor, refreshDefinitions]);
+  const getDocument = useCallback(() => doc, [doc]);
+  const getActiveEditor = useCallback(() => activeEditor, [activeEditor]);
+  const extensionCtx = useExtensionContext(getDocument, getActiveEditor);
+
+  useImperativeHandle(ref, () => {
+    const handle: Record<string, (...args: never[]) => unknown> = {};
+
+    for (const factory of handleFactories) {
+      const methods = factory(extensionCtx);
+      Object.assign(handle, methods);
+    }
+
+    return handle as unknown as Lex4EditorHandle;
+  }, [extensionCtx, handleFactories]);
 
   return (
     <EditorChrome
@@ -275,28 +276,35 @@ EditorWithHandle.displayName = 'EditorWithHandle';
  * A paginated A4 document editor built on Meta Lexical.
  * Each page is a true discrete A4 page with its own Lexical editor instance.
  *
- * Supports `ref` for imperative access to document AST, variables, and save/export.
+ * Uses an extension system for AST export, variables, and theming.
+ * Pass extensions via the `extensions` prop:
+ * @example
+ * ```tsx
+ * <Lex4Editor extensions={[defaultTheme(), astExtension(), variablesExtension(defs)]} />
+ * ```
  */
 export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
   captureHistoryShortcutsOnWindow = true,
   initialDocument,
   onDocumentChange,
-  variableDefinitions,
+  extensions,
   className,
 }, ref) => {
   return (
-    <DocumentProvider
-      initialDocument={initialDocument}
-      onDocumentChange={onDocumentChange}
-    >
-      <VariableProvider initialDefinitions={variableDefinitions}>
-        <EditorWithHandle
-          ref={ref}
-          captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
-          className={className}
-        />
-      </VariableProvider>
-    </DocumentProvider>
+    <ExtensionStateProvider>
+      <ExtensionProvider extensions={extensions}>
+        <DocumentProvider
+          initialDocument={initialDocument}
+          onDocumentChange={onDocumentChange}
+        >
+          <EditorWithHandle
+            ref={ref}
+            captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+            className={className}
+          />
+        </DocumentProvider>
+      </ExtensionProvider>
+    </ExtensionStateProvider>
   );
 });
 

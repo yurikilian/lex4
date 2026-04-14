@@ -49,7 +49,7 @@ test.describe('History Sidebar', () => {
   });
 
   test('renders labeled history entries for body and header changes', async ({ page }) => {
-    await expect(page.getByTestId('editor-sidebar')).toBeVisible();
+    await expect(page.getByTestId('history-sidebar')).toBeVisible();
     await expect(page.getByText('Word-style session history (last 100 actions)')).toBeVisible();
 
     await pasteInto('[data-testid^="page-body-"] [contenteditable="true"]', page, 'Sidebar body paste');

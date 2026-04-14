@@ -1,5 +1,5 @@
-import React, { useCallback, useRef } from 'react';
-import { Lex4Editor } from '@yurikilian/lex4';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { Lex4Editor, astExtension, variablesExtension } from '@yurikilian/lex4';
 import type { Lex4Document, Lex4EditorHandle, VariableDefinition } from '@yurikilian/lex4';
 
 const DEMO_VARIABLES: VariableDefinition[] = [
@@ -14,6 +14,11 @@ const DEMO_VARIABLES: VariableDefinition[] = [
 
 export const App: React.FC = () => {
   const editorRef = useRef<Lex4EditorHandle>(null);
+
+  const extensions = useMemo(() => [
+    astExtension(),
+    variablesExtension(DEMO_VARIABLES),
+  ], []);
 
   const handleChange = useCallback((doc: Lex4Document) => {
     console.log(`Document changed: ${doc.pages.length} page(s)`);
@@ -66,7 +71,7 @@ export const App: React.FC = () => {
           ref={editorRef}
           captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
           onDocumentChange={handleChange}
-          variableDefinitions={DEMO_VARIABLES}
+          extensions={extensions}
         />
       </main>
     </div>

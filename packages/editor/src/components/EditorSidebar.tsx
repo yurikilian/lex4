@@ -7,6 +7,7 @@ interface EditorSidebarProps {
   open: boolean;
   onClose?: () => void;
   headerActions?: React.ReactNode;
+  testId?: string;
   children: React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   open,
   onClose,
   headerActions,
+  testId = 'editor-sidebar',
   children,
 }) => {
   if (!open) {
@@ -25,7 +27,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   return (
     <aside
       className="flex h-full w-[320px] shrink-0 flex-col border-l border-gray-200 bg-white"
-      data-testid="editor-sidebar"
+      data-testid={testId}
     >
       <div className="flex items-start justify-between border-b border-gray-200 px-3 py-2.5">
         <div>

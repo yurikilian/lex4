@@ -1,7 +1,13 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { VariableDefinition, VariableContextValue } from './types';
 
-const VariableContext = createContext<VariableContextValue | null>(null);
+const EMPTY_CONTEXT: VariableContextValue = {
+  definitions: [],
+  refreshDefinitions: () => { /* no-op when variables extension not loaded */ },
+  getDefinition: () => undefined,
+};
+
+const VariableContext = createContext<VariableContextValue>(EMPTY_CONTEXT);
 
 interface VariableProviderProps {
   initialDefinitions?: VariableDefinition[];
@@ -46,11 +52,8 @@ export const VariableProvider: React.FC<VariableProviderProps> = ({
 
 /**
  * Hook to access the variable catalog from within the editor tree.
+ * Returns empty defaults when called outside a VariableProvider.
  */
 export function useVariables(): VariableContextValue {
-  const ctx = useContext(VariableContext);
-  if (!ctx) {
-    throw new Error('useVariables must be used within a VariableProvider');
-  }
-  return ctx;
+  return useContext(VariableContext);
 }

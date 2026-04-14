@@ -69,9 +69,9 @@ describe('VariableContext', () => {
     expect(result.current.definitions[0].key).toBe('new.key');
   });
 
-  it('throws when used outside provider', () => {
-    expect(() => {
-      renderHook(() => useVariables());
-    }).toThrow('useVariables must be used within a VariableProvider');
+  it('returns safe defaults when used outside provider', () => {
+    const { result } = renderHook(() => useVariables());
+    expect(result.current.definitions).toEqual([]);
+    expect(result.current.getDefinition('any.key')).toBeUndefined();
   });
 });

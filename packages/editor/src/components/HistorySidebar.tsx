@@ -46,6 +46,7 @@ export const HistorySidebar: React.FC = () => {
       open={historySidebarOpen}
       onClose={() => setHistorySidebarOpen(false)}
       headerActions={headerActions}
+      testId="history-sidebar"
     >
       {visibleEntries.length === 0 ? (
         <div

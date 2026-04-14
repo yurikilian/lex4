@@ -1,5 +1,5 @@
 import type { Lex4Document } from './document';
-import type { VariableDefinition } from '../variables/types';
+import type { Lex4Extension } from '../extensions/types';
 import type { DocumentAst } from '../ast/types';
 
 /** Public props for the Lex4Editor component */
@@ -22,11 +22,15 @@ export interface Lex4EditorProps {
   /** Capture undo/redo shortcuts at the window level, even when focus is outside the document. Defaults to true. */
   captureHistoryShortcutsOnWindow?: boolean;
 
-  /** Variable definitions for the variable picker and AST metadata */
-  variableDefinitions?: VariableDefinition[];
-
   /** Called when the user triggers save/export. Provides both the AST and its JSON serialization. */
   onSave?: (payload: { ast: DocumentAst; json: string }) => void;
+
+  /**
+   * Extensions to load into the editor.
+   * Each extension can contribute nodes, plugins, toolbar items, side panels, and imperative handle methods.
+   * @example extensions={[defaultTheme(), astExtension(), variablesExtension(defs)]}
+   */
+  extensions?: Lex4Extension[];
 
   /** Additional CSS class for the editor root element */
   className?: string;

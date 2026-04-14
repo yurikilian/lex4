@@ -17,6 +17,11 @@ export { usePagination } from './hooks/use-pagination';
 export { useOverflowDetection } from './hooks/use-overflow-detection';
 export { useHeaderFooter } from './hooks/use-header-footer';
 
+// Extension exports
+export type { Lex4Extension, ExtensionContext } from './extensions';
+export { astExtension } from './extensions';
+export { variablesExtension } from './extensions';
+
 // AST exports
 export type {
   DocumentAst,
