@@ -66,6 +66,7 @@ test.describe('Header/Footer Pagination', () => {
 
     await typeLargeRegion(page, 'header');
     await page.locator('[data-testid^="page-body-"]').first().click();
+    await page.getByTestId('header-footer-menu-trigger').click();
     await page.getByTestId('copy-header-all').click();
     await page.waitForTimeout(5000);
 
@@ -82,6 +83,7 @@ test.describe('Header/Footer Pagination', () => {
 
     await typeLargeRegion(page, 'footer');
     await page.locator('[data-testid^="page-body-"]').first().click();
+    await page.getByTestId('header-footer-menu-trigger').click();
     await page.getByTestId('copy-footer-all').click();
     await page.waitForTimeout(5000);
 
@@ -96,11 +98,13 @@ test.describe('Header/Footer Pagination', () => {
     await createLargeBody(page);
     await typeLargeRegion(page, 'header');
     await page.locator('[data-testid^="page-body-"]').first().click();
+    await page.getByTestId('header-footer-menu-trigger').click();
     await page.getByTestId('copy-header-all').click();
     await page.waitForTimeout(5000);
 
     const expandedPageCount = await page.locator('[data-page-id]').count();
 
+    await page.getByTestId('header-footer-menu-trigger').click();
     await page.getByTestId('clear-all-headers').click();
     await page.waitForTimeout(5000);
 

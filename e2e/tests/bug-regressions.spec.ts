@@ -449,6 +449,7 @@ test.describe('Bug Fix Regressions', () => {
     await page.waitForTimeout(300);
 
     // Click "Copy Header → All"
+    await page.getByTestId('header-footer-menu-trigger').click();
     await page.getByTestId('copy-header-all').click();
     await page.waitForTimeout(1000);
 
@@ -471,6 +472,7 @@ test.describe('Bug Fix Regressions', () => {
     await page.waitForTimeout(500);
 
     // Click "Clear All Headers"
+    await page.getByTestId('header-footer-menu-trigger').click();
     await page.getByTestId('clear-all-headers').click();
     await page.waitForTimeout(1000);
 

@@ -36,16 +36,18 @@ test.describe('Page Counter', () => {
   test('page counter selector appears with header/footer controls', async ({ page }) => {
     await page.getByTestId('header-footer-switch').click();
 
-    const selector = page.getByTestId('page-counter-mode');
-    await expect(selector).toBeVisible();
-    await expect(selector).toHaveValue('none');
+    await page.getByTestId('header-footer-menu-trigger').click();
+    const menu = page.getByTestId('page-counter-mode');
+    await expect(menu).toBeVisible();
+    await expect(page.getByTestId('page-counter-none')).toHaveAttribute('aria-checked', 'true');
   });
 
   test('page counter can render in the header across all pages', async ({ page }) => {
     await page.getByTestId('header-footer-switch').click();
     await createAdditionalPages(page);
 
-    await page.getByTestId('page-counter-mode').selectOption('header');
+    await page.getByTestId('header-footer-menu-trigger').click();
+    await page.getByTestId('page-counter-header').click();
 
     const pageCount = await page.locator('[data-page-id]').count();
     expect(pageCount).toBeGreaterThanOrEqual(2);
@@ -62,7 +64,8 @@ test.describe('Page Counter', () => {
     await page.getByTestId('header-footer-switch').click();
     await createAdditionalPages(page);
 
-    await page.getByTestId('page-counter-mode').selectOption('both');
+    await page.getByTestId('header-footer-menu-trigger').click();
+    await page.getByTestId('page-counter-both').click();
 
     const pageCount = await page.locator('[data-page-id]').count();
     expect(pageCount).toBeGreaterThanOrEqual(2);
@@ -78,14 +81,15 @@ test.describe('Page Counter', () => {
 
   test('page counter can render in the footer and be disabled again', async ({ page }) => {
     await page.getByTestId('header-footer-switch').click();
-    await page.getByTestId('page-counter-mode').selectOption('footer');
+    await page.getByTestId('header-footer-menu-trigger').click();
+    await page.getByTestId('page-counter-footer').click();
 
     const footerCounters = page.locator('[data-testid^="page-counter-footer-"]');
     await expect(footerCounters).toHaveCount(1);
     await expect(footerCounters.first()).toHaveText('Page 1 of 1');
     await expect(page.locator('[data-testid^="page-counter-header-"]')).toHaveCount(0);
 
-    await page.getByTestId('page-counter-mode').selectOption('none');
+    await page.getByTestId('page-counter-none').click();
     await expect(page.locator('[data-testid^="page-counter-footer-"]')).toHaveCount(0);
   });
 });

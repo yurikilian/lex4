@@ -350,20 +350,17 @@ export const Toolbar: React.FC = () => {
         />
 
         {document.headerFooterEnabled && (
-          <>
-            <Divider />
-            <HeaderFooterActions
-              activePageId={activePageId}
-              pageCounterMode={document.pageCounterMode}
-              onPageCounterModeChange={handlePageCounterModeChange}
-              onCopyHeaderToAll={handleCopyHeaderToAll}
-              onCopyFooterToAll={handleCopyFooterToAll}
-              onClearHeader={handleClearHeader}
-              onClearFooter={handleClearFooter}
-              onClearAllHeaders={handleClearAllHeaders}
-              onClearAllFooters={handleClearAllFooters}
-            />
-          </>
+          <HeaderFooterActions
+            activePageId={activePageId}
+            pageCounterMode={document.pageCounterMode}
+            onPageCounterModeChange={handlePageCounterModeChange}
+            onCopyHeaderToAll={handleCopyHeaderToAll}
+            onCopyFooterToAll={handleCopyFooterToAll}
+            onClearHeader={handleClearHeader}
+            onClearFooter={handleClearFooter}
+            onClearAllHeaders={handleClearAllHeaders}
+            onClearAllFooters={handleClearAllFooters}
+          />
         )}
 
         {toolbarItems.length > 0 && (
