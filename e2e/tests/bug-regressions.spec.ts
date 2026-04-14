@@ -293,7 +293,7 @@ test.describe('Bug Fix Regressions', () => {
     // Fill body with content
     const body = page.locator('[data-testid^="page-body-"]').first();
     await body.click();
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 38; i++) {
       await page.keyboard.type(`Line ${i + 1}`);
       await page.keyboard.press('Enter');
     }

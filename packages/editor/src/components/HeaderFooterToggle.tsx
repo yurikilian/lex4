@@ -1,4 +1,5 @@
 import React from 'react';
+import { Rows3 } from 'lucide-react';
 
 interface HeaderFooterToggleProps {
   enabled: boolean;
@@ -14,6 +15,7 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
       className="flex items-center gap-1.5 cursor-pointer select-none"
       data-testid="header-footer-toggle"
     >
+      <Rows3 size={14} className="text-gray-500" />
       <span className="text-xs font-medium text-gray-600">
         Headers & Footers
       </span>

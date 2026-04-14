@@ -342,27 +342,6 @@ export const Toolbar: React.FC = () => {
           </ToolbarIconButton>
         </div>
 
-        <Divider />
-
-        <HeaderFooterToggle
-          enabled={document.headerFooterEnabled}
-          onToggle={handleToggle}
-        />
-
-        {document.headerFooterEnabled && (
-          <HeaderFooterActions
-            activePageId={activePageId}
-            pageCounterMode={document.pageCounterMode}
-            onPageCounterModeChange={handlePageCounterModeChange}
-            onCopyHeaderToAll={handleCopyHeaderToAll}
-            onCopyFooterToAll={handleCopyFooterToAll}
-            onClearHeader={handleClearHeader}
-            onClearFooter={handleClearFooter}
-            onClearAllHeaders={handleClearAllHeaders}
-            onClearAllFooters={handleClearAllFooters}
-          />
-        )}
-
         {toolbarItems.length > 0 && (
           <>
             <Divider />
@@ -382,6 +361,27 @@ export const Toolbar: React.FC = () => {
             <PanelRight size={15} />
           </ToolbarIconButton>
         </div>
+      </div>
+
+      <div className="flex items-center gap-1 px-2 py-1 border-t border-gray-100">
+        <HeaderFooterToggle
+          enabled={document.headerFooterEnabled}
+          onToggle={handleToggle}
+        />
+
+        {document.headerFooterEnabled && (
+          <HeaderFooterActions
+            activePageId={activePageId}
+            pageCounterMode={document.pageCounterMode}
+            onPageCounterModeChange={handlePageCounterModeChange}
+            onCopyHeaderToAll={handleCopyHeaderToAll}
+            onCopyFooterToAll={handleCopyFooterToAll}
+            onClearHeader={handleClearHeader}
+            onClearFooter={handleClearFooter}
+            onClearAllHeaders={handleClearAllHeaders}
+            onClearAllFooters={handleClearAllFooters}
+          />
+        )}
       </div>
     </div>
   );
