@@ -28,16 +28,17 @@ A paginated document editor built as a **reusable React library** on top of [Met
 
 ## ✨ Features
 
-- **True A4 pagination** — every page is exactly 794 × 1123 CSS pixels (210mm × 297mm at 96 DPI)
+- **True A4 pagination** — every page is exactly 794 × 1123 CSS pixels (210 mm × 297 mm at 96 DPI)
 - **Automatic content flow** — overflow splits at block boundaries, underflow pulls content back
 - **Rich text formatting** — bold, italic, underline, strikethrough, alignment, lists, indentation
 - **Headers & footers** — global toggle with per-page editable regions and page counters
-- **Multiple font families** — Arial, Times New Roman, Courier New, Georgia, Verdana and more
+- **Multiple font families** — Inter, Arial, Times New Roman, Courier New, Georgia, Verdana and more
+- **Font size control** — per-selection font size with AST-level preservation
 - **Session history sidebar** — Word-style action timeline with full undo/redo
-- **Serializable document model** — typed AST export/import for backend persistence
+- **Extension architecture** — opt-in features via composable extensions (`astExtension`, `variablesExtension`)
 - **Document AST export** — clean, versioned, Lexical-independent AST for backend DOCX/PDF rendering
 - **Variables & placeholders** — insert dynamic tokens like `{{customer.name}}` with metadata export
-- **Font size control** — per-selection font size with AST-level preservation
+- **i18n support** — all UI strings externalized; override any subset for localization
 - **Read-only mode** — disable editing while keeping the document viewable
 - **Zero config** — drop in the component and start editing
 
@@ -83,10 +84,10 @@ yarn add @yurikilian/lex4
 
 ### Peer Dependencies
 
-The library requires React 18+ and Lexical 0.22+ as peer dependencies:
+The library requires React 18+ as a peer dependency. Lexical packages are bundled.
 
 ```bash
-npm install react react-dom lexical @lexical/react @lexical/rich-text @lexical/list @lexical/history @lexical/selection @lexical/utils @lexical/clipboard @lexical/html
+npm install react react-dom
 ```
 
 ## 🚀 Quick Start
@@ -104,22 +105,48 @@ function App() {
 }
 ```
 
-### With Initial Document
+### With Extensions
+
+Extensions add opt-in capabilities. The two built-in extensions are `astExtension` (document AST export) and `variablesExtension` (dynamic variable placeholders):
 
 ```tsx
-import { Lex4Editor, createEmptyDocument } from '@yurikilian/lex4';
+import { useRef, useMemo } from 'react';
+import {
+  Lex4Editor,
+  Lex4EditorHandle,
+  astExtension,
+  variablesExtension,
+  VariableDefinition,
+} from '@yurikilian/lex4';
 import '@yurikilian/lex4/style.css';
 
+const variables: VariableDefinition[] = [
+  { key: 'customer.name', label: 'Customer Name', group: 'Customer', valueType: 'string' },
+  { key: 'proposal.date', label: 'Proposal Date', group: 'Proposal', valueType: 'date' },
+];
+
 function App() {
-  const initialDoc = createEmptyDocument();
+  const editorRef = useRef<Lex4EditorHandle>(null);
+
+  const extensions = useMemo(() => [
+    astExtension(),
+    variablesExtension(variables),
+  ], []);
+
+  const handleSave = () => {
+    const ast = editorRef.current?.getDocumentAst();
+    console.log(JSON.stringify(ast, null, 2));
+  };
 
   return (
-    <Lex4Editor
-      initialDocument={initialDoc}
-      headerFooterEnabled={true}
-      onDocumentChange={(doc) => saveToBackend(doc)}
-      onHeaderFooterToggle={(enabled) => console.log('Headers:', enabled)}
-    />
+    <>
+      <Lex4Editor
+        ref={editorRef}
+        extensions={extensions}
+        onDocumentChange={(doc) => console.log(doc)}
+      />
+      <button onClick={handleSave}>Export AST</button>
+    </>
   );
 }
 ```
@@ -146,10 +173,56 @@ The main editor component. Drop it into any React application.
 | `headerFooterEnabled` | `boolean` | `false` | Initial header/footer toggle state |
 | `onHeaderFooterToggle` | `(enabled: boolean) => void` | — | Called when the user toggles headers/footers |
 | `readOnly` | `boolean` | `false` | Disable editing (view-only mode) |
-| `variableDefinitions` | `VariableDefinition[]` | `[]` | Available variables for the variable picker |
-| `onSave` | `(payload: { ast: DocumentAst; json: string }) => void` | — | Called when the host app triggers a save |
+| `extensions` | `Lex4Extension[]` | `[]` | Extensions to load (e.g., `astExtension()`, `variablesExtension(defs)`) |
+| `translations` | `DeepPartial<Lex4Translations>` | English | Partial i18n overrides, deep-merged with defaults |
+| `onSave` | `(payload: { ast, json }) => void` | — | Called when the host app triggers a save |
 | `captureHistoryShortcutsOnWindow` | `boolean` | `true` | Capture ⌘Z/⌘⇧Z at the window level |
 | `className` | `string` | — | Additional CSS class for the editor root |
+
+### Extensions
+
+Extensions are opt-in feature modules that add capabilities to the editor without coupling.
+
+#### `astExtension()`
+
+Adds document AST export. Contributes imperative handle methods:
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `getDocumentAst()` | `() => DocumentAst` | Returns the document as a clean, typed AST |
+| `getDocumentJson()` | `() => string` | Returns the AST serialized as formatted JSON |
+| `buildSavePayload(opts?)` | `(opts?) => SaveDocumentRequest` | Wraps the AST into a REST-ready payload |
+
+```tsx
+const extensions = [astExtension()];
+// then via ref:
+const ast = editorRef.current?.getDocumentAst();
+```
+
+#### `variablesExtension(definitions)`
+
+Adds variable placeholders — dynamic tokens rendered as non-editable chips in the editor and preserved as structured nodes in the exported AST.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `insertVariable(key)` | `(key: string) => void` | Inserts a variable at the current cursor position |
+| `refreshVariables(defs)` | `(defs: VariableDefinition[]) => void` | Updates the available variable definitions |
+
+Also adds:
+- **Toolbar button** — variable picker dropdown for inserting variables inline
+- **Side panel toggle** — opens a searchable variable panel on the right
+- **Variable node** — custom Lexical node rendered as a non-editable chip
+
+```tsx
+const variables: VariableDefinition[] = [
+  { key: 'customer.name', label: 'Customer Name', group: 'Customer', valueType: 'string' },
+  { key: 'proposal.date', label: 'Proposal Date', group: 'Proposal', valueType: 'date' },
+];
+
+const extensions = [variablesExtension(variables)];
+```
+
+In the exported AST, variables appear as `{ type: "variable", key: "customer.name" }` nodes within block content, and their definitions appear under `metadata.variables`.
 
 ### Types
 
@@ -211,51 +284,77 @@ These hooks are exported for advanced use cases where you need to build custom p
 | `useOverflowDetection` | Monitors content height and triggers reflow when content exceeds the page body |
 | `useHeaderFooter` | Header/footer state management and chrome template application |
 
-### Imperative Handle (`Lex4EditorHandle`)
+## 🌐 i18n (Internationalization)
 
-Use a `ref` to access the editor's imperative API:
+All 59 UI strings are externalized and can be overridden via the `translations` prop. No external i18n library is forced on consumers.
+
+### Basic Override
 
 ```tsx
-import { useRef } from 'react';
-import { Lex4Editor, Lex4EditorHandle } from '@yurikilian/lex4';
+<Lex4Editor
+  translations={{
+    toolbar: { undo: 'Desfazer', redo: 'Refazer', bold: 'Negrito (Ctrl+B)' },
+    header: { placeholder: 'Cabeçalho' },
+    footer: { placeholder: 'Rodapé' },
+  }}
+/>
+```
+
+### Bridge with i18next
+
+If your app already uses `i18next`, bridge it:
+
+```tsx
+import { useTranslation } from 'react-i18next';
 
 function App() {
-  const editorRef = useRef<Lex4EditorHandle>(null);
-
-  const handleExport = () => {
-    const ast = editorRef.current?.getDocumentAst();
-    console.log(JSON.stringify(ast, null, 2));
-  };
+  const { t } = useTranslation();
 
   return (
-    <>
-      <Lex4Editor ref={editorRef} />
-      <button onClick={handleExport}>Export AST</button>
-    </>
+    <Lex4Editor
+      translations={{
+        toolbar: {
+          undo: t('editor.undo'),
+          redo: t('editor.redo'),
+          bold: t('editor.bold'),
+        },
+      }}
+    />
   );
 }
 ```
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `getDocumentAst()` | `() => DocumentAst` | Returns the document as a clean, typed AST |
-| `getDocumentJson()` | `() => string` | Returns the AST serialized as formatted JSON |
-| `insertVariable(key)` | `(key: string) => void` | Inserts a variable at the current cursor position |
-| `refreshVariables(defs)` | `(defs: VariableDefinition[]) => void` | Updates the available variable definitions |
-| `buildSavePayload(opts?)` | `(opts?) => SaveDocumentRequest` | Wraps the AST into a REST-ready payload |
+### Available String Keys
 
-### Document AST
+| Section | Keys | Examples |
+|---------|------|---------|
+| `toolbar` | 16 | `undo`, `redo`, `bold`, `italic`, `alignLeft`, `numberedList`, ... |
+| `history` | 4 + 20 actions | `title`, `empty`, `actions.boldApplied`, `actions.fontChanged`, ... |
+| `variables` | 8 | `title`, `available`, `searchPlaceholder`, `openPanel`, ... |
+| `header` / `footer` | 1 each | `placeholder` |
+| `sidebar` | 1 | `close` |
+
+Dynamic strings use `{{key}}` interpolation: `"Font changed to {{value}}"`.
+
+Import `DEFAULT_TRANSLATIONS` and `Lex4Translations` to see the full shape:
+
+```tsx
+import { DEFAULT_TRANSLATIONS } from '@yurikilian/lex4';
+import type { Lex4Translations } from '@yurikilian/lex4';
+```
+
+## 📝 Document AST
 
 The AST is a **clean, versioned, Lexical-independent** structure designed for backend consumption (e.g., DOCX/PDF generation). It preserves semantic structure, formatting marks, font choices, header/footer layout, A4 page metadata, and variable references.
 
+> **Requires `astExtension()`** — the AST export is opt-in via the extension system.
+
 ```ts
-import { serializeDocument, buildSavePayload } from '@yurikilian/lex4';
+// Export via imperative ref
+const ast = editorRef.current?.getDocumentAst();
 
-// From a Lex4Document (e.g., from onDocumentChange)
-const ast = serializeDocument(document, variableDefinitions);
-
-// Wrap for REST API
-const payload = buildSavePayload(ast, {
+// Or build a REST payload
+const payload = editorRef.current?.buildSavePayload({
   exportTarget: 'pdf',
   documentId: 'doc-123',
 });
@@ -267,22 +366,40 @@ await fetch('/api/documents/export', {
 });
 ```
 
-### Variables
+### AST Shape (top-level)
 
-Variables are dynamic placeholders (e.g., `{{customer.name}}`) rendered as non-editable tokens in the editor and preserved as structured nodes in the AST.
-
-```tsx
-import { Lex4Editor, VariableDefinition } from '@yurikilian/lex4';
-
-const variables: VariableDefinition[] = [
-  { key: 'customer.name', label: 'Customer Name', group: 'Customer', valueType: 'string' },
-  { key: 'proposal.date', label: 'Proposal Date', group: 'Proposal', valueType: 'date' },
-];
-
-<Lex4Editor ref={editorRef} variableDefinitions={variables} />
+```ts
+interface DocumentAst {
+  version: '1.0.0';
+  page: {
+    format: 'A4';
+    widthMm: 210;
+    heightMm: 297;
+    margins: { topMm, rightMm, bottomMm, leftMm };
+  };
+  headerFooter: {
+    enabled: boolean;
+    pageCounterMode: 'none' | 'header' | 'footer' | 'both';
+    defaultHeader: ContentAst | null;
+    defaultFooter: ContentAst | null;
+  };
+  pages: PageAst[];
+  metadata: {
+    variables: Record<string, VariableDefinitionAst>;
+  };
+}
 ```
 
-In the exported AST, variables appear as `{ type: "variable", key: "customer.name" }` nodes within block content, and their definitions appear under `metadata.variables`.
+### REST Payload
+
+```ts
+interface SaveDocumentRequest {
+  document: DocumentAst;
+  exportTarget?: 'pdf' | 'docx';
+  documentId?: string;
+  metadata?: Record<string, string>;
+}
+```
 
 ## 🏗️ Architecture
 
@@ -306,6 +423,23 @@ The pagination engine is built as **pure functions** that transform page state a
 
 </div>
 
+### Extension Architecture
+
+Features are added via composable extensions that can contribute nodes, plugins, toolbar items, side panels, context providers, and imperative handle methods:
+
+```ts
+interface Lex4Extension {
+  name: string;
+  nodes?: Klass<LexicalNode>[];        // custom Lexical nodes
+  bodyPlugins?: React.ComponentType[];  // plugins per page editor
+  toolbarItems?: React.ComponentType[]; // toolbar UI additions
+  sidePanel?: React.ComponentType;      // right-side panel
+  provider?: React.ComponentType<...>;  // context provider wrapper
+  themeOverrides?: Partial<EditorThemeClasses>;
+  handleMethods?: (ctx) => Record<string, Function>;
+}
+```
+
 ### Key Invariants
 
 - Every page is **exactly** A4 (794 × 1123 px at 96 DPI) — no dynamic heights
@@ -319,21 +453,25 @@ The pagination engine is built as **pure functions** that transform page state a
 ```
 lex4/
 ├── packages/
-│   └── editor/               # lex4 — the publishable library
+│   └── editor/               # @yurikilian/lex4 — the publishable library
 │       ├── src/
+│       │   ├── ast/          # AST types, serializers, block/inline mappers, payload builder
 │       │   ├── components/   # React components (Lex4Editor, PageView, Toolbar, etc.)
 │       │   ├── constants/    # A4 dimensions, layout math
 │       │   ├── context/      # DocumentProvider, document reducer, actions
 │       │   ├── engine/       # Pagination logic — pure functions (reflow, overflow, paginate)
+│       │   ├── extensions/   # Extension system, astExtension, variablesExtension
 │       │   ├── hooks/        # usePagination, useOverflowDetection, useHeaderFooter
+│       │   ├── i18n/         # Translations types, defaults, context provider
 │       │   ├── lexical/      # Editor config, plugins (paste, history), custom commands
 │       │   ├── types/        # TypeScript interfaces (Lex4Document, PageState, etc.)
-│       │   └── utils/        # Editor state manipulation helpers
+│       │   ├── utils/        # Editor state manipulation helpers
+│       │   └── variables/    # VariableNode, VariablePlugin, VariableProvider
 │       └── dist/             # Built output (ESM + CJS + types + CSS)
 ├── demo/                     # Demo app (deployed to GitHub Pages)
 ├── e2e/                      # Playwright end-to-end tests
 ├── .github/workflows/        # CI, npm publish, GitHub Pages deployment
-└── docs/screenshots/         # Auto-generated screenshots for README
+└── docs/screenshots/         # Screenshots for README
 ```
 
 ## 🛠️ Development
@@ -390,8 +528,8 @@ pnpm --filter e2e test:ui
 
 | Category | Framework | Count | Description |
 |----------|-----------|-------|-------------|
-| Unit | Vitest | 89 | Engine logic, reducers, utilities, component rendering |
-| E2E | Playwright | 80 | Full user flows — typing, formatting, pagination, header/footer, history |
+| Unit | Vitest | 178 | Engine logic, reducers, AST serializers, i18n, variable nodes |
+| E2E | Playwright | 118 | Full user flows — typing, formatting, pagination, header/footer, variables, theme, i18n |
 
 ## 🔧 Build & Bundle
 
@@ -405,7 +543,7 @@ The library is built with **Vite in library mode**, producing:
 | CSS | `dist/style.css` | Compiled Tailwind styles |
 | Source maps | `dist/*.map` | Debugging support |
 
-React, ReactDOM, and all `@lexical/*` packages are **externalized** — they are not bundled and must be provided by the consuming application.
+React and ReactDOM are **externalized** — they are not bundled and must be provided by the consuming application. Lexical packages are bundled as direct dependencies.
 
 ## 🚢 Publishing to npm
 
