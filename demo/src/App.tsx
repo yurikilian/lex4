@@ -30,6 +30,15 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const handleSave = useCallback(() => {
+    if (editorRef.current) {
+      const ast = editorRef.current.getDocumentAst();
+      (window as unknown as Record<string, unknown>).__lex4_last_ast = ast;
+      console.log('[Lex4 Save] Document AST:', ast);
+      console.log('[Lex4 Save] JSON payload:', editorRef.current.getDocumentJson());
+    }
+  }, []);
+
   return (
     <div className="h-screen flex flex-col bg-gray-300">
       <header className="bg-gray-800 text-white px-4 py-2 flex items-center gap-2">
@@ -37,8 +46,16 @@ export const App: React.FC = () => {
         <span className="text-gray-400 text-sm">— Document Editor</span>
         <button
           type="button"
+          data-testid="btn-save"
+          className="ml-auto rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+          onClick={handleSave}
+        >
+          💾 Save
+        </button>
+        <button
+          type="button"
           data-testid="btn-export-ast"
-          className="ml-auto rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+          className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
           onClick={handleExportAst}
         >
           Export AST
