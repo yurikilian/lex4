@@ -47,3 +47,7 @@ export { AST_VERSION, serializeDocument, buildSavePayload, serializeDocumentJson
 // Variable exports
 export type { VariableDefinition, VariableContextValue } from './variables';
 export { VariableNode, $createVariableNode, $isVariableNode, INSERT_VARIABLE_COMMAND } from './variables';
+
+// i18n exports
+export type { Lex4Translations } from './i18n';
+export { DEFAULT_TRANSLATIONS } from './i18n';

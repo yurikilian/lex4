@@ -21,6 +21,7 @@ import { useDocument } from '../context/document-context';
 import { HeaderFooterToggle } from './HeaderFooterToggle';
 import { HeaderFooterActions } from './HeaderFooterActions';
 import { useExtensions } from '../extensions/extension-context';
+import { useTranslations, interpolate } from '../i18n';
 import type { PageCounterMode } from '../types/document';
 import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
@@ -46,6 +47,7 @@ export const Toolbar: React.FC = () => {
     undo,
   } = useDocument();
   const { toolbarItems } = useExtensions();
+  const t = useTranslations();
 
   const withBodySelection = useCallback(
     (editor: LexicalEditor, action: (targetEditor: LexicalEditor) => void) => {
@@ -92,7 +94,7 @@ export const Toolbar: React.FC = () => {
 
   const handleToggle = (enabled: boolean) => {
     runToolbarAction(
-      enabled ? 'Enabled headers and footers' : 'Disabled headers and footers',
+      enabled ? t.history.actions.enabledHeadersFooters : t.history.actions.disabledHeadersFooters,
       () => {
         dispatch({ type: 'SET_HEADER_FOOTER_ENABLED', enabled });
       },
@@ -101,137 +103,137 @@ export const Toolbar: React.FC = () => {
 
   const handleCopyHeaderToAll = () => {
     if (activePageId) {
-      runToolbarAction('Copied header to all pages', () => {
+      runToolbarAction(t.history.actions.copiedHeaderToAll, () => {
         dispatch({ type: 'COPY_HEADER_TO_ALL', sourcePageId: activePageId });
       });
     }
   };
   const handleCopyFooterToAll = () => {
     if (activePageId) {
-      runToolbarAction('Copied footer to all pages', () => {
+      runToolbarAction(t.history.actions.copiedFooterToAll, () => {
         dispatch({ type: 'COPY_FOOTER_TO_ALL', sourcePageId: activePageId });
       });
     }
   };
   const handleClearHeader = () => {
     if (activePageId) {
-      runToolbarAction('Cleared header', () => {
+      runToolbarAction(t.history.actions.clearedHeader, () => {
         dispatch({ type: 'CLEAR_HEADER', pageId: activePageId });
       });
     }
   };
   const handleClearFooter = () => {
     if (activePageId) {
-      runToolbarAction('Cleared footer', () => {
+      runToolbarAction(t.history.actions.clearedFooter, () => {
         dispatch({ type: 'CLEAR_FOOTER', pageId: activePageId });
       });
     }
   };
-  const handleClearAllHeaders = () => runToolbarAction('Cleared all headers', () => {
+  const handleClearAllHeaders = () => runToolbarAction(t.history.actions.clearedAllHeaders, () => {
     dispatch({ type: 'CLEAR_ALL_HEADERS' });
   });
-  const handleClearAllFooters = () => runToolbarAction('Cleared all footers', () => {
+  const handleClearAllFooters = () => runToolbarAction(t.history.actions.clearedAllFooters, () => {
     dispatch({ type: 'CLEAR_ALL_FOOTERS' });
   });
   const handlePageCounterModeChange = useCallback((mode: PageCounterMode) => {
-    runToolbarAction(`Page counter set to ${mode}`, () => {
+    runToolbarAction(interpolate(t.history.actions.pageCounterSet, { value: mode }), () => {
       dispatch({ type: 'SET_PAGE_COUNTER_MODE', mode });
     });
-  }, [dispatch, runToolbarAction]);
+  }, [dispatch, runToolbarAction, t.history.actions.pageCounterSet]);
 
   const handleBold = useCallback(() => {
     debug('toolbar', `bold (globalSelection=${globalSelectionActive}, editors=${editorRegistry.all().length}, hasEditor=${!!activeEditor})`);
-    runToolbarAction('Bold applied', () => {
+    runToolbarAction(t.history.actions.boldApplied, () => {
       applyToBodyEditors(toggleBold);
     });
-  }, [activeEditor, applyToBodyEditors, editorRegistry, globalSelectionActive, runToolbarAction]);
+  }, [activeEditor, applyToBodyEditors, editorRegistry, globalSelectionActive, runToolbarAction, t.history.actions.boldApplied]);
 
   const handleItalic = useCallback(() => {
     debug('toolbar', `italic (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
-    runToolbarAction('Italic applied', () => {
+    runToolbarAction(t.history.actions.italicApplied, () => {
       applyToBodyEditors(toggleItalic);
     });
-  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction]);
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction, t.history.actions.italicApplied]);
 
   const handleUnderline = useCallback(() => {
     debug('toolbar', `underline (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
-    runToolbarAction('Underline applied', () => {
+    runToolbarAction(t.history.actions.underlineApplied, () => {
       applyToBodyEditors(toggleUnderline);
     });
-  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction]);
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction, t.history.actions.underlineApplied]);
 
   const handleStrikethrough = useCallback(() => {
     debug('toolbar', `strikethrough (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
-    runToolbarAction('Strikethrough applied', () => {
+    runToolbarAction(t.history.actions.strikethroughApplied, () => {
       applyToBodyEditors(toggleStrikethrough);
     });
-  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction]);
+  }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction, t.history.actions.strikethroughApplied]);
 
   const handleAlignLeft = useCallback(() => {
-    runToolbarAction('Aligned left', () => {
+    runToolbarAction(t.history.actions.alignedLeft, () => {
       applyToBodyEditors(editor => setAlignment(editor, 'left'));
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.alignedLeft]);
 
   const handleAlignCenter = useCallback(() => {
-    runToolbarAction('Aligned center', () => {
+    runToolbarAction(t.history.actions.alignedCenter, () => {
       applyToBodyEditors(editor => setAlignment(editor, 'center'));
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.alignedCenter]);
 
   const handleAlignRight = useCallback(() => {
-    runToolbarAction('Aligned right', () => {
+    runToolbarAction(t.history.actions.alignedRight, () => {
       applyToBodyEditors(editor => setAlignment(editor, 'right'));
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.alignedRight]);
 
   const handleAlignJustify = useCallback(() => {
-    runToolbarAction('Justified text', () => {
+    runToolbarAction(t.history.actions.justifiedText, () => {
       applyToBodyEditors(editor => setAlignment(editor, 'justify'));
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.justifiedText]);
 
   const handleListNumber = useCallback(() => {
-    runToolbarAction('Inserted numbered list', () => {
+    runToolbarAction(t.history.actions.insertedNumberedList, () => {
       applyToBodyEditors(editor => insertList(editor, 'number'));
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.insertedNumberedList]);
 
   const handleListBullet = useCallback(() => {
-    runToolbarAction('Inserted bullet list', () => {
+    runToolbarAction(t.history.actions.insertedBulletList, () => {
       applyToBodyEditors(editor => insertList(editor, 'bullet'));
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.insertedBulletList]);
 
   const handleIndent = useCallback(() => {
-    runToolbarAction('Indented content', () => {
+    runToolbarAction(t.history.actions.indentedContent, () => {
       applyToBodyEditors(indentContent);
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.indentedContent]);
 
   const handleOutdent = useCallback(() => {
-    runToolbarAction('Outdented content', () => {
+    runToolbarAction(t.history.actions.outdentedContent, () => {
       applyToBodyEditors(outdentContent);
     });
-  }, [applyToBodyEditors, runToolbarAction]);
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.outdentedContent]);
 
   const handleFontChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      runToolbarAction(`Font changed to ${e.target.value}`, () => {
+      runToolbarAction(interpolate(t.history.actions.fontChanged, { value: e.target.value }), () => {
         applyToBodyEditors(editor => applyFontFamily(editor, e.target.value as FontFamily));
       });
     },
-    [applyToBodyEditors, runToolbarAction],
+    [applyToBodyEditors, runToolbarAction, t.history.actions.fontChanged],
   );
 
   const handleFontSizeChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const size = parseInt(e.target.value, 10) as FontSize;
-      runToolbarAction(`Font size changed to ${size}pt`, () => {
+      runToolbarAction(interpolate(t.history.actions.fontSizeChanged, { value: String(size) }), () => {
         applyToBodyEditors(editor => applyFontSize(editor, size));
       });
     },
-    [applyToBodyEditors, runToolbarAction],
+    [applyToBodyEditors, runToolbarAction, t.history.actions.fontSizeChanged],
   );
 
   return (
@@ -242,7 +244,7 @@ export const Toolbar: React.FC = () => {
       <div className="flex items-center gap-1 px-2 py-1.5">
         <div className="flex items-center gap-0.5" data-testid="history-controls">
           <ToolbarIconButton
-            title="Undo"
+            title={t.toolbar.undo}
             testId="btn-undo"
             disabled={!canUndo}
             onClick={undo}
@@ -250,7 +252,7 @@ export const Toolbar: React.FC = () => {
             <Undo2 size={15} />
           </ToolbarIconButton>
           <ToolbarIconButton
-            title="Redo"
+            title={t.toolbar.redo}
             testId="btn-redo"
             disabled={!canRedo}
             onClick={redo}
@@ -292,16 +294,16 @@ export const Toolbar: React.FC = () => {
         <Divider />
 
         <div className="flex items-center gap-0.5" data-testid="format-group">
-          <ToolbarIconButton title="Bold (Ctrl+B)" testId="btn-bold" onClick={handleBold}>
+          <ToolbarIconButton title={t.toolbar.bold} testId="btn-bold" onClick={handleBold}>
             <Bold size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Italic (Ctrl+I)" testId="btn-italic" onClick={handleItalic}>
+          <ToolbarIconButton title={t.toolbar.italic} testId="btn-italic" onClick={handleItalic}>
             <Italic size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Underline (Ctrl+U)" testId="btn-underline" onClick={handleUnderline}>
+          <ToolbarIconButton title={t.toolbar.underline} testId="btn-underline" onClick={handleUnderline}>
             <Underline size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Strikethrough" testId="btn-strike" onClick={handleStrikethrough}>
+          <ToolbarIconButton title={t.toolbar.strikethrough} testId="btn-strike" onClick={handleStrikethrough}>
             <Strikethrough size={15} />
           </ToolbarIconButton>
         </div>
@@ -309,16 +311,16 @@ export const Toolbar: React.FC = () => {
         <Divider />
 
         <div className="flex items-center gap-0.5" data-testid="align-group">
-          <ToolbarIconButton title="Align Left" testId="btn-align-left" onClick={handleAlignLeft}>
+          <ToolbarIconButton title={t.toolbar.alignLeft} testId="btn-align-left" onClick={handleAlignLeft}>
             <AlignLeft size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Align Center" testId="btn-align-center" onClick={handleAlignCenter}>
+          <ToolbarIconButton title={t.toolbar.alignCenter} testId="btn-align-center" onClick={handleAlignCenter}>
             <AlignCenter size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Align Right" testId="btn-align-right" onClick={handleAlignRight}>
+          <ToolbarIconButton title={t.toolbar.alignRight} testId="btn-align-right" onClick={handleAlignRight}>
             <AlignRight size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Justify" testId="btn-align-justify" onClick={handleAlignJustify}>
+          <ToolbarIconButton title={t.toolbar.justify} testId="btn-align-justify" onClick={handleAlignJustify}>
             <AlignJustify size={15} />
           </ToolbarIconButton>
         </div>
@@ -326,16 +328,16 @@ export const Toolbar: React.FC = () => {
         <Divider />
 
         <div className="flex items-center gap-0.5" data-testid="list-group">
-          <ToolbarIconButton title="Numbered List" testId="btn-list-number" onClick={handleListNumber}>
+          <ToolbarIconButton title={t.toolbar.numberedList} testId="btn-list-number" onClick={handleListNumber}>
             <ListOrdered size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Bullet List" testId="btn-list-bullet" onClick={handleListBullet}>
+          <ToolbarIconButton title={t.toolbar.bulletList} testId="btn-list-bullet" onClick={handleListBullet}>
             <List size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Indent" testId="btn-indent" onClick={handleIndent}>
+          <ToolbarIconButton title={t.toolbar.indent} testId="btn-indent" onClick={handleIndent}>
             <IndentIncrease size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title="Outdent" testId="btn-outdent" onClick={handleOutdent}>
+          <ToolbarIconButton title={t.toolbar.outdent} testId="btn-outdent" onClick={handleOutdent}>
             <IndentDecrease size={15} />
           </ToolbarIconButton>
         </div>
@@ -375,7 +377,7 @@ export const Toolbar: React.FC = () => {
 
         <div className="ml-auto flex items-center">
           <ToolbarIconButton
-            title={historySidebarOpen ? 'Close History' : 'Open History'}
+            title={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
             testId="toggle-history-sidebar"
             active={historySidebarOpen}
             onClick={() => setHistorySidebarOpen(!historySidebarOpen)}

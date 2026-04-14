@@ -103,8 +103,8 @@ export class VariableNode extends DecoratorNode<JSX.Element> {
   decorate(): JSX.Element {
     return (
       <span
-        className="lex4-variable-chip inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5
-                   text-xs font-medium text-blue-800 border border-blue-200 select-none
+        className="lex4-variable-chip inline-flex items-center rounded bg-white px-1.5 py-0.5
+                   text-xs font-medium text-blue-700 border border-blue-300 select-none
                    cursor-default whitespace-nowrap mx-0.5"
         data-testid={`variable-chip-${this.__variableKey}`}
         title={this.__variableKey}

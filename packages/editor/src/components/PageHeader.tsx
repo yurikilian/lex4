@@ -12,6 +12,7 @@ import { ActiveEditorPlugin } from '../lexical/plugins/active-editor-plugin';
 import { HeightLimitPlugin } from '../lexical/plugins/height-limit-plugin';
 import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin';
 import { useExtensions } from '../extensions/extension-context';
+import { useTranslations } from '../i18n';
 import { debug, shortId } from '../utils/debug';
 
 interface PageHeaderProps {
@@ -36,6 +37,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   const hasPageCounter = !!pageCounterLabel;
   const { nodes, themeOverrides } = useExtensions();
+  const t = useTranslations();
   const config = useMemo(
     () => {
       const baseConfig = createEditorConfig('header', pageId, nodes, themeOverrides);
@@ -73,7 +75,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   return (
     <div
-      className="lex4-page-header border-b border-dashed border-gray-200 relative flex-shrink-0"
+      className="lex4-page-header bg-blue-50/60 border-t-2 border-t-blue-200 border-b border-dashed border-blue-100 relative flex-shrink-0"
       style={{ maxHeight: MAX_HEADER_HEIGHT_PX, overflow: 'clip' }}
       data-testid={`page-header-${pageId}`}
     >
@@ -87,7 +89,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           }
           placeholder={
             <div className={`absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 text-sm ${hasPageCounter ? 'pr-24' : ''}`}>
-              Header
+              {t.header.placeholder}
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}

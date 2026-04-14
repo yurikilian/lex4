@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useTranslations } from '../i18n';
 
 interface EditorSidebarProps {
   title: string;
@@ -20,6 +21,8 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   testId = 'editor-sidebar',
   children,
 }) => {
+  const t = useTranslations();
+
   if (!open) {
     return null;
   }
@@ -45,7 +48,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                          transition-colors hover:bg-gray-100 hover:text-gray-600"
               data-testid="close-editor-sidebar"
               onClick={onClose}
-              aria-label="Close sidebar"
+              aria-label={t.sidebar.close}
             >
               <X size={14} />
             </button>

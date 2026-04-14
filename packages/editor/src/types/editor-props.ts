@@ -1,6 +1,11 @@
 import type { Lex4Document } from './document';
 import type { Lex4Extension } from '../extensions/types';
 import type { DocumentAst } from '../ast/types';
+import type { Lex4Translations } from '../i18n/types';
+
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
 
 /** Public props for the Lex4Editor component */
 export interface Lex4EditorProps {
@@ -31,6 +36,12 @@ export interface Lex4EditorProps {
    * @example extensions={[defaultTheme(), astExtension(), variablesExtension(defs)]}
    */
   extensions?: Lex4Extension[];
+
+  /**
+   * Translation overrides for i18n. Partial overrides are deep-merged with defaults (English).
+   * @example translations={{ toolbar: { undo: 'Desfazer' } }}
+   */
+  translations?: DeepPartial<Lex4Translations>;
 
   /** Additional CSS class for the editor root element */
   className?: string;

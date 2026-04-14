@@ -12,6 +12,7 @@ import {
   useExtensions,
   useExtensionContext,
 } from '../extensions/extension-context';
+import { TranslationsProvider } from '../i18n';
 import '../styles.css';
 
 function selectEntireDocument(
@@ -221,7 +222,7 @@ const EditorChrome: React.FC<{
         className="pointer-events-none fixed -left-[9999px] top-0 h-0 w-0 opacity-0"
       />
       <Toolbar />
-      <div className="flex min-h-0 flex-1 overflow-hidden bg-gray-200">
+      <div className="flex min-h-0 flex-1 overflow-hidden bg-gray-700">
         <div className="min-w-0 flex-1 overflow-auto">
           <DocumentView />
         </div>
@@ -288,23 +289,26 @@ export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
   initialDocument,
   onDocumentChange,
   extensions,
+  translations,
   className,
 }, ref) => {
   return (
-    <ExtensionStateProvider>
-      <ExtensionProvider extensions={extensions}>
-        <DocumentProvider
-          initialDocument={initialDocument}
-          onDocumentChange={onDocumentChange}
-        >
-          <EditorWithHandle
-            ref={ref}
-            captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
-            className={className}
-          />
-        </DocumentProvider>
-      </ExtensionProvider>
-    </ExtensionStateProvider>
+    <TranslationsProvider translations={translations}>
+      <ExtensionStateProvider>
+        <ExtensionProvider extensions={extensions}>
+          <DocumentProvider
+            initialDocument={initialDocument}
+            onDocumentChange={onDocumentChange}
+          >
+            <EditorWithHandle
+              ref={ref}
+              captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+              className={className}
+            />
+          </DocumentProvider>
+        </ExtensionProvider>
+      </ExtensionStateProvider>
+    </TranslationsProvider>
   );
 });
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { useDocument } from '../context/document-context';
 import { EditorSidebar } from './EditorSidebar';
+import { useTranslations } from '../i18n';
 
 function formatTimestamp(timestamp: string): string {
   const date = new Date(timestamp);
@@ -21,14 +22,15 @@ export const HistorySidebar: React.FC = () => {
     jumpToHistoryEntry,
     setHistorySidebarOpen,
   } = useDocument();
+  const t = useTranslations();
 
   const visibleEntries = historyEntries.slice().reverse();
 
   const headerActions = (
     <button
       type="button"
-      title="Clear History"
-      aria-label="Clear History"
+      title={t.history.clearHistory}
+      aria-label={t.history.clearHistory}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => clearHistory('manual')}
       className="flex h-6 w-6 items-center justify-center rounded text-gray-400
@@ -41,8 +43,8 @@ export const HistorySidebar: React.FC = () => {
 
   return (
     <EditorSidebar
-      title="History"
-      subtitle="Word-style session history (last 100 actions)"
+      title={t.history.title}
+      subtitle={t.history.subtitle}
       open={historySidebarOpen}
       onClose={() => setHistorySidebarOpen(false)}
       headerActions={headerActions}
@@ -53,7 +55,7 @@ export const HistorySidebar: React.FC = () => {
           className="px-3 py-4 text-xs text-gray-500"
           data-testid="history-empty"
         >
-          No history yet.
+          {t.history.empty}
         </div>
       ) : (
         <ol className="divide-y divide-gray-100" data-testid="history-entry-list">

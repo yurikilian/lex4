@@ -10,6 +10,7 @@ import { VariablePanel } from '../components/VariablePanel';
 import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
 import { useDocument } from '../context/document-context';
 import { useExtensionState } from './extension-context';
+import { useTranslations, interpolate } from '../i18n';
 
 // --- Variable panel open/close context ---
 
@@ -42,10 +43,11 @@ const VariablePanelStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
  */
 const VariableToolbarItem: React.FC = () => {
   const { activeEditor, runHistoryAction } = useDocument();
+  const t = useTranslations();
 
   const handleInsert = useCallback((variableKey: string) => {
     runHistoryAction(
-      { label: `Insert variable ${variableKey}`, source: 'toolbar', region: 'document' },
+      { label: interpolate(t.variables.insertVariable, { key: variableKey }), source: 'toolbar', region: 'document' },
       () => {
         if (activeEditor) {
           activeEditor.dispatchCommand(INSERT_VARIABLE_COMMAND, variableKey);
@@ -67,12 +69,13 @@ const VariableToolbarItem: React.FC = () => {
  */
 const VariablePanelToggle: React.FC = () => {
   const { panelOpen, setPanelOpen } = useVariablePanelState();
+  const t = useTranslations();
 
   return (
     <button
       type="button"
-      title={panelOpen ? 'Close Variables' : 'Open Variables'}
-      aria-label={panelOpen ? 'Close Variables' : 'Open Variables'}
+      title={panelOpen ? t.variables.closePanel : t.variables.openPanel}
+      aria-label={panelOpen ? t.variables.closePanel : t.variables.openPanel}
       onMouseDown={e => e.preventDefault()}
       onClick={() => setPanelOpen(!panelOpen)}
       className={`

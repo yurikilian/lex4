@@ -3,6 +3,7 @@ import { Search, RefreshCw } from 'lucide-react';
 import { EditorSidebar } from './EditorSidebar';
 import { useVariables } from '../variables/variable-context';
 import { useDocument } from '../context/document-context';
+import { useTranslations, interpolate } from '../i18n';
 import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
 import type { VariableDefinition } from '../variables/types';
 
@@ -21,6 +22,7 @@ export const VariablePanel: React.FC<{
 }> = ({ open, onClose }) => {
   const { definitions } = useVariables();
   const { activeEditor, runHistoryAction } = useDocument();
+  const t = useTranslations();
   const [filter, setFilter] = useState('');
 
   const filtered = useMemo(() => {
@@ -45,7 +47,7 @@ export const VariablePanel: React.FC<{
     (key: string) => {
       if (!activeEditor) return;
       runHistoryAction(
-        { label: `Insert variable ${key}`, source: 'toolbar', region: 'document' },
+        { label: interpolate(t.variables.insertVariable, { key }), source: 'toolbar', region: 'document' },
         () => {
           activeEditor.dispatchCommand(INSERT_VARIABLE_COMMAND, key);
         },
@@ -58,8 +60,8 @@ export const VariablePanel: React.FC<{
 
   return (
     <EditorSidebar
-      title="Variables"
-      subtitle={`${definitions.length} available`}
+      title={t.variables.title}
+      subtitle={interpolate(t.variables.available, { count: String(definitions.length) })}
       open={open}
       onClose={onClose}
       testId="variable-panel"
@@ -68,7 +70,7 @@ export const VariablePanel: React.FC<{
           type="button"
           className="flex h-6 w-6 items-center justify-center rounded text-gray-400
                      transition-colors hover:bg-gray-100 hover:text-gray-600"
-          title="Refresh variables"
+          title={t.variables.refreshVariables}
           data-testid="btn-refresh-variables"
         >
           <RefreshCw size={12} />
@@ -83,7 +85,7 @@ export const VariablePanel: React.FC<{
             className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-8 pr-3 text-xs
                        placeholder-gray-400 focus:border-blue-400 focus:bg-white focus:outline-none
                        focus:ring-1 focus:ring-blue-400"
-            placeholder="Search variables..."
+            placeholder={t.variables.searchPlaceholder}
             data-testid="variable-panel-search"
             value={filter}
             onChange={e => setFilter(e.target.value)}
@@ -93,32 +95,29 @@ export const VariablePanel: React.FC<{
 
       <div className="px-3 pb-3">
         {Object.keys(grouped).length === 0 && (
-          <div className="py-4 text-center text-xs text-gray-400">No variables found</div>
+          <div className="py-4 text-center text-xs text-gray-400">{t.variables.noVariablesFound}</div>
         )}
         {Object.entries(grouped).map(([group, defs]) => (
           <div key={group} className="mb-3">
-            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-              {group}
-            </div>
             <div className="flex flex-col gap-1">
               {defs.map(def => (
                 <button
                   key={def.key}
                   type="button"
-                  className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs
+                  className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs
                              transition-colors hover:bg-blue-50 group"
                   data-testid={`variable-panel-${def.key}`}
                   onClick={() => handleInsert(def.key)}
                   disabled={!activeEditor}
                 >
                   <span
-                    className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50
+                    className="inline-flex items-center rounded-full border border-blue-300 bg-white
                                px-2 py-0.5 text-[11px] font-medium text-blue-700
-                               group-hover:border-blue-300 group-hover:bg-blue-100"
+                               group-hover:border-blue-400 group-hover:bg-blue-50"
                   >
-                    {`{{${def.key}}}`}
+                    {def.label}
                   </span>
-                  <span className="text-gray-500 truncate">{def.label}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{group}</span>
                 </button>
               ))}
             </div>
