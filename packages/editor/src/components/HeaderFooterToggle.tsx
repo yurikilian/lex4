@@ -1,5 +1,6 @@
 import React from 'react';
 import { Rows3 } from 'lucide-react';
+import { useTranslations } from '../i18n';
 
 interface HeaderFooterToggleProps {
   enabled: boolean;
@@ -10,6 +11,8 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
   enabled,
   onToggle,
 }) => {
+  const t = useTranslations();
+
   return (
     <label
       className="flex items-center gap-1.5 cursor-pointer select-none"
@@ -17,7 +20,7 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
     >
       <Rows3 size={14} className="text-gray-500" />
       <span className="text-xs font-medium text-gray-600">
-        Headers & Footers
+        {t.headerFooter.label}
       </span>
       <button
         type="button"

@@ -71,6 +71,14 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
     placeholder: 'Footer',
   },
 
+  body: {
+    placeholder: 'Start typing...',
+  },
+
+  headerFooter: {
+    label: 'Headers & Footers',
+  },
+
   sidebar: {
     close: 'Close sidebar',
   },

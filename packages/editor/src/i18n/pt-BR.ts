@@ -71,6 +71,14 @@ export const PT_BR_TRANSLATIONS: Lex4Translations = {
     placeholder: 'Rodapé',
   },
 
+  body: {
+    placeholder: 'Comece a digitar...',
+  },
+
+  headerFooter: {
+    label: 'Cabeçalhos e Rodapés',
+  },
+
   sidebar: {
     close: 'Fechar barra lateral',
   },

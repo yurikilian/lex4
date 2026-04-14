@@ -18,6 +18,7 @@ import { HistoryCapturePlugin } from '../lexical/plugins/history-capture-plugin'
 import { PageBoundaryPlugin } from '../lexical/plugins/page-boundary-plugin';
 import { useDocument } from '../context/document-context';
 import { useExtensions } from '../extensions/extension-context';
+import { useTranslations } from '../i18n';
 import { debug, shortId } from '../utils/debug';
 
 interface PageBodyProps {
@@ -74,6 +75,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
   readOnly = false,
 }) => {
   const { nodes, bodyPlugins, themeOverrides } = useExtensions();
+  const t = useTranslations();
 
   const config = useMemo(
     () => {
@@ -130,7 +132,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
           }
           placeholder={
             <div className="absolute top-0 left-0 text-gray-400 pointer-events-none select-none">
-              Start typing...
+              {t.body.placeholder}
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}

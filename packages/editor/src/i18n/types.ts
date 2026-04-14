@@ -80,6 +80,14 @@ export interface Lex4Translations {
     placeholder: string;
   };
 
+  body: {
+    placeholder: string;
+  };
+
+  headerFooter: {
+    label: string;
+  };
+
   sidebar: {
     close: string;
   };
