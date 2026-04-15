@@ -871,4 +871,46 @@ test.describe('Bug Fix Regressions', () => {
     await page.waitForTimeout(150);
     expect(await getActiveBodyTestId()).toBe(firstBodyTestId);
   });
+
+  // ───── Regression: Single block larger than page body must not overflow ─────
+  // Previously documented as a known limitation ("No mid-block splitting").
+  // Now mid-block splitting is implemented and this verifies the fix holds.
+
+  test('single block larger than page body does not visually overflow', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+
+    // Create a single very long paragraph (no newlines = one block)
+    const longText = Array.from({ length: 150 }, (_, i) =>
+      `Overflow regression sentence ${i + 1}. `
+    ).join('');
+
+    await page.evaluate(async (text) => {
+      const editor = document.querySelector('[contenteditable="true"]');
+      if (editor) {
+        editor.focus();
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        editor.dispatchEvent(
+          new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }),
+        );
+      }
+    }, longText);
+
+    await page.waitForTimeout(3000);
+
+    // Should have split onto multiple pages
+    const pages = page.locator('[data-page-id]');
+    const count = await pages.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+
+    // No page body should have visual overflow
+    const bodies = page.locator('[data-testid^="page-body-"]');
+    for (let i = 0; i < await bodies.count(); i++) {
+      const hasOverflow = await bodies.nth(i).evaluate((el) => {
+        return el.scrollHeight > el.clientHeight + 2;
+      });
+      expect(hasOverflow).toBe(false);
+    }
+  });
 });

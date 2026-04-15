@@ -6,6 +6,8 @@ export interface OverflowResult {
   fittingBlocks: BlockMeasurement[];
   overflowingBlocks: BlockMeasurement[];
   remainingHeight: number;
+  /** True when the first (or only) block alone exceeds maxBodyHeight */
+  singleBlockOverflow: boolean;
 }
 
 /**
@@ -34,11 +36,15 @@ export function detectOverflow(
   const fitting = blocks.slice(0, splitIndex);
   const overflowing = blocks.slice(splitIndex);
 
+  const singleBlockOverflow =
+    blocks.length > 0 && blocks[0].height > maxBodyHeight;
+
   return {
     hasOverflow: overflowing.length > 0,
     fittingBlocks: fitting,
     overflowingBlocks: overflowing,
     remainingHeight: maxBodyHeight - usedHeight,
+    singleBlockOverflow,
   };
 }
 

@@ -8,6 +8,7 @@ import {
   appendNodes,
   removeLastNodes,
   removeFirstNodes,
+  splitBlockNode,
 } from '../utils/editor-state-utils';
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical';
 
@@ -160,6 +161,84 @@ describe('editor-state-utils', () => {
       const [removed, remaining] = removeFirstNodes(state, 5);
       expect(removed).toHaveLength(3);
       expect(remaining).toBeNull();
+    });
+  });
+
+  describe('splitBlockNode', () => {
+    function mockParagraphWithChildren(count: number): SerializedLexicalNode {
+      const children = Array.from({ length: count }, (_, i) => ({
+        type: 'text',
+        text: `child-${i}`,
+        version: 1,
+      }));
+      return {
+        type: 'paragraph',
+        version: 1,
+        children,
+        direction: null,
+        format: '',
+        indent: 0,
+        textFormat: 0,
+        textStyle: '',
+      } as unknown as SerializedLexicalNode;
+    }
+
+    it('splits children at the given offset', () => {
+      const block = mockParagraphWithChildren(4);
+      const [before, after] = splitBlockNode(block, 2);
+      expect(before).not.toBeNull();
+      expect(after).not.toBeNull();
+      expect((before as any).children).toHaveLength(2);
+      expect((after as any).children).toHaveLength(2);
+      expect((before as any).children[0].text).toBe('child-0');
+      expect((after as any).children[0].text).toBe('child-2');
+    });
+
+    it('preserves node type, format, direction, and indent', () => {
+      const block = {
+        type: 'heading',
+        version: 1,
+        children: [
+          { type: 'text', text: 'a', version: 1 },
+          { type: 'text', text: 'b', version: 1 },
+        ],
+        direction: 'ltr',
+        format: 'center',
+        indent: 2,
+        tag: 'h2',
+      } as unknown as SerializedLexicalNode;
+
+      const [before, after] = splitBlockNode(block, 1);
+      expect((before as any).type).toBe('heading');
+      expect((before as any).direction).toBe('ltr');
+      expect((before as any).format).toBe('center');
+      expect((before as any).indent).toBe(2);
+      expect((before as any).tag).toBe('h2');
+      expect((after as any).type).toBe('heading');
+      expect((after as any).tag).toBe('h2');
+    });
+
+    it('returns [null, copy] when offset is 0', () => {
+      const block = mockParagraphWithChildren(3);
+      const [before, after] = splitBlockNode(block, 0);
+      expect(before).toBeNull();
+      expect(after).not.toBeNull();
+      expect((after as any).children).toHaveLength(3);
+    });
+
+    it('returns [copy, null] when offset >= children length', () => {
+      const block = mockParagraphWithChildren(3);
+      const [before, after] = splitBlockNode(block, 5);
+      expect(before).not.toBeNull();
+      expect(after).toBeNull();
+      expect((before as any).children).toHaveLength(3);
+    });
+
+    it('does not mutate the original block', () => {
+      const block = mockParagraphWithChildren(4);
+      const originalChildren = (block as any).children.length;
+      splitBlockNode(block, 2);
+      expect((block as any).children).toHaveLength(originalChildren);
     });
   });
 });
