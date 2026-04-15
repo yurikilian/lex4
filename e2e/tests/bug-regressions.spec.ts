@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForPageCount, pasteText, waitForPaginationStable } from './helpers';
 
 test.describe('Bug Fix Regressions', () => {
   test.beforeEach(async ({ page }) => {
@@ -81,24 +82,8 @@ test.describe('Bug Fix Regressions', () => {
     );
     const largeText = paragraphs.join('\n\n');
 
-    // Paste via clipboard API
-    await page.evaluate(async (text) => {
-      const editor = document.querySelector('[contenteditable="true"]');
-      if (editor) {
-        editor.focus();
-        const dt = new DataTransfer();
-        dt.setData('text/plain', text);
-        const pasteEvent = new ClipboardEvent('paste', {
-          clipboardData: dt,
-          bubbles: true,
-          cancelable: true,
-        });
-        editor.dispatchEvent(pasteEvent);
-      }
-    }, largeText);
-
-    // Wait for overflow/pagination to settle
-    await page.waitForTimeout(2000);
+    await pasteText(page, largeText);
+    await waitForPageCount(page, 2);
 
     const pages = page.locator('[data-page-id]');
     const count = await pages.count();
@@ -123,8 +108,8 @@ test.describe('Bug Fix Regressions', () => {
       await page.keyboard.press('Enter');
     }
 
-    // Wait for overflow processing to settle
-    await page.waitForTimeout(3000);
+    // Wait for overflow processing to create new pages
+    await waitForPageCount(page, 2);
 
     // Overflow should have created additional pages rather than letting content spill
     const pages = page.locator('[data-page-id]');
@@ -270,14 +255,14 @@ test.describe('Bug Fix Regressions', () => {
       await page.keyboard.type(`Line ${i + 1}`);
       await page.keyboard.press('Enter');
     }
-    await page.waitForTimeout(2000);
+    await waitForPaginationStable(page);
 
     // Now go back to the top and insert several blank lines
     await page.keyboard.press('Meta+Home');
     for (let i = 0; i < 15; i++) {
       await page.keyboard.press('Enter');
     }
-    await page.waitForTimeout(2000);
+    await waitForPageCount(page, 2);
 
     // Overflow should have created a second page
     const pages = page.locator('[data-page-id]');
@@ -297,7 +282,7 @@ test.describe('Bug Fix Regressions', () => {
       await page.keyboard.type(`Line ${i + 1}`);
       await page.keyboard.press('Enter');
     }
-    await page.waitForTimeout(2000);
+    await waitForPaginationStable(page);
 
     // Now expand the header with enters
     const header = page.locator('[data-testid^="page-header-"]').first();
@@ -305,7 +290,7 @@ test.describe('Bug Fix Regressions', () => {
     for (let i = 0; i < 8; i++) {
       await page.keyboard.press('Enter');
     }
-    await page.waitForTimeout(2000);
+    await waitForPageCount(page, 2);
 
     // Body should have overflowed to create another page
     const pages = page.locator('[data-page-id]');
@@ -320,30 +305,13 @@ test.describe('Bug Fix Regressions', () => {
     await body.click();
 
     // Generate many long paragraphs that will definitely overflow one page.
-    // Each paragraph wraps to 3+ visual lines at ~20px each ≈ 60px/para.
-    // ~18 paragraphs fill one page, so 40 guarantees page 2 has content.
     const paragraphs = Array.from({ length: 40 }, (_, i) =>
       `Paragraph ${i + 1}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec ligula sollicitudin, congue dolor eget, sagittis orci. Aliquam dolor ante, hendrerit nec neque non, porta consectetur sem.`
     );
     const largeText = paragraphs.join('\n');
 
-    // Paste via ClipboardEvent — triggers Lexical's paste handler
-    await page.evaluate(async (text) => {
-      const editor = document.querySelector('[contenteditable="true"]');
-      if (editor) {
-        editor.focus();
-        const dt = new DataTransfer();
-        dt.setData('text/plain', text);
-        const pasteEvent = new ClipboardEvent('paste', {
-          clipboardData: dt,
-          bubbles: true,
-          cancelable: true,
-        });
-        editor.dispatchEvent(pasteEvent);
-      }
-    }, largeText);
-
-    await page.waitForTimeout(3000);
+    await pasteText(page, largeText);
+    await waitForPageCount(page, 2);
 
     // Must have at least 2 pages
     const pages = page.locator('[data-page-id]');
@@ -369,22 +337,8 @@ test.describe('Bug Fix Regressions', () => {
     );
     const largeText = paragraphs.join('\n');
 
-    await page.evaluate(async (text) => {
-      const editor = document.querySelector('[contenteditable="true"]');
-      if (editor) {
-        editor.focus();
-        const dt = new DataTransfer();
-        dt.setData('text/plain', text);
-        const pasteEvent = new ClipboardEvent('paste', {
-          clipboardData: dt,
-          bubbles: true,
-          cancelable: true,
-        });
-        editor.dispatchEvent(pasteEvent);
-      }
-    }, largeText);
-
-    await page.waitForTimeout(5000);
+    await pasteText(page, largeText);
+    await waitForPageCount(page, 3);
 
     const pages = page.locator('[data-page-id]');
     const count = await pages.count();
@@ -420,19 +374,8 @@ test.describe('Bug Fix Regressions', () => {
     const paragraphs = Array.from({ length: 60 }, (_, i) =>
       `Row ${i + 1}: Sed gravida sit amet enim vel fermentum. Aenean ut ante a mi pulvinar placerat in eu odio. Phasellus ac posuere neque. Vestibulum ante ipsum primis in faucibus orci luctus.`
     );
-    await page.evaluate(async (text) => {
-      const editor = document.querySelector('[data-testid^="page-body-"] [contenteditable="true"]');
-      if (editor) {
-        editor.focus();
-        const dt = new DataTransfer();
-        dt.setData('text/plain', text);
-        editor.dispatchEvent(new ClipboardEvent('paste', {
-          clipboardData: dt, bubbles: true, cancelable: true,
-        }));
-      }
-    }, paragraphs.join('\n'));
-
-    await page.waitForTimeout(5000);
+    await pasteText(page, paragraphs.join('\n'));
+    await waitForPageCount(page, 2);
 
     // Verify we have at least 2 pages
     const pageCount = await page.locator('[data-page-id]').count();
