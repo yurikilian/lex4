@@ -19,6 +19,8 @@ import {
   redoHistory,
   undoHistory,
 } from '../utils/history-manager';
+import { useTranslations, interpolate } from '../i18n';
+import type { Lex4Translations } from '../i18n/types';
 
 interface DocumentProviderProps {
   initialDocument?: Lex4Document;
@@ -126,12 +128,17 @@ function getPageNumber(document: Lex4Document, pageId?: string): number | null {
 function describeAction(
   action: DocumentAction,
   document: Lex4Document,
+  t: Lex4Translations,
 ): HistoryActionDescriptor {
+  const pageSuffix = (pageId: string) => {
+    const num = getPageNumber(document, pageId);
+    return num ? ` - ${interpolate(t.regions.page, { page: num })}` : '';
+  };
+
   switch (action.type) {
     case 'UPDATE_PAGE_BODY': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Edited body - Page ${pageNumber}` : 'Edited body',
+        label: t.historyLabels.editedBody + pageSuffix(action.pageId),
         source: 'body',
         pageId: action.pageId,
         region: 'body',
@@ -139,9 +146,8 @@ function describeAction(
     }
     case 'UPDATE_PAGE_HEADER':
     case 'UPDATE_PAGE_HEADER_CONTENT': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Edited header - Page ${pageNumber}` : 'Edited header',
+        label: t.historyLabels.editedHeader + pageSuffix(action.pageId),
         source: 'header',
         pageId: action.pageId,
         region: 'header',
@@ -149,9 +155,8 @@ function describeAction(
     }
     case 'UPDATE_PAGE_FOOTER':
     case 'UPDATE_PAGE_FOOTER_CONTENT': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Edited footer - Page ${pageNumber}` : 'Edited footer',
+        label: t.historyLabels.editedFooter + pageSuffix(action.pageId),
         source: 'footer',
         pageId: action.pageId,
         region: 'footer',
@@ -159,43 +164,43 @@ function describeAction(
     }
     case 'SET_HEADER_FOOTER_ENABLED':
       return {
-        label: action.enabled ? 'Enabled headers and footers' : 'Disabled headers and footers',
+        label: action.enabled
+          ? t.history.actions.enabledHeadersFooters
+          : t.history.actions.disabledHeadersFooters,
         source: 'document',
         region: 'document',
       };
     case 'SET_PAGE_COUNTER_MODE':
       return {
-        label: `Page counter set to ${action.mode}`,
+        label: interpolate(t.history.actions.pageCounterSet, { value: action.mode }),
         source: 'document',
         region: 'document',
       };
     case 'COPY_HEADER_TO_ALL':
       return {
-        label: 'Copied header to all pages',
+        label: t.history.actions.copiedHeaderToAll,
         source: 'toolbar',
         pageId: action.sourcePageId,
         region: 'header',
       };
     case 'COPY_FOOTER_TO_ALL':
       return {
-        label: 'Copied footer to all pages',
+        label: t.history.actions.copiedFooterToAll,
         source: 'toolbar',
         pageId: action.sourcePageId,
         region: 'footer',
       };
     case 'CLEAR_HEADER': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Cleared header - Page ${pageNumber}` : 'Cleared header',
+        label: t.history.actions.clearedHeader + pageSuffix(action.pageId),
         source: 'toolbar',
         pageId: action.pageId,
         region: 'header',
       };
     }
     case 'CLEAR_FOOTER': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Cleared footer - Page ${pageNumber}` : 'Cleared footer',
+        label: t.history.actions.clearedFooter + pageSuffix(action.pageId),
         source: 'toolbar',
         pageId: action.pageId,
         region: 'footer',
@@ -203,35 +208,33 @@ function describeAction(
     }
     case 'CLEAR_ALL_HEADERS':
       return {
-        label: 'Cleared all headers',
+        label: t.history.actions.clearedAllHeaders,
         source: 'toolbar',
         region: 'header',
       };
     case 'CLEAR_ALL_FOOTERS':
       return {
-        label: 'Cleared all footers',
+        label: t.history.actions.clearedAllFooters,
         source: 'toolbar',
         region: 'footer',
       };
     case 'CLEAR_DOCUMENT_CONTENT':
       return {
-        label: 'Cleared document body',
+        label: t.historyLabels.clearedDocumentBody,
         source: 'document',
         region: 'document',
       };
     case 'SET_HEADER_HEIGHT': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Resized header - Page ${pageNumber}` : 'Resized header',
+        label: t.historyLabels.resizedHeader + pageSuffix(action.pageId),
         source: 'header',
         pageId: action.pageId,
         region: 'header',
       };
     }
     case 'SET_FOOTER_HEIGHT': {
-      const pageNumber = getPageNumber(document, action.pageId);
       return {
-        label: pageNumber ? `Resized footer - Page ${pageNumber}` : 'Resized footer',
+        label: t.historyLabels.resizedFooter + pageSuffix(action.pageId),
         source: 'footer',
         pageId: action.pageId,
         region: 'footer',
@@ -239,25 +242,25 @@ function describeAction(
     }
     case 'ADD_PAGE':
       return {
-        label: 'Added page',
+        label: t.historyLabels.addedPage,
         source: 'overflow',
         region: 'document',
       };
     case 'REMOVE_PAGE':
       return {
-        label: 'Removed page',
+        label: t.historyLabels.removedPage,
         source: 'overflow',
         region: 'document',
       };
     case 'SET_DOCUMENT':
       return {
-        label: 'Document reflow',
+        label: t.historyLabels.documentReflow,
         source: 'overflow',
         region: 'document',
       };
     default:
       return {
-        label: 'Updated document',
+        label: t.historyLabels.updatedDocument,
         source: 'document',
         region: 'document',
       };
@@ -285,6 +288,7 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
   const [globalSelectionActive, setGlobalSelectionActive] = useState(false);
   const [historySidebarOpen, setHistorySidebarOpen] = useState(true);
   const [focusAtEndVersion, setFocusAtEndVersion] = useState(0);
+  const t = useTranslations();
   const activeEditorRef = useRef<LexicalEditor | null>(null);
   const activeCaretPositionRef = useRef<CaretPosition | null>(null);
   const pendingCaretPositionRef = useRef<CaretPosition | null>(null);
@@ -529,7 +533,7 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
         };
         scheduleHistoryBatchFlush();
       } else {
-        const descriptor = describeAction(action, currentDocument);
+        const descriptor = describeAction(action, currentDocument, t);
         setHistoryState(previousHistory => {
           const nextHistory = recordHistoryEntry(
             previousHistory,

@@ -32,3 +32,4 @@ coverage/
 # NOTE: Do NOT ignore *.db or *.sqlite files.
 # The project memory database (lex4-memory.db) is an intentional
 # committed artifact for development continuity.
+docs/~$import.docx

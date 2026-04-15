@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { A4_WIDTH_PX, A4_HEIGHT_PX, PAGE_MARGIN_PX } from '../constants/dimensions';
 import { useDocument } from '../context/document-context';
+import { useTranslations, interpolate } from '../i18n';
 import { PageBody } from './PageBody';
 import { PageHeader } from './PageHeader';
 import { PageFooter } from './PageFooter';
@@ -33,10 +34,14 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
   onMoveToNextPage,
 }) => {
   const { document, dispatch, setActivePageId } = useDocument();
+  const t = useTranslations();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
   const pageCounterMode = document.pageCounterMode;
-  const pageCounterLabel = `Page ${pageIndex + 1} of ${document.pages.length}`;
+  const pageCounterLabel = interpolate(t.pageCounter.format, {
+    current: pageIndex + 1,
+    total: document.pages.length,
+  });
 
   if (!page) return null;
 

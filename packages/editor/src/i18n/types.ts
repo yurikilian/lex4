@@ -84,11 +84,50 @@ export interface Lex4Translations {
     placeholder: string;
   };
 
+  /** Use {{current}} for current page, {{total}} for total pages */
+  pageCounter: {
+    format: string;
+  };
+
+  /** Region names used in history labels */
+  regions: {
+    body: string;
+    header: string;
+    footer: string;
+    document: string;
+    toolbar: string;
+    overflow: string;
+    history: string;
+    /** Use {{page}} for the page number */
+    page: string;
+  };
+
   headerFooter: {
     label: string;
   };
 
   sidebar: {
     close: string;
+  };
+
+  /** History entry labels for editor actions (used in HistoryCapturePlugin & describeAction) */
+  historyLabels: {
+    typedText: string;
+    pastedContent: string;
+    insertedLineBreak: string;
+    deletedBackward: string;
+    deletedForward: string;
+    formattedText: string;
+    formattedParagraph: string;
+    editedBody: string;
+    editedHeader: string;
+    editedFooter: string;
+    clearedDocumentBody: string;
+    resizedHeader: string;
+    resizedFooter: string;
+    addedPage: string;
+    removedPage: string;
+    documentReflow: string;
+    updatedDocument: string;
   };
 }

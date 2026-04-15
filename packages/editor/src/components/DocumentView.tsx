@@ -3,6 +3,7 @@ import { $getRoot } from 'lexical';
 import type { SerializedEditorState, LexicalEditor } from 'lexical';
 
 import { useDocument } from '../context/document-context';
+import { useTranslations, interpolate } from '../i18n';
 import { computeBodyHeight } from '../constants/page-layout';
 import { usePagination } from '../hooks/use-pagination';
 import { PageView } from './PageView';
@@ -26,6 +27,7 @@ export const DocumentView: React.FC = () => {
     setActiveEditor,
     setActivePageId,
   } = useDocument();
+  const t = useTranslations();
   const { handlePageUnderflow, reflowAll } = usePagination(document, dispatch);
   const previousBodyHeightsRef = useRef<number[] | null>(null);
   const pasteOverflowSequenceRef = useRef(false);
@@ -216,7 +218,7 @@ export const DocumentView: React.FC = () => {
 
       runHistoryAction(
         {
-          label: `Deleted backward - Page ${pageIndex + 1}`,
+          label: `${t.historyLabels.deletedBackward} - ${interpolate(t.regions.page, { page: pageIndex + 1 })}`,
           source: 'body',
           pageId,
           region: 'body',
@@ -241,7 +243,7 @@ export const DocumentView: React.FC = () => {
 
       runHistoryAction(
         {
-          label: `Deleted forward - Page ${pageIndex + 1}`,
+          label: `${t.historyLabels.deletedForward} - ${interpolate(t.regions.page, { page: pageIndex + 1 })}`,
           source: 'body',
           pageId,
           region: 'body',

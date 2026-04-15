@@ -75,11 +75,46 @@ export const PT_BR_TRANSLATIONS: Lex4Translations = {
     placeholder: 'Comece a digitar...',
   },
 
+  pageCounter: {
+    format: 'Página {{current}} de {{total}}',
+  },
+
+  regions: {
+    body: 'corpo',
+    header: 'cabeçalho',
+    footer: 'rodapé',
+    document: 'documento',
+    toolbar: 'barra de ferramentas',
+    overflow: 'estouro',
+    history: 'histórico',
+    page: 'Página {{page}}',
+  },
+
   headerFooter: {
     label: 'Cabeçalhos e Rodapés',
   },
 
   sidebar: {
     close: 'Fechar barra lateral',
+  },
+
+  historyLabels: {
+    typedText: 'Texto digitado',
+    pastedContent: 'Conteúdo colado',
+    insertedLineBreak: 'Quebra de linha inserida',
+    deletedBackward: 'Exclusão para trás',
+    deletedForward: 'Exclusão para frente',
+    formattedText: 'Texto formatado',
+    formattedParagraph: 'Parágrafo formatado',
+    editedBody: 'Corpo editado',
+    editedHeader: 'Cabeçalho editado',
+    editedFooter: 'Rodapé editado',
+    clearedDocumentBody: 'Corpo do documento limpo',
+    resizedHeader: 'Cabeçalho redimensionado',
+    resizedFooter: 'Rodapé redimensionado',
+    addedPage: 'Página adicionada',
+    removedPage: 'Página removida',
+    documentReflow: 'Redistribuição do documento',
+    updatedDocument: 'Documento atualizado',
   },
 };

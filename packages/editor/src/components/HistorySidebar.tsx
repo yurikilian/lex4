@@ -80,7 +80,7 @@ export const HistorySidebar: React.FC = () => {
                         {entry.label}
                       </div>
                       <div className="mt-0.5 text-xs text-gray-400">
-                        {entry.source}
+                        {t.regions[entry.source as keyof typeof t.regions] ?? entry.source}
                       </div>
                     </div>
                     <div className="shrink-0 text-xs text-gray-400">

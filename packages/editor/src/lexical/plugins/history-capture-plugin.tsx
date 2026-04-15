@@ -13,6 +13,7 @@ import {
 } from 'lexical';
 
 import { useDocument } from '../../context/document-context';
+import { useTranslations, interpolate } from '../../i18n';
 import type { HistoryActionDescriptor, HistoryRegion } from '../../types/history';
 
 interface HistoryCapturePluginProps {
@@ -20,18 +21,10 @@ interface HistoryCapturePluginProps {
   region: Exclude<HistoryRegion, 'document'>;
 }
 
-function createPageLabel(region: HistoryCapturePluginProps['region'], pageNumber: number | null): string {
-  if (region === 'body') {
-    return pageNumber ? `Page ${pageNumber}` : 'Body';
-  }
-
-  const regionLabel = region.charAt(0).toUpperCase() + region.slice(1);
-  return pageNumber ? `${regionLabel} Page ${pageNumber}` : regionLabel;
-}
-
 export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ pageId, region }) => {
   const [editor] = useLexicalComposerContext();
   const { document, queueHistoryAction } = useDocument();
+  const t = useTranslations();
 
   const context = useMemo(() => {
     const pageNumber = document.pages.findIndex(page => page.id === pageId);
@@ -41,9 +34,21 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     };
   }, [document.pages, pageId, region]);
 
+  const createPageLabel = useMemo(() => {
+    return (r: HistoryCapturePluginProps['region'], pageNumber: number | null): string => {
+      if (r === 'body') {
+        return pageNumber ? interpolate(t.regions.page, { page: pageNumber }) : t.regions.body;
+      }
+      const regionLabel = r === 'header' ? t.regions.header : t.regions.footer;
+      return pageNumber
+        ? `${regionLabel} ${interpolate(t.regions.page, { page: pageNumber })}`
+        : regionLabel;
+    };
+  }, [t]);
+
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -52,16 +57,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     return editor.registerCommand(
       CONTROLLED_TEXT_INSERTION_COMMAND,
       () => {
-        queueHistoryAction(buildDescriptor('Typed text'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.typedText));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -78,16 +83,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
           return false;
         }
 
-        queueHistoryAction(buildDescriptor('Typed text'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.typedText));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -100,16 +105,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
         if (text.trim().length === 0) {
           return false;
         }
-        queueHistoryAction(buildDescriptor('Pasted content'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.pastedContent));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -118,16 +123,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     return editor.registerCommand(
       KEY_ENTER_COMMAND,
       () => {
-        queueHistoryAction(buildDescriptor('Inserted line break'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.insertedLineBreak));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -136,16 +141,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     return editor.registerCommand(
       KEY_BACKSPACE_COMMAND,
       () => {
-        queueHistoryAction(buildDescriptor('Deleted backward'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.deletedBackward));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -154,16 +159,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     return editor.registerCommand(
       KEY_DELETE_COMMAND,
       () => {
-        queueHistoryAction(buildDescriptor('Deleted forward'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.deletedForward));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -172,16 +177,16 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     return editor.registerCommand(
       FORMAT_TEXT_COMMAND,
       () => {
-        queueHistoryAction(buildDescriptor('Formatted text'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.formattedText));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   useEffect(() => {
-    const buildDescriptor = (prefix: string): HistoryActionDescriptor => ({
-      label: `${prefix} - ${createPageLabel(region, context.pageNumber)}`,
+    const buildDescriptor = (label: string): HistoryActionDescriptor => ({
+      label: `${label} - ${createPageLabel(region, context.pageNumber)}`,
       source: context.source,
       pageId,
       region,
@@ -190,12 +195,12 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
     return editor.registerCommand(
       FORMAT_ELEMENT_COMMAND,
       () => {
-        queueHistoryAction(buildDescriptor('Formatted paragraph'));
+        queueHistoryAction(buildDescriptor(t.historyLabels.formattedParagraph));
         return false;
       },
       COMMAND_PRIORITY_LOW,
     );
-  }, [context.pageNumber, context.source, editor, pageId, queueHistoryAction, region]);
+  }, [context.pageNumber, context.source, createPageLabel, editor, pageId, queueHistoryAction, region, t]);
 
   return null;
 };

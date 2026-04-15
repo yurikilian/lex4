@@ -75,11 +75,46 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
     placeholder: 'Start typing...',
   },
 
+  pageCounter: {
+    format: 'Page {{current}} of {{total}}',
+  },
+
+  regions: {
+    body: 'body',
+    header: 'header',
+    footer: 'footer',
+    document: 'document',
+    toolbar: 'toolbar',
+    overflow: 'overflow',
+    history: 'history',
+    page: 'Page {{page}}',
+  },
+
   headerFooter: {
     label: 'Headers & Footers',
   },
 
   sidebar: {
     close: 'Close sidebar',
+  },
+
+  historyLabels: {
+    typedText: 'Typed text',
+    pastedContent: 'Pasted content',
+    insertedLineBreak: 'Inserted line break',
+    deletedBackward: 'Deleted backward',
+    deletedForward: 'Deleted forward',
+    formattedText: 'Formatted text',
+    formattedParagraph: 'Formatted paragraph',
+    editedBody: 'Edited body',
+    editedHeader: 'Edited header',
+    editedFooter: 'Edited footer',
+    clearedDocumentBody: 'Cleared document body',
+    resizedHeader: 'Resized header',
+    resizedFooter: 'Resized footer',
+    addedPage: 'Added page',
+    removedPage: 'Removed page',
+    documentReflow: 'Document reflow',
+    updatedDocument: 'Updated document',
   },
 };

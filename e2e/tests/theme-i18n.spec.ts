@@ -6,11 +6,11 @@ test.describe('Theme — Visual Design', () => {
     await page.waitForSelector('[data-testid="lex4-editor"]');
   });
 
-  test('document area has dark background', async ({ page }) => {
+  test('document area has light background', async ({ page }) => {
     const container = page.locator('[data-testid="lex4-editor"] > div:nth-child(3)');
     const bg = await container.evaluate(el => getComputedStyle(el).backgroundColor);
-    // bg-gray-700 = rgb(55, 65, 81)
-    expect(bg).toBe('rgb(55, 65, 81)');
+    // bg-gray-200 = rgb(229, 231, 235)
+    expect(bg).toBe('rgb(229, 231, 235)');
   });
 
   test('page has prominent shadow on dark background', async ({ page }) => {
