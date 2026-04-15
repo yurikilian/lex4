@@ -5,6 +5,7 @@ import { computeBodyHeight } from '../constants/page-layout';
 import {
   getTopLevelNodes,
   splitEditorState,
+  splitBlockNode,
   mergeEditorStates,
   createEditorStateFromNodes,
 } from '../utils/editor-state-utils';
@@ -88,7 +89,66 @@ export function usePagination(
         const bodyHeight = computeBodyHeight(headerH, footerH);
 
         const nodes = getTopLevelNodes(page.bodyState);
-        if (nodes.length <= 1) return; // Can't split a single node
+        if (nodes.length <= 1) {
+          // Single block overflow — attempt heuristic mid-block split on
+          // the serialized node. The real DOM-based split in OverflowPlugin
+          // will correct this on render if the estimate is off.
+          if (nodes.length === 1) {
+            const singleNode = nodes[0];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const children = (singleNode as any).children;
+            if (children && children.length > 1) {
+              const estimatedLineHeight = 24;
+              const maxChildren = Math.max(1, Math.floor(bodyHeight / estimatedLineHeight));
+              if (maxChildren < children.length) {
+                const [keepBlock, overflowBlock] = splitBlockNode(singleNode, maxChildren);
+                if (keepBlock && overflowBlock) {
+                  const keepState = createEditorStateFromNodes([keepBlock]);
+                  const overflowState = createEditorStateFromNodes([overflowBlock]);
+
+                  const nextPage = pages[pageIndex + 1];
+                  if (nextPage) {
+                    const mergedBody = mergeEditorStates(overflowState, nextPage.bodyState);
+                    dispatch({
+                      type: 'SET_DOCUMENT',
+                      document: {
+                        ...document,
+                        pages: pages.map((p, i) => {
+                          if (i === pageIndex) return { ...p, bodyState: keepState };
+                          if (i === pageIndex + 1) return { ...p, bodyState: mergedBody };
+                          return p;
+                        }),
+                      },
+                    });
+                  } else {
+                    const newPage: PageState = {
+                      ...createPageFromTemplate({
+                        headerState: document.defaultHeaderState,
+                        footerState: document.defaultFooterState,
+                        headerHeight: document.defaultHeaderHeight,
+                        footerHeight: document.defaultFooterHeight,
+                      }),
+                      bodyState: overflowState,
+                    };
+                    dispatch({
+                      type: 'SET_DOCUMENT',
+                      document: {
+                        ...document,
+                        pages: [
+                          ...pages.map((p, i) =>
+                            i === pageIndex ? { ...p, bodyState: keepState } : p,
+                          ),
+                          newPage,
+                        ],
+                      },
+                    });
+                  }
+                }
+              }
+            }
+          }
+          return;
+        }
 
         const fitCount = estimateNodesFitting(page.bodyState, bodyHeight);
         if (fitCount >= nodes.length) return; // Everything fits

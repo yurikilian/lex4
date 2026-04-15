@@ -222,7 +222,7 @@ const EditorChrome: React.FC<{
         className="pointer-events-none fixed -left-[9999px] top-0 h-0 w-0 opacity-0"
       />
       <Toolbar />
-      <div className="flex min-h-0 flex-1 overflow-hidden bg-gray-700">
+      <div className="flex min-h-0 flex-1 overflow-hidden bg-gray-200">
         <div className="min-w-0 flex-1 overflow-auto">
           <DocumentView />
         </div>

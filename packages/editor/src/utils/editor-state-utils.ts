@@ -99,6 +99,38 @@ export function appendNodes(
 }
 
 /**
+ * Split a serialized block node's children at a given child offset.
+ *
+ * Returns two copies of the block: the first has children [0, offset),
+ * the second has children [offset, end). Both keep the same node type,
+ * format, direction, indent, and version.
+ *
+ * Returns null pair if the offset is out of range.
+ */
+export function splitBlockNode(
+  block: SerializedLexicalNode,
+  childOffset: number,
+): [SerializedLexicalNode | null, SerializedLexicalNode | null] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const children: SerializedLexicalNode[] = (block as any).children ?? [];
+
+  if (childOffset <= 0) return [null, structuredClone(block)];
+  if (childOffset >= children.length) return [structuredClone(block), null];
+
+  const before = children.slice(0, childOffset);
+  const after = children.slice(childOffset);
+
+  const makeCopy = (kids: SerializedLexicalNode[]): SerializedLexicalNode => {
+    const copy = structuredClone(block);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (copy as any).children = kids;
+    return copy;
+  };
+
+  return [makeCopy(before), makeCopy(after)];
+}
+
+/**
  * Remove the last N nodes from a serialized editor state.
  * Returns [trimmedState, removedNodes].
  */

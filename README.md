@@ -29,7 +29,7 @@ A paginated document editor built as a **reusable React library** on top of [Met
 ## ✨ Features
 
 - **True A4 pagination** — every page is exactly 794 × 1123 CSS pixels (210 mm × 297 mm at 96 DPI)
-- **Automatic content flow** — overflow splits at block boundaries, underflow pulls content back
+- **Automatic content flow** — overflow splits at block boundaries with mid-block splitting for oversized paragraphs and lists
 - **Rich text formatting** — bold, italic, underline, strikethrough, alignment, lists, indentation
 - **Headers & footers** — global toggle with per-page editable regions and page counters
 - **Multiple font families** — Inter, Arial, Times New Roman, Courier New, Georgia, Verdana and more
@@ -446,7 +446,7 @@ interface Lex4Extension {
 - Header and footer regions **never** overlap body content
 - Overflow always creates **full A4 pages**, never partial pages
 - At least **one page** always exists — the document is never empty
-- Blocks move **whole** between pages (no mid-block splitting)
+- Oversized blocks are **automatically split** across pages (mid-block splitting)
 
 ## 📁 Project Structure
 
@@ -582,7 +582,6 @@ To deploy manually, trigger the workflow from the Actions tab.
 
 | Limitation | Details |
 |------------|---------|
-| **No mid-block splitting** | Blocks (paragraphs, list items) move whole between pages. A single block larger than a page body will overflow visually. |
 | **Heuristic initial pagination** | Block heights are estimated at 24px per line until the first render. `ResizeObserver` corrects this on mount. |
 | **No collaborative editing** | The document model is designed for single-user editing. Real-time collaboration (e.g. CRDT/OT) is out of scope. |
 | **No table support** | Tables are not supported as block types. |

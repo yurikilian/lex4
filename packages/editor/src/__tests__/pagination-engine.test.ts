@@ -91,6 +91,25 @@ describe('detectOverflow', () => {
     expect(result.fittingBlocks).toHaveLength(1);
   });
 
+  it('reports singleBlockOverflow when first block exceeds height', () => {
+    const blocks = [block('big', 2000)];
+    const result = detectOverflow(blocks, 1000);
+    expect(result.singleBlockOverflow).toBe(true);
+  });
+
+  it('reports singleBlockOverflow false when first block fits', () => {
+    const blocks = [block('a', 200), block('b', 300)];
+    const result = detectOverflow(blocks, 600);
+    expect(result.singleBlockOverflow).toBe(false);
+  });
+
+  it('reports singleBlockOverflow true even with multiple blocks', () => {
+    const blocks = [block('big', 2000), block('small', 100)];
+    const result = detectOverflow(blocks, 1000);
+    expect(result.singleBlockOverflow).toBe(true);
+    expect(result.hasOverflow).toBe(true);
+  });
+
   it('reports remaining height correctly', () => {
     const blocks = [block('a', 300)];
     const result = detectOverflow(blocks, 1000);

@@ -8,6 +8,7 @@ import {
   type SerializedLexicalNode,
 } from 'lexical';
 import { debug, debugWarn } from '../../utils/debug';
+import { performMidBlockSplit } from '../utils/mid-block-split';
 
 /**
  * Recursively serializes a Lexical node and all its children.
@@ -83,7 +84,39 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       if (children.length === 0) return;
 
       if (children.length <= 1) {
-        debug('overflow', `single block overflows (content=${contentHeight}px > available=${availableHeight}px) — cannot split`);
+        debug('overflow', `single block overflows (content=${contentHeight}px > available=${availableHeight}px) — attempting mid-block split`);
+
+        processingRef.current = true;
+
+        editor.update(
+          () => {
+            const overflowNodes = performMidBlockSplit(rootElement, availableHeight, 0);
+            if (!overflowNodes || overflowNodes.length === 0) {
+              debug('overflow', 'mid-block split not possible for single block');
+              processingRef.current = false;
+              return;
+            }
+
+            const overflowState: SerializedEditorState = {
+              root: {
+                children: overflowNodes,
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'root',
+                version: 1,
+              },
+            } as SerializedEditorState;
+
+            debug('overflow', `mid-block split extracted ${overflowNodes.length} overflow nodes from single block`);
+
+            setTimeout(() => {
+              onOverflowRef.current(overflowState, cause);
+              processingRef.current = false;
+            }, 0);
+          },
+          { tag: 'overflow-split' },
+        );
         return;
       }
 
@@ -95,13 +128,21 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       // Uses offsetTop (relative to offsetParent, unaffected by scroll)
       // instead of getBoundingClientRect (which shifts with scroll).
       let splitIndex = children.length;
+      let firstBlockOverflows = false;
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
         const childBottom = child.offsetTop + child.offsetHeight;
 
-        if (childBottom > availableHeight && i > 0) {
-          splitIndex = i;
-          debug('overflow', `split at index ${i} (childBottom=${childBottom}px > ${availableHeight}px)`);
+        if (childBottom > availableHeight) {
+          if (i === 0) {
+            // First block itself overflows — attempt mid-block split on it,
+            // then fall through to extract remaining blocks after it
+            firstBlockOverflows = true;
+            splitIndex = 1; // everything after block 0 overflows
+          } else {
+            splitIndex = i;
+          }
+          debug('overflow', `split at index ${i === 0 ? '0 (mid-block)' : i} (childBottom=${childBottom}px > ${availableHeight}px)`);
           break;
         }
       }
@@ -123,18 +164,43 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
             return;
           }
 
-          const overflowNodes: SerializedLexicalNode[] = [];
-          const toRemove = allChildren.slice(splitIndex);
+          let overflowNodes: SerializedLexicalNode[] = [];
 
-          for (const node of toRemove) {
-            overflowNodes.push(serializeNodeTree(node));
+          // If the first block itself overflows, try mid-block split on it
+          if (firstBlockOverflows) {
+            const midBlockOverflow = performMidBlockSplit(rootElement, availableHeight, 0);
+            if (midBlockOverflow && midBlockOverflow.length > 0) {
+              overflowNodes.push(...midBlockOverflow);
+              debug('overflow', `mid-block split on first block extracted ${midBlockOverflow.length} nodes`);
+            } else {
+              debug('overflow', 'mid-block split failed on first block — keeping it whole');
+            }
+
+            // Serialize and remove remaining blocks after the first
+            const freshChildren = root.getChildren();
+            const toRemove = freshChildren.slice(1);
+            for (const node of toRemove) {
+              overflowNodes.push(serializeNodeTree(node));
+            }
+            for (const node of toRemove) {
+              node.remove();
+            }
+          } else {
+            const toRemove = allChildren.slice(splitIndex);
+            for (const node of toRemove) {
+              overflowNodes.push(serializeNodeTree(node));
+            }
+            for (const node of toRemove) {
+              node.remove();
+            }
           }
 
-          for (const node of toRemove) {
-            node.remove();
+          if (overflowNodes.length === 0) {
+            processingRef.current = false;
+            return;
           }
 
-          debug('overflow', `extracted ${overflowNodes.length} overflow nodes, kept ${splitIndex} nodes on current page`);
+          debug('overflow', `extracted ${overflowNodes.length} overflow nodes total`);
 
           const overflowState: SerializedEditorState = {
             root: {
