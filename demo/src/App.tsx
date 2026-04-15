@@ -55,14 +55,14 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-300">
-      <header className="bg-gray-800 text-white px-4 py-2 flex items-center gap-2">
-        <span className="font-bold text-lg">Lex4</span>
-        <span className="text-gray-400 text-sm">— Document Editor</span>
+    <div className="h-screen flex flex-col bg-gray-100">
+      <header className="bg-white border-b border-gray-200 text-gray-900 px-4 py-2 flex items-center gap-2">
+        <span className="font-bold text-lg text-blue-600">Lex4</span>
+        <span className="text-gray-500 text-sm">— Document Editor</span>
         <button
           type="button"
           data-testid="btn-save"
-          className="ml-auto rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+          className="ml-auto rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600"
           onClick={handleSave}
         >
           💾 Save
@@ -78,8 +78,8 @@ export const App: React.FC = () => {
         <select
           value={langCode}
           onChange={(e) => setLangCode(e.target.value)}
-          className="rounded bg-gray-700 px-2 py-1 text-sm text-white border border-gray-600
-                     hover:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          className="rounded bg-white px-2 py-1 text-sm text-gray-700 border border-gray-300
+                     hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-400"
           data-testid="language-selector"
         >
           {LANGUAGES.map(lang => (
