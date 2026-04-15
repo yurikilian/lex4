@@ -62,7 +62,7 @@ test.describe('History Sidebar', () => {
     await page.waitForTimeout(200);
 
     await expect(page.getByTestId('history-entry-list')).toContainText('Pasted content - Page 1');
-    await expect(page.getByTestId('history-entry-list')).toContainText('Typed text - Header Page 1');
+    await expect(page.getByTestId('history-entry-list')).toContainText('Typed text - header Page 1');
   });
 
   test('toolbar undo and redo buttons replay document history', async ({ page }) => {
