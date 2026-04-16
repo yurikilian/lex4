@@ -62,12 +62,10 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, disabl
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative inline-block">
+    <div ref={containerRef} className="lex4-variable-picker">
       <button
         type="button"
-        className="h-7 rounded border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700
-                   hover:bg-gray-50 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                   disabled:opacity-50 disabled:cursor-not-allowed"
+        className="lex4-variable-picker-btn"
         data-testid="variable-picker-button"
         disabled={disabled || definitions.length === 0}
         onClick={() => setOpen(!open)}
@@ -78,15 +76,12 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, disabl
 
       {open && (
         <div
-          className="absolute left-0 top-full z-50 mt-1 w-64 rounded-md border border-gray-200
-                     bg-white shadow-lg"
+          className="lex4-variable-picker-dropdown"
           data-testid="variable-picker-dropdown"
         >
-          <div className="border-b border-gray-100 p-2">
+          <div className="lex4-variable-picker-search">
             <input
               type="text"
-              className="w-full rounded border border-gray-200 px-2 py-1 text-xs
-                         focus:border-blue-400 focus:outline-none"
               placeholder="Search variables..."
               data-testid="variable-picker-search"
               value={filter}
@@ -95,26 +90,25 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, disabl
             />
           </div>
 
-          <div className="max-h-48 overflow-y-auto p-1">
+          <div className="lex4-variable-picker-list">
             {Object.keys(grouped).length === 0 && (
-              <div className="px-2 py-1 text-xs text-gray-400">No variables found</div>
+              <div className="lex4-variable-picker-empty">No variables found</div>
             )}
             {Object.entries(grouped).map(([group, defs]) => (
               <div key={group}>
-                <div className="px-2 py-1 text-[10px] font-semibold uppercase text-gray-400">
+                <div className="lex4-variable-picker-group-label">
                   {group}
                 </div>
                 {defs.map(def => (
                   <button
                     key={def.key}
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs
-                               hover:bg-blue-50"
+                    className="lex4-variable-picker-option"
                     data-testid={`variable-option-${def.key}`}
                     onClick={() => handleInsert(def.key)}
                   >
-                    <span className="font-medium text-blue-700">{`{{${def.key}}}`}</span>
-                    <span className="text-gray-500">{def.label}</span>
+                    <span className="lex4-variable-picker-key">{`{{${def.key}}}`}</span>
+                    <span className="lex4-variable-picker-label">{def.label}</span>
                   </button>
                 ))}
               </div>

@@ -75,7 +75,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   return (
     <div
-      className="lex4-page-header bg-blue-50/60 border-t-2 border-t-blue-200 border-b border-dashed border-blue-100 relative flex-shrink-0"
+      className="lex4-page-header"
       style={{ maxHeight: MAX_HEADER_HEIGHT_PX, overflow: 'clip' }}
       data-testid={`page-header-${pageId}`}
     >
@@ -84,11 +84,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           contentEditable={
             <ContentEditable
               ref={contentRef}
-              className={`outline-none p-2 text-gray-600 min-h-[24px] ${hasPageCounter ? 'pr-24' : ''}`}
+              className={`lex4-page-hf-editable${hasPageCounter ? ' lex4-page-hf-narrow' : ''}`}
             />
           }
           placeholder={
-            <div className={`absolute top-0 left-0 text-gray-400 pointer-events-none select-none p-2 ${hasPageCounter ? 'pr-24' : ''}`}>
+            <div className={`lex4-page-hf-placeholder${hasPageCounter ? ' lex4-page-hf-narrow' : ''}`}>
               {t.header.placeholder}</div>
           }
           ErrorBoundary={LexicalErrorBoundary}
@@ -100,7 +100,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </LexicalComposer>
       {pageCounterLabel && (
         <div
-          className="pointer-events-none absolute right-2 top-2 select-none text-xs text-gray-500"
+          className="lex4-page-counter"
           data-testid={`page-counter-header-${pageId}`}
         >
           {pageCounterLabel}

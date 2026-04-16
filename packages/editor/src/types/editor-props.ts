@@ -27,8 +27,8 @@ export interface Lex4EditorProps {
   /** Capture undo/redo shortcuts at the window level, even when focus is outside the document. Defaults to true. */
   captureHistoryShortcutsOnWindow?: boolean;
 
-  /** Called when the user triggers save/export. Provides both the AST and its JSON serialization. */
-  onSave?: (payload: { ast: DocumentAst; json: string }) => void;
+  /** Called when the user triggers save/export. Provides the full document, AST, and its JSON serialization. */
+  onSave?: (payload: { document: Lex4Document; ast: DocumentAst; json: string }) => void;
 
   /**
    * Extensions to load into the editor.

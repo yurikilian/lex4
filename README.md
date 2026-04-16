@@ -175,7 +175,7 @@ The main editor component. Drop it into any React application.
 | `readOnly` | `boolean` | `false` | Disable editing (view-only mode) |
 | `extensions` | `Lex4Extension[]` | `[]` | Extensions to load (e.g., `astExtension()`, `variablesExtension(defs)`) |
 | `translations` | `DeepPartial<Lex4Translations>` | English | Partial i18n overrides, deep-merged with defaults |
-| `onSave` | `(payload: { ast, json }) => void` | — | Called when the host app triggers a save |
+| `onSave` | `(payload: { document, ast, json }) => void` | — | Called when the host app triggers a save (includes full `Lex4Document`) |
 | `captureHistoryShortcutsOnWindow` | `boolean` | `true` | Capture ⌘Z/⌘⇧Z at the window level |
 | `className` | `string` | — | Additional CSS class for the editor root |
 
@@ -343,6 +343,71 @@ import { DEFAULT_TRANSLATIONS } from '@yurikilian/lex4';
 import type { Lex4Translations } from '@yurikilian/lex4';
 ```
 
+## 🎨 Theming & Customization
+
+All styling uses **CSS custom properties** (design tokens) and **semantic `.lex4-*` classes** — no Tailwind utilities in the production output. This makes `style.css` safe to import alongside any CSS framework.
+
+### Design Tokens
+
+Override tokens on `.lex4-editor` to theme the entire editor without `!important`:
+
+```css
+.lex4-editor {
+  /* Brand / accent */
+  --lex4-color-primary: #10b981;         /* emerald instead of blue */
+  --lex4-color-primary-light: #ecfdf5;
+  --lex4-color-primary-text: #047857;
+
+  /* Surfaces & text */
+  --lex4-color-bg: #ffffff;
+  --lex4-color-bg-canvas: #f8fafc;       /* lighter canvas */
+  --lex4-color-text: #111827;
+  --lex4-color-text-secondary: #6b7280;
+
+  /* Dimensions */
+  --lex4-sidebar-width: 280px;           /* narrower sidebar */
+  --lex4-font-family: 'Times New Roman', serif;
+}
+```
+
+See the full list of tokens in [`packages/editor/src/styles.css`](packages/editor/src/styles.css).
+
+### Stable CSS Selectors
+
+Every UI region has a semantic class you can target:
+
+| Region | Selector |
+|--------|----------|
+| Root | `.lex4-editor` |
+| Toolbar | `.lex4-toolbar` |
+| Toolbar button | `.lex4-toolbar-btn` |
+| Toolbar select | `.lex4-toolbar-select` |
+| Document canvas | `.lex4-canvas` |
+| Page | `.lex4-page` |
+| Page body | `.lex4-page-body` |
+| Page header | `.lex4-page-header` |
+| Page footer | `.lex4-page-footer` |
+| Sidebar | `.lex4-sidebar` |
+| History entry | `.lex4-history-entry-row` |
+| Variable chip | `.lex4-variable-chip` |
+| Variable picker | `.lex4-variable-picker` |
+
+### Extension-Level Theming
+
+Extensions can contribute CSS variables and a root class name:
+
+```ts
+const darkModeExtension: Lex4Extension = {
+  name: 'dark-mode',
+  cssVariables: {
+    '--lex4-color-bg': '#1a1a2e',
+    '--lex4-color-text': '#e0e0e0',
+    '--lex4-color-bg-canvas': '#16213e',
+  },
+  rootClassName: 'lex4-dark',
+};
+```
+
 ## 📝 Document AST
 
 The AST is a **clean, versioned, Lexical-independent** structure designed for backend consumption (e.g., DOCX/PDF generation). It preserves semantic structure, formatting marks, font choices, header/footer layout, A4 page metadata, and variable references.
@@ -436,6 +501,8 @@ interface Lex4Extension {
   sidePanel?: React.ComponentType;      // right-side panel
   provider?: React.ComponentType<...>;  // context provider wrapper
   themeOverrides?: Partial<EditorThemeClasses>;
+  cssVariables?: Record<string, string>;  // CSS custom property overrides
+  rootClassName?: string;                 // extra class on editor root
   handleMethods?: (ctx) => Record<string, Function>;
 }
 ```
@@ -528,7 +595,7 @@ pnpm --filter e2e test:ui
 
 | Category | Framework | Count | Description |
 |----------|-----------|-------|-------------|
-| Unit | Vitest | 178 | Engine logic, reducers, AST serializers, i18n, variable nodes |
+| Unit | Vitest | 186 | Engine logic, reducers, AST serializers, i18n, variable nodes |
 | E2E | Playwright | 118 | Full user flows — typing, formatting, pagination, header/footer, variables, theme, i18n |
 
 ## 🔧 Build & Bundle
@@ -540,7 +607,7 @@ The library is built with **Vite in library mode**, producing:
 | ESM | `dist/lex4-editor.js` | ES module for modern bundlers |
 | CJS | `dist/lex4-editor.cjs` | CommonJS for Node.js / legacy bundlers |
 | Types | `dist/index.d.ts` | Full TypeScript declarations |
-| CSS | `dist/style.css` | Compiled Tailwind styles |
+| CSS | `dist/style.css` | Pure CSS with design tokens (no Tailwind) |
 | Source maps | `dist/*.map` | Debugging support |
 
 React and ReactDOM are **externalized** — they are not bundled and must be provided by the consuming application. Lexical packages are bundled as direct dependencies.
@@ -572,7 +639,7 @@ To deploy manually, trigger the workflow from the Actions tab.
 | [React 18](https://react.dev/) | UI framework |
 | [Meta Lexical](https://lexical.dev/) | Rich text editing engine |
 | [Vite](https://vitejs.dev/) | Library build (ESM + CJS) and dev server |
-| [Tailwind CSS](https://tailwindcss.com/) | Styling |
+| [Tailwind CSS](https://tailwindcss.com/) | Dev-only utility reference (not in production output) |
 | [Vitest](https://vitest.dev/) | Unit testing |
 | [Playwright](https://playwright.dev/) | End-to-end testing |
 | [pnpm](https://pnpm.io/) | Package manager (monorepo workspaces) |

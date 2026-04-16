@@ -8,6 +8,13 @@ import { VariableProvider, useVariables } from '../variables/variable-context';
 import { VariablePicker } from '../components/VariablePicker';
 import { VariablePanel } from '../components/VariablePanel';
 import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
+
+declare module '../types/editor-handle' {
+  interface Lex4EditorHandle {
+    insertVariable: (key: string) => void;
+    refreshVariables: (newDefs: VariableDefinition[]) => void;
+  }
+}
 import { useDocument } from '../context/document-context';
 import { useExtensionState } from './extension-context';
 import { useTranslations, interpolate } from '../i18n';
@@ -78,12 +85,7 @@ const VariablePanelToggle: React.FC = () => {
       aria-label={panelOpen ? t.variables.closePanel : t.variables.openPanel}
       onMouseDown={e => e.preventDefault()}
       onClick={() => setPanelOpen(!panelOpen)}
-      className={`
-        flex h-7 w-7 items-center justify-center rounded transition-colors
-        ${panelOpen
-          ? 'bg-blue-50 text-blue-600'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
-      `}
+      className={`lex4-toolbar-btn${panelOpen ? ' active' : ''}`}
       data-testid="toggle-variable-panel"
     >
       <Braces size={15} />

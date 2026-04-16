@@ -54,6 +54,18 @@ export interface Lex4Extension {
   themeOverrides?: Partial<EditorThemeClasses>;
 
   /**
+   * CSS custom property overrides applied on the `.lex4-editor` root.
+   * Use to retheme the editor — e.g. `{ '--lex4-color-primary': '#e11d48' }`.
+   */
+  cssVariables?: Record<string, string>;
+
+  /**
+   * Extra CSS class name(s) added to the `.lex4-editor` root element.
+   * Useful for scoping extension-specific styles.
+   */
+  rootClassName?: string;
+
+  /**
    * Factory that returns imperative handle methods.
    * These are merged into the Lex4EditorHandle exposed via ref.
    */
@@ -71,6 +83,8 @@ export interface ResolvedExtensions {
   sidePanels: React.ComponentType[];
   providers: React.ComponentType<{ children: React.ReactNode }>[];
   themeOverrides: Partial<EditorThemeClasses>;
+  cssVariables: Record<string, string>;
+  rootClassNames: string[];
   handleFactories: Array<(ctx: ExtensionContext) => Record<string, (...args: never[]) => unknown>>;
 }
 
@@ -85,6 +99,8 @@ export function resolveExtensions(extensions: Lex4Extension[]): ResolvedExtensio
     sidePanels: [],
     providers: [],
     themeOverrides: {},
+    cssVariables: {},
+    rootClassNames: [],
     handleFactories: [],
   };
 
@@ -97,6 +113,10 @@ export function resolveExtensions(extensions: Lex4Extension[]): ResolvedExtensio
     if (ext.themeOverrides) {
       resolved.themeOverrides = { ...resolved.themeOverrides, ...ext.themeOverrides };
     }
+    if (ext.cssVariables) {
+      Object.assign(resolved.cssVariables, ext.cssVariables);
+    }
+    if (ext.rootClassName) resolved.rootClassNames.push(ext.rootClassName);
     if (ext.handleMethods) resolved.handleFactories.push(ext.handleMethods);
   }
 

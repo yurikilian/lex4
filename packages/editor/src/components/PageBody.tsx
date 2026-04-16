@@ -117,8 +117,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
 
   return (
     <div
-      className="lex4-page-body flex-1 min-h-0 relative"
-      style={{ overflow: 'hidden' }}
+      className="lex4-page-body"
       data-testid={`page-body-${pageId}`}
       onFocus={onFocus}
     >
@@ -126,12 +125,11 @@ export const PageBody: React.FC<PageBodyProps> = ({
         <RichTextPlugin
           contentEditable={
             <ContentEditable
-              className="outline-none h-full p-0"
-              style={{ overflow: 'visible' }}
+              className="lex4-page-body-editable"
             />
           }
           placeholder={
-            <div className="absolute top-0 left-0 text-gray-400 pointer-events-none select-none">
+            <div className="lex4-page-placeholder">
               {t.body.placeholder}
             </div>
           }

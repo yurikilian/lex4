@@ -33,8 +33,7 @@ export const HistorySidebar: React.FC = () => {
       aria-label={t.history.clearHistory}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => clearHistory('manual')}
-      className="flex h-6 w-6 items-center justify-center rounded text-gray-400
-                 transition-colors hover:bg-gray-100 hover:text-gray-600"
+      className="lex4-sidebar-action-btn"
       data-testid="clear-history"
     >
       <Trash2 size={13} />
@@ -52,13 +51,13 @@ export const HistorySidebar: React.FC = () => {
     >
       {visibleEntries.length === 0 ? (
         <div
-          className="px-3 py-4 text-xs text-gray-500"
+          className="lex4-history-empty"
           data-testid="history-empty"
         >
           {t.history.empty}
         </div>
       ) : (
-        <ol className="divide-y divide-gray-100" data-testid="history-entry-list">
+        <ol className="lex4-history-list" data-testid="history-entry-list">
           {visibleEntries.map((entry, reversedIndex) => {
             const actualIndex = historyEntries.length - reversedIndex - 1;
             const isCurrent = actualIndex === historyCursor - 1;
@@ -67,23 +66,23 @@ export const HistorySidebar: React.FC = () => {
               <li key={entry.id}>
                 <button
                   type="button"
-                  className={`w-full px-3 py-2 text-left transition-colors ${
-                    isCurrent ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
+                  className={`lex4-history-entry ${
+                    isCurrent ? 'active' : ''
                   }`}
                   data-testid={`history-entry-${actualIndex}`}
                   data-history-current={isCurrent ? 'true' : 'false'}
                   onClick={() => jumpToHistoryEntry(actualIndex)}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className={`text-xs ${isCurrent ? 'font-semibold text-blue-700' : 'text-gray-900'}`}>
+                  <div className="lex4-history-entry-row">
+                    <div className="lex4-history-entry-content">
+                      <div className={`lex4-history-entry-label${isCurrent ? ' current' : ''}`}>
                         {entry.label}
                       </div>
-                      <div className="mt-0.5 text-xs text-gray-400">
+                      <div className="lex4-history-entry-source">
                         {t.regions[entry.source as keyof typeof t.regions] ?? entry.source}
                       </div>
                     </div>
-                    <div className="shrink-0 text-xs text-gray-400">
+                    <div className="lex4-history-entry-time">
                       {formatTimestamp(entry.timestamp)}
                     </div>
                   </div>

@@ -15,11 +15,11 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
 
   return (
     <label
-      className="flex items-center gap-1.5 cursor-pointer select-none"
+      className="lex4-hf-toggle"
       data-testid="header-footer-toggle"
     >
-      <Rows3 size={14} className="text-gray-500" />
-      <span className="text-xs font-medium text-gray-600">
+      <Rows3 size={14} className="lex4-hf-toggle-icon" />
+      <span className="lex4-hf-toggle-label">
         {t.headerFooter.label}
       </span>
       <button
@@ -28,20 +28,11 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
         aria-checked={enabled}
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => onToggle(!enabled)}
-        className={`
-          relative inline-flex h-4 w-7 items-center rounded-full
-          transition-colors duration-200
-          ${enabled ? 'bg-blue-500' : 'bg-gray-300'}
-        `}
+        className="lex4-hf-switch"
+        style={{ backgroundColor: enabled ? 'var(--lex4-color-primary)' : 'var(--lex4-color-text-disabled)' }}
         data-testid="header-footer-switch"
       >
-        <span
-          className={`
-            inline-block h-3 w-3 rounded-full bg-white shadow-sm
-            transition-transform duration-200
-            ${enabled ? 'translate-x-3.5' : 'translate-x-0.5'}
-          `}
-        />
+        <span className="lex4-hf-switch-knob" />
       </button>
     </label>
   );

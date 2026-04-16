@@ -1,7 +1,17 @@
 import type { Lex4Extension, ExtensionContext } from './types';
 import { serializeDocument } from '../ast/document-serializer';
 import { buildSavePayload, serializeDocumentJson } from '../ast/payload-builder';
+import type { PayloadOptions } from '../ast/payload-builder';
+import type { DocumentAst, SaveDocumentRequest } from '../ast/types';
 import type { VariableDefinition } from '../variables/types';
+
+declare module '../types/editor-handle' {
+  interface Lex4EditorHandle {
+    getDocumentAst: () => DocumentAst;
+    getDocumentJson: () => string;
+    buildSavePayload: (options?: PayloadOptions) => SaveDocumentRequest;
+  }
+}
 
 /**
  * Creates an AST extension that adds document export capabilities.

@@ -10,23 +10,41 @@ const EMPTY_RESOLVED: ResolvedExtensions = {
   sidePanels: [],
   providers: [],
   themeOverrides: {},
+  cssVariables: {},
+  rootClassNames: [],
   handleFactories: [],
 };
 
 const ExtensionResolvedContext = createContext<ResolvedExtensions>(EMPTY_RESOLVED);
 
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 /**
  * Provides resolved extension data to all child components.
- * Extensions are resolved once from the extensions array.
+ * Extensions are resolved when the set of extension names changes,
+ * not on every array reference change — preventing unnecessary
+ * editor re-initialization.
  */
 export const ExtensionProvider: React.FC<{
   extensions?: Lex4Extension[];
   children: React.ReactNode;
 }> = ({ extensions, children }) => {
-  const resolved = useMemo(
-    () => (extensions && extensions.length > 0 ? resolveExtensions(extensions) : EMPTY_RESOLVED),
-    [extensions],
-  );
+  const prevNamesRef = useRef<string[]>([]);
+  const resolvedRef = useRef<ResolvedExtensions>(EMPTY_RESOLVED);
+
+  const currentNames = (extensions ?? []).map(e => e.name);
+  if (!arraysEqual(currentNames, prevNamesRef.current)) {
+    resolvedRef.current =
+      extensions && extensions.length > 0 ? resolveExtensions(extensions) : EMPTY_RESOLVED;
+    prevNamesRef.current = currentNames;
+  }
+  const resolved = resolvedRef.current;
 
   // Wrap children with extension providers (inside-out order)
   let wrapped = <>{children}</>;

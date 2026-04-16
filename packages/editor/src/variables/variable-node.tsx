@@ -114,9 +114,7 @@ function VariableChip({ variableKey }: { variableKey: string }): JSX.Element {
 
   return (
     <span
-      className="lex4-variable-chip inline-flex items-center rounded-full border border-blue-300
-                 bg-white px-2 py-0.5 text-[11px] font-medium text-blue-700 select-none
-                 cursor-default whitespace-nowrap mx-0.5"
+      className="lex4-variable-chip"
       data-testid={`variable-chip-${variableKey}`}
       title={variableKey}
     >

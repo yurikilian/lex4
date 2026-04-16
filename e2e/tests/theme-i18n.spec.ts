@@ -128,13 +128,13 @@ test.describe('i18n — Default Translations', () => {
 
   test('header placeholder shows translated text', async ({ page }) => {
     await page.getByTestId('header-footer-toggle').click();
-    const headerPlaceholder = page.locator('[data-testid^="page-header-"] .pointer-events-none');
+    const headerPlaceholder = page.locator('[data-testid^="page-header-"] .lex4-page-hf-placeholder');
     await expect(headerPlaceholder.first()).toHaveText('Header');
   });
 
   test('footer placeholder shows translated text', async ({ page }) => {
     await page.getByTestId('header-footer-toggle').click();
-    const footerPlaceholder = page.locator('[data-testid^="page-footer-"] .pointer-events-none');
+    const footerPlaceholder = page.locator('[data-testid^="page-footer-"] .lex4-page-hf-placeholder');
     await expect(footerPlaceholder.first()).toHaveText('Footer');
   });
 

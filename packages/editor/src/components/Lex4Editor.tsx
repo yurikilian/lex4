@@ -13,6 +13,8 @@ import {
   useExtensionContext,
 } from '../extensions/extension-context';
 import { TranslationsProvider } from '../i18n';
+import { serializeDocument } from '../ast/document-serializer';
+import { serializeDocumentJson } from '../ast/payload-builder';
 import '../styles.css';
 
 function selectEntireDocument(
@@ -50,9 +52,11 @@ function isFormFieldTarget(target: EventTarget | null): boolean {
 
 const EditorChrome: React.FC<{
   captureHistoryShortcutsOnWindow: boolean;
+  onSave?: Lex4EditorProps['onSave'];
   className?: string;
 }> = ({
   captureHistoryShortcutsOnWindow,
+  onSave,
   className,
 }) => {
   const {
@@ -63,7 +67,7 @@ const EditorChrome: React.FC<{
     undo,
     redo,
   } = useDocument();
-  const { sidePanels } = useExtensions();
+  const { sidePanels, cssVariables, rootClassNames } = useExtensions();
   const rootRef = useRef<HTMLDivElement>(null);
   const selectionBufferRef = useRef<HTMLTextAreaElement>(null);
 
@@ -135,12 +139,23 @@ const EditorChrome: React.FC<{
       return;
     }
 
+    if (key === 's' && onSave) {
+      event.preventDefault();
+      event.stopPropagation();
+      const ast = serializeDocument(document);
+      const json = serializeDocumentJson(ast);
+      onSave({ document, ast, json });
+      return;
+    }
+
     if (handleHistoryShortcut(event)) {
       return;
     }
   }, [
+    document,
     dispatch,
     handleHistoryShortcut,
+    onSave,
     setGlobalSelectionActive,
   ]);
 
@@ -163,9 +178,14 @@ const EditorChrome: React.FC<{
         '[data-testid^="page-body-"] [data-lexical-editor="true"]',
       ) ?? [];
 
+    const root = rootRef.current;
+    const styles = root ? getComputedStyle(root) : null;
+    const selBg = styles?.getPropertyValue('--lex4-color-selection-bg').trim() || GLOBAL_SELECTION_BACKGROUND;
+    const selFg = styles?.getPropertyValue('--lex4-color-selection-text').trim() || GLOBAL_SELECTION_FOREGROUND;
+
     editableRoots.forEach((editableRoot) => {
-      editableRoot.style.backgroundColor = globalSelectionActive ? GLOBAL_SELECTION_BACKGROUND : '';
-      editableRoot.style.color = globalSelectionActive ? GLOBAL_SELECTION_FOREGROUND : '';
+      editableRoot.style.backgroundColor = globalSelectionActive ? selBg : '';
+      editableRoot.style.color = globalSelectionActive ? selFg : '';
       editableRoot.style.caretColor = globalSelectionActive ? 'transparent' : '';
     });
   }, [globalSelectionActive, document.pages.length]);
@@ -204,10 +224,16 @@ const EditorChrome: React.FC<{
     };
   }, [captureHistoryShortcutsOnWindow, clearGlobalSelection, handleHistoryShortcut, redo, undo]);
 
+  const rootClassName = ['lex4-editor', ...rootClassNames, className].filter(Boolean).join(' ');
+  const extensionStyle = Object.keys(cssVariables).length > 0
+    ? cssVariables as React.CSSProperties
+    : undefined;
+
   return (
     <div
       ref={rootRef}
-      className={`lex4-editor flex flex-col h-full ${className ?? ''}`}
+      className={rootClassName}
+      style={extensionStyle}
       data-testid="lex4-editor"
       data-global-selection-active={globalSelectionActive ? 'true' : 'false'}
       onKeyDownCapture={handleKeyDownCapture}
@@ -219,11 +245,11 @@ const EditorChrome: React.FC<{
         data-testid="global-selection-buffer"
         readOnly
         tabIndex={-1}
-        className="pointer-events-none fixed -left-[9999px] top-0 h-0 w-0 opacity-0"
+        className="lex4-selection-buffer"
       />
       <Toolbar />
-      <div className="flex min-h-0 flex-1 overflow-hidden bg-gray-200">
-        <div className="min-w-0 flex-1 overflow-auto">
+      <div className="lex4-canvas">
+        <div className="lex4-canvas-scroll">
           <DocumentView />
         </div>
         {sidePanels.map((Panel, idx) => (
@@ -241,8 +267,9 @@ const EditorChrome: React.FC<{
  */
 const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   captureHistoryShortcutsOnWindow: boolean;
+  onSave?: Lex4EditorProps['onSave'];
   className?: string;
-}>(({ captureHistoryShortcutsOnWindow, className }, ref) => {
+}>(({ captureHistoryShortcutsOnWindow, onSave, className }, ref) => {
   const { document: doc, activeEditor } = useDocument();
   const { handleFactories } = useExtensions();
 
@@ -264,6 +291,7 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   return (
     <EditorChrome
       captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+      onSave={onSave}
       className={className}
     />
   );
@@ -288,6 +316,7 @@ export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
   captureHistoryShortcutsOnWindow = true,
   initialDocument,
   onDocumentChange,
+  onSave,
   extensions,
   translations,
   className,
@@ -303,6 +332,7 @@ export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
             <EditorWithHandle
               ref={ref}
               captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+              onSave={onSave}
               className={className}
             />
           </DocumentProvider>

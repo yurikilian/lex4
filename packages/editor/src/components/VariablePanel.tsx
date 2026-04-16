@@ -68,8 +68,7 @@ export const VariablePanel: React.FC<{
       headerActions={
         <button
           type="button"
-          className="flex h-6 w-6 items-center justify-center rounded text-gray-400
-                     transition-colors hover:bg-gray-100 hover:text-gray-600"
+          className="lex4-sidebar-action-btn"
           title={t.variables.refreshVariables}
           data-testid="btn-refresh-variables"
         >
@@ -77,14 +76,12 @@ export const VariablePanel: React.FC<{
         </button>
       }
     >
-      <div className="p-3">
-        <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="lex4-variable-search-container">
+        <div className="lex4-variable-search-wrapper">
+          <Search size={14} className="lex4-variable-search-icon" />
           <input
             type="text"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-8 pr-3 text-xs
-                       placeholder-gray-400 focus:border-blue-400 focus:bg-white focus:outline-none
-                       focus:ring-1 focus:ring-blue-400"
+            className="lex4-variable-search-input"
             placeholder={t.variables.searchPlaceholder}
             data-testid="variable-panel-search"
             value={filter}
@@ -93,31 +90,26 @@ export const VariablePanel: React.FC<{
         </div>
       </div>
 
-      <div className="px-3 pb-3">
+      <div className="lex4-variable-list">
         {Object.keys(grouped).length === 0 && (
-          <div className="py-4 text-center text-xs text-gray-400">{t.variables.noVariablesFound}</div>
+          <div className="lex4-variable-list-empty">{t.variables.noVariablesFound}</div>
         )}
         {Object.entries(grouped).map(([group, defs]) => (
-          <div key={group} className="mb-3">
-            <div className="flex flex-col gap-1">
+          <div key={group} className="lex4-variable-group">
+            <div>
               {defs.map(def => (
                 <button
                   key={def.key}
                   type="button"
-                  className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs
-                             transition-colors hover:bg-blue-50 group"
+                  className="lex4-variable-list-item"
                   data-testid={`variable-panel-${def.key}`}
                   onClick={() => handleInsert(def.key)}
                   disabled={!activeEditor}
                 >
-                  <span
-                    className="inline-flex items-center rounded-full border border-blue-300 bg-white
-                               px-2 py-0.5 text-[11px] font-medium text-blue-700
-                               group-hover:border-blue-400 group-hover:bg-blue-50"
-                  >
+                  <span className="lex4-variable-badge">
                     {def.label}
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{group}</span>
+                  <span className="lex4-variable-group-label">{group}</span>
                 </button>
               ))}
             </div>

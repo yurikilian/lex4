@@ -240,11 +240,11 @@ export const Toolbar: React.FC = () => {
 
   return (
     <div
-      className="lex4-toolbar sticky top-0 z-10 bg-white border-b border-gray-200"
+      className="lex4-toolbar"
       data-testid="toolbar"
     >
-      <div className="flex items-center gap-1 px-2 py-1.5">
-        <div className="flex items-center gap-0.5" data-testid="history-controls">
+      <div className="lex4-toolbar-row">
+        <div className="lex4-toolbar-group" data-testid="history-controls">
           <ToolbarIconButton
             title={t.toolbar.undo}
             testId="btn-undo"
@@ -265,11 +265,10 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
-        <div className="flex items-center gap-1">
-          <Type size={14} className="text-gray-500" />
+        <div className="lex4-toolbar-group-gap">
+          <Type size={14} className="lex4-toolbar-icon" />
           <select
-            className="h-7 rounded border border-gray-200 bg-white px-2 text-xs text-gray-700
-                       focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="lex4-toolbar-select"
             data-testid="font-selector"
             defaultValue="Calibri"
             onChange={handleFontChange}
@@ -282,11 +281,10 @@ export const Toolbar: React.FC = () => {
           </select>
         </div>
 
-        <div className="flex items-center gap-1">
-          <ALargeSmall size={14} className="text-gray-500" />
+        <div className="lex4-toolbar-group-gap">
+          <ALargeSmall size={14} className="lex4-toolbar-icon" />
           <select
-            className="h-7 w-16 rounded border border-gray-200 bg-white px-1 text-xs text-gray-700
-                       focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="lex4-toolbar-select lex4-toolbar-select-narrow"
             data-testid="font-size-selector"
             defaultValue="12"
             onChange={handleFontSizeChange}
@@ -301,7 +299,7 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
-        <div className="flex items-center gap-0.5" data-testid="format-group">
+        <div className="lex4-toolbar-group" data-testid="format-group">
           <ToolbarIconButton title={t.toolbar.bold} testId="btn-bold" onClick={handleBold}>
             <Bold size={15} />
           </ToolbarIconButton>
@@ -318,7 +316,7 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
-        <div className="flex items-center gap-0.5" data-testid="align-group">
+        <div className="lex4-toolbar-group" data-testid="align-group">
           <ToolbarIconButton title={t.toolbar.alignLeft} testId="btn-align-left" onClick={handleAlignLeft}>
             <AlignLeft size={15} />
           </ToolbarIconButton>
@@ -335,7 +333,7 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
-        <div className="flex items-center gap-0.5" data-testid="list-group">
+        <div className="lex4-toolbar-group" data-testid="list-group">
           <ToolbarIconButton title={t.toolbar.numberedList} testId="btn-list-number" onClick={handleListNumber}>
             <ListOrdered size={15} />
           </ToolbarIconButton>
@@ -359,7 +357,7 @@ export const Toolbar: React.FC = () => {
           </>
         )}
 
-        <div className="ml-auto flex items-center">
+        <div className="lex4-toolbar-end">
           <ToolbarIconButton
             title={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
             testId="toggle-history-sidebar"
@@ -371,7 +369,7 @@ export const Toolbar: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 px-2 py-1 border-t border-gray-100">
+      <div className="lex4-hf-row">
         <HeaderFooterToggle
           enabled={document.headerFooterEnabled}
           onToggle={handleToggle}
@@ -419,14 +417,7 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     disabled={disabled}
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
-    className={`
-      flex h-7 w-7 items-center justify-center rounded transition-colors
-      ${disabled
-        ? 'cursor-not-allowed text-gray-300'
-        : active
-          ? 'bg-blue-50 text-blue-600'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
-    `}
+    className={`lex4-toolbar-btn${active ? ' active' : ''}`}
     data-testid={testId}
   >
     {children}
@@ -434,5 +425,5 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
 );
 
 const Divider: React.FC = () => (
-  <div className="mx-0.5 h-5 w-px bg-gray-200" />
+  <div className="lex4-toolbar-separator" />
 );

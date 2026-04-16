@@ -288,7 +288,7 @@ export const DocumentView: React.FC = () => {
 
   return (
     <div
-      className="lex4-document-view flex flex-col items-center gap-8 py-8 min-h-full"
+      className="lex4-document-view"
       data-testid="document-view"
       tabIndex={-1}
     >

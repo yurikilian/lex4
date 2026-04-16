@@ -61,17 +61,12 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative" data-testid="header-footer-actions">
+    <div ref={containerRef} style={{ position: 'relative' }} data-testid="header-footer-actions">
       <button
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen(!open)}
-        className={`
-          flex h-7 items-center gap-1 rounded px-1.5 text-xs transition-colors
-          ${open
-            ? 'bg-blue-50 text-blue-600'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
-        `}
+        className="lex4-settings-trigger"
         data-testid="header-footer-menu-trigger"
         aria-expanded={open}
         aria-haspopup="true"
@@ -82,12 +77,12 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
 
       {open && (
         <div
-          className="absolute left-0 top-full mt-1 z-50 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="lex4-settings-menu"
           role="menu"
           data-testid="header-footer-menu"
         >
           <SectionLabel>Page counter</SectionLabel>
-          <div className="px-3 pb-2 grid grid-cols-2 gap-1" data-testid="page-counter-mode">
+          <div className="lex4-settings-counter-grid" data-testid="page-counter-mode">
             {PAGE_COUNTER_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
@@ -96,12 +91,7 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
                 aria-checked={pageCounterMode === value}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onPageCounterModeChange(value)}
-                className={`
-                  rounded px-2 py-1 text-xs text-left transition-colors
-                  ${pageCounterMode === value
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-100'}
-                `}
+                className="lex4-settings-counter-btn"
                 data-testid={`page-counter-${value}`}
               >
                 {label}
@@ -163,7 +153,7 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
 };
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+  <div className="lex4-settings-label">
     {children}
   </div>
 );
@@ -183,8 +173,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, disabled, tes
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
     disabled={disabled}
-    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 transition-colors
-               hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+    className="lex4-settings-item"
     data-testid={testId}
   >
     {icon}
@@ -193,5 +182,5 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, disabled, tes
 );
 
 const MenuDivider: React.FC = () => (
-  <div className="my-1 h-px bg-gray-100" />
+  <div className="lex4-settings-divider" />
 );

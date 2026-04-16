@@ -1,14 +1,18 @@
 /**
- * Base imperative handle exposed by Lex4Editor via React ref.
+ * Imperative handle exposed by Lex4Editor via React ref.
  *
- * This is always empty — all methods are contributed by extensions.
- * The actual handle type is dynamic based on which extensions are loaded.
+ * The base interface is empty — all methods are declared by extensions
+ * via TypeScript module augmentation of this interface.
  *
- * Common extension-provided methods:
- * - astExtension: getDocumentAst(), getDocumentJson(), buildSavePayload()
- * - variablesExtension: insertVariable(), refreshVariables()
+ * @example
+ * ```ts
+ * // In a custom extension file:
+ * declare module '@yurikilian/lex4' {
+ *   interface Lex4EditorHandle {
+ *     myMethod: () => void;
+ *   }
+ * }
+ * ```
  */
-export interface Lex4EditorHandle {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: (...args: any[]) => any;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface Lex4EditorHandle {}
