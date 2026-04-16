@@ -2,34 +2,34 @@ import type { EditorThemeClasses } from 'lexical';
 
 /**
  * Lexical theme configuration — maps Lexical CSS class names
- * to Tailwind-compatible class strings for consistent styling.
+ * to stable Lex4 class strings for consistent styling.
  */
 export const lexicalTheme: EditorThemeClasses = {
-  root: 'lex4-root outline-none',
-  paragraph: 'lex4-paragraph text-justify',
+  root: 'lex4-root',
+  paragraph: 'lex4-paragraph',
   heading: {
-    h1: 'text-3xl font-bold mb-2',
-    h2: 'text-2xl font-bold mb-2',
-    h3: 'text-xl font-semibold mb-1',
-    h4: 'text-lg font-semibold mb-1',
-    h5: 'text-base font-medium mb-1',
+    h1: 'lex4-heading lex4-heading-h1',
+    h2: 'lex4-heading lex4-heading-h2',
+    h3: 'lex4-heading lex4-heading-h3',
+    h4: 'lex4-heading lex4-heading-h4',
+    h5: 'lex4-heading lex4-heading-h5',
   },
   text: {
-    bold: 'font-bold',
-    italic: 'italic',
-    underline: 'underline',
-    strikethrough: 'line-through',
-    underlineStrikethrough: 'underline line-through',
+    bold: 'lex4-text-bold',
+    italic: 'lex4-text-italic',
+    underline: 'lex4-text-underline',
+    strikethrough: 'lex4-text-strikethrough',
+    underlineStrikethrough: 'lex4-text-underline lex4-text-strikethrough',
   },
   list: {
     nested: {
-      listitem: 'list-none',
+      listitem: 'lex4-listitem-nested',
     },
-    ol: 'list-decimal ml-6',
-    ul: 'list-disc ml-6',
+    ol: 'lex4-list lex4-list-ordered',
+    ul: 'lex4-list lex4-list-unordered',
     listitem: 'lex4-listitem',
     listitemChecked: 'lex4-listitem-checked',
     listitemUnchecked: 'lex4-listitem-unchecked',
   },
-  quote: 'border-l-4 border-gray-300 pl-4 italic text-gray-600',
+  quote: 'lex4-quote',
 };

@@ -766,6 +766,94 @@
   overflow: visible;
 }
 
+.lex4-root {
+  outline: none;
+}
+
+.lex4-paragraph {
+  margin: 0;
+  text-align: justify;
+}
+
+.lex4-heading {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--lex4-color-text);
+}
+
+.lex4-heading-h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.lex4-heading-h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.lex4-heading-h3 {
+  font-size: 1.25rem;
+}
+
+.lex4-heading-h4 {
+  font-size: 1.125rem;
+}
+
+.lex4-heading-h5 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.lex4-text-bold {
+  font-weight: 700;
+}
+
+.lex4-text-italic {
+  font-style: italic;
+}
+
+.lex4-text-underline {
+  text-decoration: underline;
+}
+
+.lex4-text-strikethrough {
+  text-decoration: line-through;
+}
+
+.lex4-text-underline.lex4-text-strikethrough {
+  text-decoration: underline line-through;
+}
+
+.lex4-list {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.lex4-list-ordered {
+  list-style: decimal;
+}
+
+.lex4-list-unordered {
+  list-style: disc;
+}
+
+.lex4-listitem {
+  margin: 0.25rem 0;
+}
+
+.lex4-listitem-nested {
+  list-style: none;
+}
+
+.lex4-quote {
+  margin: 0;
+  border-left: 4px solid var(--lex4-color-border);
+  padding-left: 1rem;
+  color: var(--lex4-color-text-secondary);
+  font-style: italic;
+}
+
 .lex4-page-placeholder {
   position: absolute;
   top: 0;
