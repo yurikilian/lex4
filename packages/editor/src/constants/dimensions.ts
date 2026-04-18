@@ -17,13 +17,11 @@ export const A4_WIDTH_PX = Math.round(A4_WIDTH_MM * PX_PER_MM);
 /** A4 height in CSS pixels (≈1123px) */
 export const A4_HEIGHT_PX = Math.round(A4_HEIGHT_MM * PX_PER_MM);
 
-/** Standard A4 vertical margin: 25.4mm (1 inch) in CSS pixels */
-export const PAGE_MARGIN_TOP_PX = Math.round(25.4 * PX_PER_MM);
-export const PAGE_MARGIN_BOTTOM_PX = Math.round(25.4 * PX_PER_MM);
-
-/** Standard A4 horizontal margin: 31.75mm (1.25 inches) in CSS pixels */
-export const PAGE_MARGIN_LEFT_PX = Math.round(31.75 * PX_PER_MM);
-export const PAGE_MARGIN_RIGHT_PX = Math.round(31.75 * PX_PER_MM);
+/** Standard A4 margin: 30mm on all sides (European standard) in CSS pixels */
+export const PAGE_MARGIN_TOP_PX = Math.round(30 * PX_PER_MM);
+export const PAGE_MARGIN_BOTTOM_PX = Math.round(30 * PX_PER_MM);
+export const PAGE_MARGIN_LEFT_PX = Math.round(30 * PX_PER_MM);
+export const PAGE_MARGIN_RIGHT_PX = Math.round(30 * PX_PER_MM);
 
 /** Maximum header height as a ratio of page height */
 export const MAX_HEADER_RATIO = 0.2;

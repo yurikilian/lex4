@@ -22,14 +22,11 @@ describe('A4 dimensions', () => {
     expect(A4_HEIGHT_PX).toBe(1123);
   });
 
-  it('sets standard A4 vertical margins (25.4mm = 96px)', () => {
-    expect(PAGE_MARGIN_TOP_PX).toBe(96);
-    expect(PAGE_MARGIN_BOTTOM_PX).toBe(96);
-  });
-
-  it('sets standard A4 horizontal margins (31.75mm = 120px)', () => {
-    expect(PAGE_MARGIN_LEFT_PX).toBe(120);
-    expect(PAGE_MARGIN_RIGHT_PX).toBe(120);
+  it('sets standard A4 margins (30mm = 113px all sides)', () => {
+    expect(PAGE_MARGIN_TOP_PX).toBe(113);
+    expect(PAGE_MARGIN_BOTTOM_PX).toBe(113);
+    expect(PAGE_MARGIN_LEFT_PX).toBe(113);
+    expect(PAGE_MARGIN_RIGHT_PX).toBe(113);
   });
 
   it('sets max header height to 20% of page height', () => {
