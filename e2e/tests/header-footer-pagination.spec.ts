@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-async function createLargeBody(page: Page, rows = 90) {
+async function createLargeBody(page: Page, rows = 60) {
   const body = page.locator('[data-testid^="page-body-"]').first();
   await body.click();
 
@@ -31,9 +31,9 @@ async function typeLargeRegion(page: Page, region: 'header' | 'footer') {
   const editor = page.locator(`[data-testid^="page-${region}-"] [contenteditable="true"]`).first();
   await editor.click();
 
-  for (let index = 0; index < 6; index++) {
+  for (let index = 0; index < 12; index++) {
     await page.keyboard.type(`${region.toUpperCase()} line ${index + 1}`);
-    if (index < 5) {
+    if (index < 11) {
       await page.keyboard.press('Enter');
     }
   }
