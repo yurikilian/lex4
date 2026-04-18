@@ -1,17 +1,14 @@
 import {
   A4_HEIGHT_PX,
-  PAGE_MARGIN_PX,
+  PAGE_MARGIN_TOP_PX,
+  PAGE_MARGIN_BOTTOM_PX,
 } from './dimensions';
 
-/**
- * Computes the available body height for a page, accounting for
- * header/footer heights and page margins.
- */
 export function computeBodyHeight(
   headerHeight: number,
   footerHeight: number,
 ): number {
-  const verticalMargins = PAGE_MARGIN_PX * 2;
+  const verticalMargins = PAGE_MARGIN_TOP_PX + PAGE_MARGIN_BOTTOM_PX;
   return A4_HEIGHT_PX - headerHeight - footerHeight - verticalMargins;
 }
 

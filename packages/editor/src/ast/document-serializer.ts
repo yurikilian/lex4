@@ -16,9 +16,18 @@ import { AST_VERSION } from './types';
 import type { Lex4Document } from '../types/document';
 import type { VariableDefinition } from '../variables/types';
 import { mapEditorStateToBlocks, mapEditorStateToContent } from './content-mapper';
-import { PAGE_MARGIN_PX, PX_PER_MM } from '../constants';
+import {
+  PAGE_MARGIN_TOP_PX,
+  PAGE_MARGIN_BOTTOM_PX,
+  PAGE_MARGIN_LEFT_PX,
+  PAGE_MARGIN_RIGHT_PX,
+  PX_PER_MM,
+} from '../constants';
 
-const MARGIN_MM = Math.round((PAGE_MARGIN_PX / PX_PER_MM) * 10) / 10;
+const MARGIN_TOP_MM = Math.round((PAGE_MARGIN_TOP_PX / PX_PER_MM) * 10) / 10;
+const MARGIN_BOTTOM_MM = Math.round((PAGE_MARGIN_BOTTOM_PX / PX_PER_MM) * 10) / 10;
+const MARGIN_LEFT_MM = Math.round((PAGE_MARGIN_LEFT_PX / PX_PER_MM) * 10) / 10;
+const MARGIN_RIGHT_MM = Math.round((PAGE_MARGIN_RIGHT_PX / PX_PER_MM) * 10) / 10;
 
 /**
  * Serializes a Lex4Document into a clean, backend-friendly DocumentAst.
@@ -43,10 +52,10 @@ export function serializeDocument(
       widthMm: 210,
       heightMm: 297,
       margins: {
-        topMm: MARGIN_MM,
-        rightMm: MARGIN_MM,
-        bottomMm: MARGIN_MM,
-        leftMm: MARGIN_MM,
+        topMm: MARGIN_TOP_MM,
+        rightMm: MARGIN_RIGHT_MM,
+        bottomMm: MARGIN_BOTTOM_MM,
+        leftMm: MARGIN_LEFT_MM,
       },
     },
     headerFooter: {
