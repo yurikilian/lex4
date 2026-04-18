@@ -122,8 +122,8 @@ test.describe('Global Document Commands', () => {
     });
 
     expect(selectionStyle.active).toBe('true');
-    expect(selectionStyle.bodyBackgroundColor).toBe('rgb(191, 219, 254)');
-    expect(selectionStyle.bodyColor).toBe('rgb(30, 64, 175)');
+    expect(selectionStyle.bodyBackgroundColor).toBe('rgb(190, 218, 253)');
+    expect(selectionStyle.bodyColor).toBe('rgb(18, 43, 109)');
     expect(selectionStyle.headerBackgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(selectionStyle.footerBackgroundColor).toBe('rgba(0, 0, 0, 0)');
   });

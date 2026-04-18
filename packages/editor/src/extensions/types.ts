@@ -38,6 +38,9 @@ export interface Lex4Extension {
   /** Components rendered in the toolbar's extension slot. */
   toolbarItems?: React.ComponentType[];
 
+  /** Components rendered in the toolbar's right-aligned end area (next to history toggle). */
+  toolbarEndItems?: React.ComponentType[];
+
   /** Component rendered as a right side panel. */
   sidePanel?: React.ComponentType;
 
@@ -55,7 +58,7 @@ export interface Lex4Extension {
 
   /**
    * CSS custom property overrides applied on the `.lex4-editor` root.
-   * Use to retheme the editor — e.g. `{ '--lex4-color-primary': '#e11d48' }`.
+   * Use to retheme the editor — e.g. `{ '--color-primary': 'hsl(350 80% 50%)' }`.
    */
   cssVariables?: Record<string, string>;
 
@@ -80,6 +83,7 @@ export interface ResolvedExtensions {
   nodes: Klass<LexicalNode>[];
   bodyPlugins: React.ComponentType[];
   toolbarItems: React.ComponentType[];
+  toolbarEndItems: React.ComponentType[];
   sidePanels: React.ComponentType[];
   providers: React.ComponentType<{ children: React.ReactNode }>[];
   themeOverrides: Partial<EditorThemeClasses>;
@@ -96,6 +100,7 @@ export function resolveExtensions(extensions: Lex4Extension[]): ResolvedExtensio
     nodes: [],
     bodyPlugins: [],
     toolbarItems: [],
+    toolbarEndItems: [],
     sidePanels: [],
     providers: [],
     themeOverrides: {},
@@ -108,6 +113,7 @@ export function resolveExtensions(extensions: Lex4Extension[]): ResolvedExtensio
     if (ext.nodes) resolved.nodes.push(...ext.nodes);
     if (ext.bodyPlugins) resolved.bodyPlugins.push(...ext.bodyPlugins);
     if (ext.toolbarItems) resolved.toolbarItems.push(...ext.toolbarItems);
+    if (ext.toolbarEndItems) resolved.toolbarEndItems.push(...ext.toolbarEndItems);
     if (ext.sidePanel) resolved.sidePanels.push(ext.sidePanel);
     if (ext.provider) resolved.providers.push(ext.provider);
     if (ext.themeOverrides) {

@@ -29,7 +29,7 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => onToggle(!enabled)}
         className="lex4-hf-switch"
-        style={{ backgroundColor: enabled ? 'var(--lex4-color-primary)' : 'var(--lex4-color-text-disabled)' }}
+        style={{ backgroundColor: enabled ? 'var(--color-primary)' : 'var(--color-muted)' }}
         data-testid="header-footer-switch"
       >
         <span className="lex4-hf-switch-knob" />

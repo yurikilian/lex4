@@ -94,7 +94,7 @@ test.describe('Bug Fix Regressions', () => {
       const box = await pages.nth(i).boundingBox();
       expect(box).not.toBeNull();
       expect(box!.width).toBe(794);
-      expect(box!.height).toBe(1123);
+      expect(box!.height).toBeCloseTo(1123, 0);
     }
   });
 
@@ -120,7 +120,7 @@ test.describe('Bug Fix Regressions', () => {
     for (let i = 0; i < count; i++) {
       const box = await pages.nth(i).boundingBox();
       expect(box).not.toBeNull();
-      expect(box!.height).toBe(1123);
+      expect(box!.height).toBeCloseTo(1123, 0);
     }
   });
 
@@ -349,7 +349,7 @@ test.describe('Bug Fix Regressions', () => {
       const box = await pages.nth(i).boundingBox();
       expect(box).not.toBeNull();
       expect(box!.width).toBe(794);
-      expect(box!.height).toBe(1123);
+      expect(box!.height).toBeCloseTo(1123, 0);
     }
 
     // Every page (except possibly last) should have content

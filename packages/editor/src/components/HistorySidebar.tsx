@@ -74,16 +74,20 @@ export const HistorySidebar: React.FC = () => {
                   onClick={() => jumpToHistoryEntry(actualIndex)}
                 >
                   <div className="lex4-history-entry-row">
+                    <div className="lex4-history-entry-dot" />
                     <div className="lex4-history-entry-content">
-                      <div className={`lex4-history-entry-label${isCurrent ? ' current' : ''}`}>
+                      <div className="lex4-history-entry-label">
                         {entry.label}
                       </div>
-                      <div className="lex4-history-entry-source">
-                        {t.regions[entry.source as keyof typeof t.regions] ?? entry.source}
+                      <div className="lex4-history-entry-meta">
+                        <span className="lex4-history-entry-source">
+                          {t.regions[entry.source as keyof typeof t.regions] ?? entry.source}
+                        </span>
+                        <span className="lex4-history-entry-meta-dot">·</span>
+                        <span className="lex4-history-entry-time">
+                          {formatTimestamp(entry.timestamp)}
+                        </span>
                       </div>
-                    </div>
-                    <div className="lex4-history-entry-time">
-                      {formatTimestamp(entry.timestamp)}
                     </div>
                   </div>
                 </button>

@@ -1,3 +1,125 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+
+@theme inline {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Neutrals — slate */
+  --color-background: hsl(210 20% 98%);
+  --color-foreground: hsl(222 47% 11%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222 47% 11%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222 47% 11%);
+
+  /* Primary — blue-500 */
+  --color-primary: hsl(217 91% 60%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-primary-glow: hsl(213 94% 68%);
+
+  --color-secondary: hsl(210 40% 96%);
+  --color-secondary-foreground: hsl(222 47% 11%);
+  --color-muted: hsl(210 40% 96%);
+  --color-muted-foreground: hsl(215 16% 47%);
+  --color-accent: hsl(158 64% 42%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
+  --color-border: hsl(214 32% 91%);
+  --color-border-strong: hsl(213 27% 84%);
+  --color-input: hsl(214 32% 91%);
+  --color-ring: hsl(213 94% 68%);
+
+  /* Surfaces & canvas */
+  --color-surface: hsl(210 40% 98%);
+  --color-surface-elevated: hsl(0 0% 100%);
+  --color-canvas: hsl(0 0% 100%);
+  --color-canvas-foreground: hsl(222 47% 11%);
+
+  /* Variable token chip colors */
+  --color-token-customer: hsl(217 91% 60%);
+  --color-token-customer-bg: hsl(214 95% 95%);
+  --color-token-proposal: hsl(21 90% 48%);
+  --color-token-proposal-bg: hsl(33 100% 92%);
+  --color-token-seller: hsl(142 71% 45%);
+  --color-token-seller-bg: hsl(138 76% 92%);
+  --color-token-company: hsl(215 25% 27%);
+  --color-token-company-bg: hsl(210 40% 96%);
+
+  /* Shadows */
+  --shadow-paper: 0 1px 2px hsl(222 47% 11% / 0.04), 0 8px 24px -8px hsl(222 47% 11% / 0.08);
+  --shadow-elegant: 0 16px 40px -12px hsl(222 47% 11% / 0.12);
+
+  /* Radii */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-in-right: slide-in-right 0.25s ease-out;
+}
+
+/* Extended CSS custom properties (not Tailwind utilities) */
+:root {
+  --color-selection-bg: hsl(214 95% 87%);
+  --color-selection-text: hsl(224 71% 25%);
+  --gradient-brand: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-glow) 100%);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer components {
+  /* Token chip — inline variable badge */
+  .token-chip {
+    @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[11px] font-medium border transition-all;
+    @apply hover:scale-[1.03] cursor-pointer leading-none;
+  }
+
+  .token-chip::before {
+    content: "";
+    @apply w-1 h-1 rounded-full;
+    background: currentColor;
+  }
+
+  .token-customer { color: var(--color-token-customer); background: var(--color-token-customer-bg); border-color: color-mix(in srgb, var(--color-token-customer) 30%, transparent); }
+  .token-proposal { color: var(--color-token-proposal); background: var(--color-token-proposal-bg); border-color: color-mix(in srgb, var(--color-token-proposal) 30%, transparent); }
+  .token-seller   { color: var(--color-token-seller);   background: var(--color-token-seller-bg);   border-color: color-mix(in srgb, var(--color-token-seller) 30%, transparent); }
+  .token-company  { color: var(--color-token-company);  background: var(--color-token-company-bg);  border-color: color-mix(in srgb, var(--color-token-company) 30%, transparent); }
+
+  /* Toolbar button — compact icon button */
+  .toolbar-btn {
+    @apply inline-flex items-center justify-center h-7 w-7 rounded-sm text-muted-foreground;
+    @apply hover:bg-secondary hover:text-foreground transition-colors;
+  }
+
+  .toolbar-btn-active {
+    @apply bg-secondary text-primary;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-1 ring-accent ring-offset-0;
+  }
+}

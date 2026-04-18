@@ -41,8 +41,8 @@ function selectEntireDocument(
   selectionBuffer.select();
 }
 
-const GLOBAL_SELECTION_BACKGROUND = 'rgb(191, 219, 254)';
-const GLOBAL_SELECTION_FOREGROUND = 'rgb(30, 64, 175)';
+const GLOBAL_SELECTION_BACKGROUND = 'hsl(214 95% 87%)';
+const GLOBAL_SELECTION_FOREGROUND = 'hsl(224 71% 25%)';
 
 function isFormFieldTarget(target: EventTarget | null): boolean {
   const element = target as HTMLElement | null;
@@ -180,8 +180,8 @@ const EditorChrome: React.FC<{
 
     const root = rootRef.current;
     const styles = root ? getComputedStyle(root) : null;
-    const selBg = styles?.getPropertyValue('--lex4-color-selection-bg').trim() || GLOBAL_SELECTION_BACKGROUND;
-    const selFg = styles?.getPropertyValue('--lex4-color-selection-text').trim() || GLOBAL_SELECTION_FOREGROUND;
+    const selBg = styles?.getPropertyValue('--color-selection-bg').trim() || GLOBAL_SELECTION_BACKGROUND;
+    const selFg = styles?.getPropertyValue('--color-selection-text').trim() || GLOBAL_SELECTION_FOREGROUND;
 
     editableRoots.forEach((editableRoot) => {
       editableRoot.style.backgroundColor = globalSelectionActive ? selBg : '';

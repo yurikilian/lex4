@@ -96,7 +96,7 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, disabl
             )}
             {Object.entries(grouped).map(([group, defs]) => (
               <div key={group}>
-                <div className="lex4-variable-picker-group-label">
+                <div className="lex4-variable-picker-group-label" data-variable-group={group}>
                   {group}
                 </div>
                 {defs.map(def => (
@@ -105,6 +105,7 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, disabl
                     type="button"
                     className="lex4-variable-picker-option"
                     data-testid={`variable-option-${def.key}`}
+                    data-variable-group={group}
                     onClick={() => handleInsert(def.key)}
                   >
                     <span className="lex4-variable-picker-key">{`{{${def.key}}}`}</span>

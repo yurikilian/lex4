@@ -154,7 +154,8 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
     name: 'variables',
     nodes: [VariableNode],
     bodyPlugins: [VariablePlugin],
-    toolbarItems: [VariableToolbarItem, VariablePanelToggle],
+    toolbarItems: [VariableToolbarItem],
+    toolbarEndItems: [VariablePanelToggle],
     sidePanel: VariablePanelWithState,
     provider: ProviderWrapper,
     handleMethods: (ctx: ExtensionContext) => ({

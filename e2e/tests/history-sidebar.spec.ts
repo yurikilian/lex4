@@ -46,6 +46,8 @@ test.describe('History Sidebar', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="page-0"]');
+    // Sidebars are hidden by default — open the history sidebar
+    await page.getByTestId('toggle-history-sidebar').click();
   });
 
   test('renders labeled history entries for body and header changes', async ({ page }) => {

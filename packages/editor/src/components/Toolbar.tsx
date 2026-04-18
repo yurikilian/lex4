@@ -48,7 +48,7 @@ export const Toolbar: React.FC = () => {
     setHistorySidebarOpen,
     undo,
   } = useDocument();
-  const { toolbarItems } = useExtensions();
+  const { toolbarItems, toolbarEndItems } = useExtensions();
   const t = useTranslations();
 
   const withBodySelection = useCallback(
@@ -358,6 +358,9 @@ export const Toolbar: React.FC = () => {
         )}
 
         <div className="lex4-toolbar-end">
+          {toolbarEndItems.map((EndItem, idx) => (
+            <EndItem key={idx} />
+          ))}
           <ToolbarIconButton
             title={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
             testId="toggle-history-sidebar"

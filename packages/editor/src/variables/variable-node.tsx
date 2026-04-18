@@ -110,12 +110,15 @@ export class VariableNode extends DecoratorNode<JSX.Element> {
 
 function VariableChip({ variableKey }: { variableKey: string }): JSX.Element {
   const { getDefinition } = useVariables();
-  const label = getDefinition(variableKey)?.label ?? variableKey;
+  const def = getDefinition(variableKey);
+  const label = def?.label ?? variableKey;
+  const group = def?.group;
 
   return (
     <span
       className="lex4-variable-chip"
       data-testid={`variable-chip-${variableKey}`}
+      data-variable-group={group}
       title={variableKey}
     >
       {label}

@@ -7,6 +7,7 @@ const EMPTY_RESOLVED: ResolvedExtensions = {
   nodes: [],
   bodyPlugins: [],
   toolbarItems: [],
+  toolbarEndItems: [],
   sidePanels: [],
   providers: [],
   themeOverrides: {},

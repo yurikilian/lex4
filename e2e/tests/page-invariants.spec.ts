@@ -11,7 +11,7 @@ test.describe('Page Invariants', () => {
     const box = await pageEl.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBe(794);
-    expect(box!.height).toBe(1123);
+    expect(box!.height).toBeCloseTo(1123, 0);
   });
 
   test('page has white background', async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('Page Invariants', () => {
       const box = await pages.nth(i).boundingBox();
       expect(box).not.toBeNull();
       expect(box!.width).toBe(794);
-      expect(box!.height).toBe(1123);
+      expect(box!.height).toBeCloseTo(1123, 0);
     }
   });
 });

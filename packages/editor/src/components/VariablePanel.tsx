@@ -95,21 +95,21 @@ export const VariablePanel: React.FC<{
           <div className="lex4-variable-list-empty">{t.variables.noVariablesFound}</div>
         )}
         {Object.entries(grouped).map(([group, defs]) => (
-          <div key={group} className="lex4-variable-group">
-            <div>
+          <div key={group} className="lex4-variable-group" data-variable-group={group}>
+            <div className="lex4-variable-group-label">{group}</div>
+            <div className="lex4-variable-group-items">
               {defs.map(def => (
                 <button
                   key={def.key}
                   type="button"
                   className="lex4-variable-list-item"
                   data-testid={`variable-panel-${def.key}`}
+                  data-variable-group={group}
                   onClick={() => handleInsert(def.key)}
                   disabled={!activeEditor}
+                  title={def.key}
                 >
-                  <span className="lex4-variable-badge">
-                    {def.label}
-                  </span>
-                  <span className="lex4-variable-group-label">{group}</span>
+                  {def.label}
                 </button>
               ))}
             </div>

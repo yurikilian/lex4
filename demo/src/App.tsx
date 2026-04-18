@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Lex4Editor, astExtension, variablesExtension, PT_BR_TRANSLATIONS } from '@yurikilian/lex4';
 import type { Lex4Document, Lex4EditorHandle, VariableDefinition, Lex4Translations } from '@yurikilian/lex4';
+import { Button } from '@/components/ui/button';
+import { Save, Download, Globe, ChevronDown } from 'lucide-react';
 import '@yurikilian/lex4/style.css';
 
 type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
@@ -56,39 +58,67 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-100">
-      <header className="bg-white border-b border-slate-200 text-slate-900 px-4 py-2 flex items-center gap-2">
-        <span className="font-bold text-lg text-blue-600">Lex4</span>
-        <span className="text-slate-500 text-sm">— Document Editor</span>
-        <button
-          type="button"
-          data-testid="btn-save"
-          className="ml-auto rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600"
-          onClick={handleSave}
-        >
-          💾 Save
-        </button>
-        <button
-          type="button"
-          data-testid="btn-export-ast"
-          className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-          onClick={handleExportAst}
-        >
-          Export AST
-        </button>
-        <select
-          value={langCode}
-          onChange={(e) => setLangCode(e.target.value)}
-          className="rounded bg-white px-2 py-1 text-sm text-slate-700 border border-slate-300
-                     hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-400"
-          data-testid="language-selector"
-        >
-          {LANGUAGES.map(lang => (
-            <option key={lang.code} value={lang.code}>
-              {lang.flag} {lang.label}
-            </option>
-          ))}
-        </select>
+    <div className="h-screen flex flex-col bg-background">
+      <header className="h-14 border-b border-border bg-surface-elevated/95 backdrop-blur-xl sticky top-0 z-30">
+        <div className="h-full px-4 flex items-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-primary-foreground font-bold text-base shadow-sm"
+              style={{ background: 'var(--gradient-brand)' }}
+            >
+              L
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold tracking-tight">
+                Lex<span className="text-primary">4</span>
+              </div>
+              <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                Document Editor
+              </div>
+            </div>
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md hover:bg-secondary text-xs text-muted-foreground transition-colors"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <select
+                value={langCode}
+                onChange={(e) => setLangCode(e.target.value)}
+                className="bg-transparent text-xs text-muted-foreground appearance-none cursor-pointer focus:outline-none"
+                data-testid="language-selector"
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="btn-export-ast"
+              className="h-9 gap-1.5 text-xs"
+              onClick={handleExportAst}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export AST
+            </Button>
+            <Button
+              size="sm"
+              data-testid="btn-save"
+              className="h-9 gap-1.5 text-xs shadow-sm hover:shadow-md transition-shadow"
+              style={{ background: 'var(--gradient-brand)' }}
+              onClick={handleSave}
+            >
+              <Save className="h-3.5 w-3.5" />
+              Save
+            </Button>
+          </div>
+        </div>
       </header>
       <main className="flex-1 overflow-hidden">
         <Lex4Editor

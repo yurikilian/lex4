@@ -8,9 +8,9 @@ test.describe('Theme — Visual Design', () => {
 
   test('document area has light background', async ({ page }) => {
     const container = page.locator('[data-testid="lex4-editor"] > div:nth-child(3)');
-    const bg = await container.evaluate(el => getComputedStyle(el).backgroundColor);
-    // bg-gray-200 = rgb(229, 231, 235)
-    expect(bg).toBe('rgb(229, 231, 235)');
+    const bgImage = await container.evaluate(el => getComputedStyle(el).backgroundImage);
+    // Canvas uses a radial gradient for depth
+    expect(bgImage).toContain('gradient');
   });
 
   test('page has prominent shadow on dark background', async ({ page }) => {
@@ -35,7 +35,9 @@ test.describe('Theme — Visual Design', () => {
     await expect(headerPage).toBeVisible();
 
     const borderTopWidth = await headerPage.evaluate(el => getComputedStyle(el).borderTopWidth);
-    expect(borderTopWidth).toBe('2px');
+    expect(borderTopWidth).toBe('0px');
+    const borderBottomWidth = await headerPage.evaluate(el => getComputedStyle(el).borderBottomWidth);
+    expect(borderBottomWidth).toBe('1px');
   });
 
   test('footer has blue tint when enabled', async ({ page }) => {
@@ -44,7 +46,9 @@ test.describe('Theme — Visual Design', () => {
     await expect(footerPage).toBeVisible();
 
     const borderBottomWidth = await footerPage.evaluate(el => getComputedStyle(el).borderBottomWidth);
-    expect(borderBottomWidth).toBe('2px');
+    expect(borderBottomWidth).toBe('0px');
+    const borderTopWidth = await footerPage.evaluate(el => getComputedStyle(el).borderTopWidth);
+    expect(borderTopWidth).toBe('1px');
   });
 
   test('variable chip in editor has outlined style', async ({ page }) => {
@@ -60,8 +64,8 @@ test.describe('Theme — Visual Design', () => {
     await expect(chip).toBeVisible();
 
     const bg = await chip.evaluate(el => getComputedStyle(el).backgroundColor);
-    // bg-white = rgb(255, 255, 255)
-    expect(bg).toBe('rgb(255, 255, 255)');
+    // Category-colored chip background (not transparent)
+    expect(bg).not.toBe('rgba(0, 0, 0, 0)');
   });
 
   test('variable panel shows labels instead of template keys', async ({ page }) => {
@@ -72,14 +76,14 @@ test.describe('Theme — Visual Design', () => {
     const panel = page.getByTestId('variable-panel');
     await expect(panel).toBeVisible();
 
-    // Variable panel pills should show labels (not {{key}})
-    const firstPill = panel.locator('[data-testid^="variable-panel-"] span').first();
-    const text = await firstPill.textContent();
+    // Variable panel chips show labels (not {{key}})
+    const firstChip = panel.locator('[data-testid^="variable-panel-"]').first();
+    const text = await firstChip.textContent();
     expect(text).not.toContain('{{');
     expect(text).not.toContain('}}');
   });
 
-  test('variable panel shows group name on the right', async ({ page }) => {
+  test('variable panel shows group labels per category', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
 
@@ -87,15 +91,11 @@ test.describe('Theme — Visual Design', () => {
     const panel = page.getByTestId('variable-panel');
     await expect(panel).toBeVisible();
 
-    // Wait for variable items to render (use specific variable testid)
-    const firstRow = panel.locator('[data-testid="variable-panel-customer.name"]');
-    await expect(firstRow).toBeVisible();
-    const spans = firstRow.locator('span');
-    await expect(spans).toHaveCount(2);
-    const groupSpan = spans.last();
-    const text = await groupSpan.textContent();
+    // Group labels should be visible as separate elements
+    const groupLabel = panel.locator('.lex4-variable-group-label').first();
+    await expect(groupLabel).toBeVisible();
+    const text = await groupLabel.textContent();
     expect(text).toBeTruthy();
-    // Group should be "Customer" (case may vary)
     expect(text?.toLowerCase()).toContain('customer');
   });
 });
@@ -139,14 +139,16 @@ test.describe('i18n — Default Translations', () => {
   });
 
   test('history sidebar title shows translated text', async ({ page }) => {
-    // History sidebar is open by default
+    // History sidebar is hidden by default — open it
+    await page.getByTestId('toggle-history-sidebar').click();
     const sidebar = page.getByTestId('history-sidebar');
     await expect(sidebar).toBeVisible();
     await expect(sidebar.locator('h2')).toHaveText('History');
   });
 
   test('history sidebar empty state shows translated text', async ({ page }) => {
-    // History sidebar is open by default
+    // History sidebar is hidden by default — open it
+    await page.getByTestId('toggle-history-sidebar').click();
     const empty = page.getByTestId('history-empty');
     await expect(empty).toHaveText('No history yet.');
   });
@@ -171,7 +173,8 @@ test.describe('i18n — Default Translations', () => {
   });
 
   test('history action labels use i18n strings', async ({ page }) => {
-    // History sidebar is already open by default
+    // History sidebar is hidden by default — open it
+    await page.getByTestId('toggle-history-sidebar').click();
 
     // Click into the body, type, select all, and apply bold
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();

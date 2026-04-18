@@ -286,7 +286,7 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
   );
   const activePageIdRef = useRef<string | null>(initialSnapshot.pages[0]?.id ?? null);
   const [globalSelectionActive, setGlobalSelectionActive] = useState(false);
-  const [historySidebarOpen, setHistorySidebarOpen] = useState(true);
+  const [historySidebarOpen, setHistorySidebarOpen] = useState(false);
   const [focusAtEndVersion, setFocusAtEndVersion] = useState(0);
   const t = useTranslations();
   const activeEditorRef = useRef<LexicalEditor | null>(null);
