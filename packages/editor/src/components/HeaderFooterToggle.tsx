@@ -1,5 +1,5 @@
 import React from 'react';
-import { Rows3 } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useTranslations } from '../i18n';
 
 interface HeaderFooterToggleProps {
@@ -18,7 +18,7 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
       className="lex4-hf-toggle"
       data-testid="header-footer-toggle"
     >
-      <Rows3 size={14} className="lex4-hf-toggle-icon" />
+      <FileText size={14} className="lex4-hf-toggle-icon" />
       <span className="lex4-hf-toggle-label">
         {t.headerFooter.label}
       </span>

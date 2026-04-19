@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Settings,
-  ChevronDown,
-  CopyPlus,
-  Eraser,
-  Trash2,
-} from 'lucide-react';
+import { CopyPlus, Eraser, Settings2, Trash2 } from 'lucide-react';
 import type { PageCounterMode } from '../types/document';
 
 interface HeaderFooterActionsProps {
@@ -66,13 +60,14 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen(!open)}
-        className="lex4-settings-trigger"
+        className="lex4-settings-trigger lex4-settings-trigger-icon"
         data-testid="header-footer-menu-trigger"
         aria-expanded={open}
         aria-haspopup="true"
+        aria-label="Header and footer settings"
+        title="Header and footer settings"
       >
-        <Settings size={14} />
-        <ChevronDown size={12} />
+        <Settings2 size={14} />
       </button>
 
       {open && (

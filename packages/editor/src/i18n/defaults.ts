@@ -61,6 +61,16 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
     insertVariable: 'Insert variable {{key}}',
     openPanel: 'Open Variables',
     closePanel: 'Close Variables',
+    newVariable: 'New variable',
+    createVariableTitle: 'Create variable',
+    createVariableLabel: 'Label',
+    createVariableKey: 'Key',
+    createVariableGroup: 'Group',
+    createVariableType: 'Type',
+    createVariableSave: 'Add variable',
+    createVariableCancel: 'Cancel',
+    createVariableMissingFields: 'Label and key are required.',
+    createVariableDuplicateKey: 'Variable {{key}} already exists.',
   },
 
   header: {

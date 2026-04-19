@@ -12,8 +12,8 @@ test.describe('Variable Export', () => {
     await page.keyboard.type('Hello ');
 
     // Insert variable
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-option-customer.name').click();
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
 
     // Wait for the variable chip to appear
     await expect(page.locator('[data-testid="variable-chip-customer.name"]')).toBeVisible();
@@ -35,8 +35,8 @@ test.describe('Variable Export', () => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
 
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-option-customer.name').click();
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
 
     await page.getByTestId('btn-export-ast').click();
     const ast = await page.evaluate(() => (window as any).__lex4_last_ast);
@@ -51,13 +51,12 @@ test.describe('Variable Export', () => {
     await body.click();
 
     // Insert same variable twice
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-option-customer.name').click();
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
 
     await page.keyboard.type(' and ');
 
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-option-customer.name').click();
+    await page.getByTestId('variable-panel-customer.name').click();
 
     // Export AST
     await page.getByTestId('btn-export-ast').click();

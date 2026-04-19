@@ -1,11 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Braces } from 'lucide-react';
 import type { Lex4Extension, ExtensionContext } from './types';
 import type { VariableDefinition } from '../variables/types';
 import { VariableNode } from '../variables/variable-node';
 import { VariablePlugin } from '../variables/variable-plugin';
 import { VariableProvider, useVariables } from '../variables/variable-context';
-import { VariablePicker } from '../components/VariablePicker';
 import { VariablePanel } from '../components/VariablePanel';
 import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
 
@@ -13,11 +12,12 @@ declare module '../types/editor-handle' {
   interface Lex4EditorHandle {
     insertVariable: (key: string) => void;
     refreshVariables: (newDefs: VariableDefinition[]) => void;
+    setVariablePanelOpen: (open: boolean) => void;
+    toggleVariablePanel: () => void;
   }
 }
-import { useDocument } from '../context/document-context';
 import { useExtensionState } from './extension-context';
-import { useTranslations, interpolate } from '../i18n';
+import { useTranslations } from '../i18n';
 
 // --- Variable panel open/close context ---
 
@@ -45,50 +45,25 @@ const VariablePanelStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
 };
 
 /**
- * Toolbar item contributed by the variables extension.
- * Wires the VariablePicker to the active editor and document context.
+ * Toolbar toggle contributed by the variables extension.
+ * Opens and closes the variables side panel from the toolbar end area.
  */
-const VariableToolbarItem: React.FC = () => {
-  const { activeEditor, runHistoryAction } = useDocument();
-  const t = useTranslations();
-
-  const handleInsert = useCallback((variableKey: string) => {
-    runHistoryAction(
-      { label: interpolate(t.variables.insertVariable, { key: variableKey }), source: 'toolbar', region: 'document' },
-      () => {
-        if (activeEditor) {
-          activeEditor.dispatchCommand(INSERT_VARIABLE_COMMAND, variableKey);
-        }
-      },
-    );
-  }, [activeEditor, runHistoryAction]);
-
-  return (
-    <VariablePicker
-      onInsert={handleInsert}
-      disabled={!activeEditor}
-    />
-  );
-};
-
-/**
- * Toolbar toggle button for the Variables side panel.
- */
-const VariablePanelToggle: React.FC = () => {
+const VariableToolbarToggle: React.FC = () => {
   const { panelOpen, setPanelOpen } = useVariablePanelState();
   const t = useTranslations();
 
   return (
     <button
       type="button"
+      className={`lex4-toolbar-toggle-btn${panelOpen ? ' active' : ''}`}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => setPanelOpen(!panelOpen)}
+      data-testid="toggle-variable-panel"
       title={panelOpen ? t.variables.closePanel : t.variables.openPanel}
       aria-label={panelOpen ? t.variables.closePanel : t.variables.openPanel}
-      onMouseDown={e => e.preventDefault()}
-      onClick={() => setPanelOpen(!panelOpen)}
-      className={`lex4-toolbar-btn${panelOpen ? ' active' : ''}`}
-      data-testid="toggle-variable-panel"
     >
-      <Braces size={15} />
+      <Braces size={14} />
+      Variables
     </button>
   );
 };
@@ -99,6 +74,18 @@ const VariablePanelToggle: React.FC = () => {
 const VariablePanelWithState: React.FC = () => {
   const { panelOpen, setPanelOpen } = useVariablePanelState();
   return <VariablePanel open={panelOpen} onClose={() => setPanelOpen(false)} />;
+};
+
+const VariablePanelStateSync: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { panelOpen, setPanelOpen } = useVariablePanelState();
+  const extState = useExtensionState();
+
+  useEffect(() => {
+    extState.set('variablePanelOpen', panelOpen);
+    extState.set('setVariablePanelOpen', setPanelOpen);
+  }, [extState, panelOpen, setPanelOpen]);
+
+  return <>{children}</>;
 };
 
 /**
@@ -123,7 +110,7 @@ const VariableDefinitionsSync: React.FC<{ children: React.ReactNode }> = ({ chil
  * - VariableNode (custom Lexical node)
  * - VariablePlugin (body plugin for insert command handling)
  * - VariableProvider (context provider for variable catalog)
- * - VariablePicker toolbar item + panel toggle button
+ * - Variables side panel plus toolbar toggle
  * - VariablePanel side panel with toggle state
  * - Handle methods: insertVariable, refreshVariables
  *
@@ -142,9 +129,11 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
     return (
       <VariablePanelStateProvider>
         <VariableProvider initialDefinitions={definitions}>
-          <VariableDefinitionsSync>
-            {children}
-          </VariableDefinitionsSync>
+          <VariablePanelStateSync>
+            <VariableDefinitionsSync>
+              {children}
+            </VariableDefinitionsSync>
+          </VariablePanelStateSync>
         </VariableProvider>
       </VariablePanelStateProvider>
     );
@@ -154,8 +143,7 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
     name: 'variables',
     nodes: [VariableNode],
     bodyPlugins: [VariablePlugin],
-    toolbarItems: [VariableToolbarItem],
-    toolbarEndItems: [VariablePanelToggle],
+    toolbarEndItems: [VariableToolbarToggle],
     sidePanel: VariablePanelWithState,
     provider: ProviderWrapper,
     handleMethods: (ctx: ExtensionContext) => ({
@@ -167,6 +155,15 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
       },
       refreshVariables: (newDefs: VariableDefinition[]) => {
         ctx.setExtensionState('variableDefinitions', newDefs);
+      },
+      setVariablePanelOpen: (open: boolean) => {
+        const setter = ctx.getExtensionState<(open: boolean) => void>('setVariablePanelOpen');
+        setter?.(open);
+      },
+      toggleVariablePanel: () => {
+        const current = ctx.getExtensionState<boolean>('variablePanelOpen') ?? false;
+        const setter = ctx.getExtensionState<(open: boolean) => void>('setVariablePanelOpen');
+        setter?.(!current);
       },
     }),
   };

@@ -7,9 +7,9 @@ import '@yurikilian/lex4/style.css';
 
 type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
 
-const LANGUAGES: { code: string; label: string; flag: string; translations?: DeepPartial<Lex4Translations> }[] = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'pt-BR', label: 'Português', flag: '🇧🇷', translations: PT_BR_TRANSLATIONS },
+const LANGUAGES: { code: string; label: string; shortLabel: string; translations?: DeepPartial<Lex4Translations> }[] = [
+  { code: 'en', label: 'English', shortLabel: 'EN' },
+  { code: 'pt-BR', label: 'Português', shortLabel: 'PT', translations: PT_BR_TRANSLATIONS },
 ];
 
 const DEMO_VARIABLES: VariableDefinition[] = [
@@ -59,62 +59,70 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <header className="h-14 border-b border-border bg-surface-elevated/95 backdrop-blur-xl sticky top-0 z-30">
+      <header className="h-12 border-b border-border bg-surface-elevated/95 backdrop-blur-xl sticky top-0 z-30">
         <div className="h-full px-4 flex items-center gap-4">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-primary-foreground font-bold text-base shadow-sm"
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-primary-foreground font-bold text-sm shadow-sm"
               style={{ background: 'var(--gradient-brand)' }}
             >
               L
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-tight">
+              <div className="text-[13px] font-semibold tracking-tight">
                 Lex<span className="text-primary">4</span>
               </div>
-              <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+              <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">
                 Document Editor
               </div>
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="hidden md:flex items-center gap-1 ml-4 text-[10px] text-muted-foreground">
+            <span className="font-medium text-foreground">Untitled proposal</span>
+            <span className="opacity-40">·</span>
+            <span>Auto-saved 2s ago</span>
+          </div>
+
+          <div className="ml-auto flex items-center gap-1">
             <button
-              className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md hover:bg-secondary text-xs text-muted-foreground transition-colors"
+              className="h-7 px-2 inline-flex items-center gap-1 rounded-md hover:bg-secondary text-[10px] text-muted-foreground transition-colors"
+              title={currentLang.label}
             >
-              <Globe className="h-3.5 w-3.5" />
+              <Globe className="h-2.5 w-2.5" />
               <select
                 value={langCode}
                 onChange={(e) => setLangCode(e.target.value)}
-                className="bg-transparent text-xs text-muted-foreground appearance-none cursor-pointer focus:outline-none"
+                className="w-[1.8rem] bg-transparent text-[10px] font-medium text-muted-foreground appearance-none cursor-pointer focus:outline-none"
                 data-testid="language-selector"
+                aria-label="Language"
               >
                 {LANGUAGES.map(lang => (
                   <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.label}
+                    {lang.shortLabel}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="h-3 w-3" />
+              <ChevronDown className="h-2.5 w-2.5" />
             </button>
             <Button
               variant="outline"
               size="sm"
               data-testid="btn-export-ast"
-              className="h-9 gap-1.5 text-xs"
+              className="h-7 gap-1 px-2 text-[10px]"
               onClick={handleExportAst}
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-2.5 w-2.5" />
               Export AST
             </Button>
             <Button
               size="sm"
               data-testid="btn-save"
-              className="h-9 gap-1.5 text-xs shadow-sm hover:shadow-md transition-shadow"
+              className="h-7 gap-1 px-2 text-[10px] shadow-sm hover:shadow-md transition-shadow"
               style={{ background: 'var(--gradient-brand)' }}
               onClick={handleSave}
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-2.5 w-2.5" />
               Save
             </Button>
           </div>

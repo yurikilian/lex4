@@ -55,9 +55,8 @@ test.describe('Theme — Visual Design', () => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
 
-    // Use the variable picker (toolbar dropdown) to insert a variable
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-option-customer.name').click();
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
 
     // Variable chip should appear with outlined style
     const chip = page.locator('[data-testid="variable-chip-customer.name"]');
@@ -97,6 +96,69 @@ test.describe('Theme — Visual Design', () => {
     const text = await groupLabel.textContent();
     expect(text).toBeTruthy();
     expect(text?.toLowerCase()).toContain('customer');
+  });
+
+  test('toolbar and sidebar pills use shadcn-like outline sizing', async ({ page }) => {
+    const variableToggle = page.getByTestId('toggle-variable-panel');
+    await expect(variableToggle).toBeVisible();
+
+    const toggleStyles = await variableToggle.evaluate((el) => {
+      const styles = getComputedStyle(el);
+      return {
+        borderRadius: styles.borderRadius,
+        fontSize: styles.fontSize,
+        height: styles.height,
+        paddingLeft: styles.paddingLeft,
+        backgroundColor: styles.backgroundColor,
+      };
+    });
+
+    expect(toggleStyles.borderRadius).toBe('6px');
+    expect(toggleStyles.fontSize).toBe('12px');
+    expect(toggleStyles.height).toBe('32px');
+    expect(toggleStyles.paddingLeft).toBe('12px');
+    expect(toggleStyles.backgroundColor).toBe('rgb(249, 250, 251)');
+
+    await variableToggle.click();
+    const variablePill = page.getByTestId('variable-panel-customer.name');
+    await expect(variablePill).toBeVisible();
+
+    const pillStyles = await variablePill.evaluate((el) => {
+      const styles = getComputedStyle(el);
+      return {
+        borderRadius: styles.borderRadius,
+        fontSize: styles.fontSize,
+        minHeight: styles.minHeight,
+        paddingLeft: styles.paddingLeft,
+        boxShadow: styles.boxShadow,
+      };
+    });
+
+    expect(pillStyles.borderRadius).toBe('6px');
+    expect(pillStyles.fontSize).toBe('12px');
+    expect(pillStyles.minHeight).toBe('28px');
+    expect(pillStyles.paddingLeft).toBe('12px');
+    expect(pillStyles.boxShadow).toBe('none');
+
+    await page.getByTestId('header-footer-toggle').click();
+    await page.getByTestId('toggle-history-sidebar').click();
+    const historySourcePill = page.locator('.lex4-history-entry-source').first();
+    await expect(historySourcePill).toBeVisible();
+
+    const historyPillStyles = await historySourcePill.evaluate((el) => {
+      const styles = getComputedStyle(el);
+      return {
+        borderRadius: styles.borderRadius,
+        fontSize: styles.fontSize,
+        minHeight: styles.minHeight,
+        paddingLeft: styles.paddingLeft,
+      };
+    });
+
+    expect(historyPillStyles.borderRadius).toBe('6px');
+    expect(historyPillStyles.fontSize).toBe('11px');
+    expect(historyPillStyles.minHeight).toBe('28px');
+    expect(historyPillStyles.paddingLeft).toBe('12px');
   });
 });
 

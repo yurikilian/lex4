@@ -15,28 +15,23 @@ import {
   List,
   IndentIncrease,
   IndentDecrease,
+  History,
   Type,
   ALargeSmall,
-  PanelRight,
 } from 'lucide-react';
 import { useDocument } from '../context/document-context';
-import { HeaderFooterToggle } from './HeaderFooterToggle';
-import { HeaderFooterActions } from './HeaderFooterActions';
 import { useExtensions } from '../extensions/extension-context';
 import { useTranslations, interpolate } from '../i18n';
-import type { PageCounterMode } from '../types/document';
 import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
 import { applyFontSize, SUPPORTED_FONT_SIZES, type FontSize } from '../lexical/plugins/font-size-plugin';
 import { toggleBold, toggleItalic, toggleUnderline, toggleStrikethrough, setAlignment } from '../lexical/commands/format-commands';
 import { insertList, indentContent, outdentContent } from '../lexical/commands/list-commands';
 import { debug } from '../utils/debug';
+import { CanvasControls } from './CanvasControls';
 
 export const Toolbar: React.FC = () => {
   const {
-    document,
-    dispatch,
-    activePageId,
     activeEditor,
     canRedo,
     canUndo,
@@ -93,55 +88,6 @@ export const Toolbar: React.FC = () => {
     },
     [runHistoryAction],
   );
-
-  const handleToggle = (enabled: boolean) => {
-    runToolbarAction(
-      enabled ? t.history.actions.enabledHeadersFooters : t.history.actions.disabledHeadersFooters,
-      () => {
-        dispatch({ type: 'SET_HEADER_FOOTER_ENABLED', enabled });
-      },
-    );
-  };
-
-  const handleCopyHeaderToAll = () => {
-    if (activePageId) {
-      runToolbarAction(t.history.actions.copiedHeaderToAll, () => {
-        dispatch({ type: 'COPY_HEADER_TO_ALL', sourcePageId: activePageId });
-      });
-    }
-  };
-  const handleCopyFooterToAll = () => {
-    if (activePageId) {
-      runToolbarAction(t.history.actions.copiedFooterToAll, () => {
-        dispatch({ type: 'COPY_FOOTER_TO_ALL', sourcePageId: activePageId });
-      });
-    }
-  };
-  const handleClearHeader = () => {
-    if (activePageId) {
-      runToolbarAction(t.history.actions.clearedHeader, () => {
-        dispatch({ type: 'CLEAR_HEADER', pageId: activePageId });
-      });
-    }
-  };
-  const handleClearFooter = () => {
-    if (activePageId) {
-      runToolbarAction(t.history.actions.clearedFooter, () => {
-        dispatch({ type: 'CLEAR_FOOTER', pageId: activePageId });
-      });
-    }
-  };
-  const handleClearAllHeaders = () => runToolbarAction(t.history.actions.clearedAllHeaders, () => {
-    dispatch({ type: 'CLEAR_ALL_HEADERS' });
-  });
-  const handleClearAllFooters = () => runToolbarAction(t.history.actions.clearedAllFooters, () => {
-    dispatch({ type: 'CLEAR_ALL_FOOTERS' });
-  });
-  const handlePageCounterModeChange = useCallback((mode: PageCounterMode) => {
-    runToolbarAction(interpolate(t.history.actions.pageCounterSet, { value: mode }), () => {
-      dispatch({ type: 'SET_PAGE_COUNTER_MODE', mode });
-    });
-  }, [dispatch, runToolbarAction, t.history.actions.pageCounterSet]);
 
   const handleBold = useCallback(() => {
     debug('toolbar', `bold (globalSelection=${globalSelectionActive}, editors=${editorRegistry.all().length}, hasEditor=${!!activeEditor})`);
@@ -237,6 +183,10 @@ export const Toolbar: React.FC = () => {
     },
     [applyToBodyEditors, runToolbarAction, t.history.actions.fontSizeChanged],
   );
+
+  const handleToggleHistory = useCallback(() => {
+    setHistorySidebarOpen(!historySidebarOpen);
+  }, [historySidebarOpen, setHistorySidebarOpen]);
 
   return (
     <div
@@ -357,40 +307,27 @@ export const Toolbar: React.FC = () => {
           </>
         )}
 
+        <Divider />
+
+        <CanvasControls />
+
         <div className="lex4-toolbar-end">
           {toolbarEndItems.map((EndItem, idx) => (
             <EndItem key={idx} />
           ))}
-          <ToolbarIconButton
+          <button
+            type="button"
+            className={`lex4-toolbar-toggle-btn${historySidebarOpen ? ' active' : ''}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleToggleHistory}
+            data-testid="toggle-history-sidebar"
             title={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
-            testId="toggle-history-sidebar"
-            active={historySidebarOpen}
-            onClick={() => setHistorySidebarOpen(!historySidebarOpen)}
+            aria-label={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
           >
-            <PanelRight size={15} />
-          </ToolbarIconButton>
+            <History size={14} />
+            History
+          </button>
         </div>
-      </div>
-
-      <div className="lex4-hf-row">
-        <HeaderFooterToggle
-          enabled={document.headerFooterEnabled}
-          onToggle={handleToggle}
-        />
-
-        {document.headerFooterEnabled && (
-          <HeaderFooterActions
-            activePageId={activePageId}
-            pageCounterMode={document.pageCounterMode}
-            onPageCounterModeChange={handlePageCounterModeChange}
-            onCopyHeaderToAll={handleCopyHeaderToAll}
-            onCopyFooterToAll={handleCopyFooterToAll}
-            onClearHeader={handleClearHeader}
-            onClearFooter={handleClearFooter}
-            onClearAllHeaders={handleClearAllHeaders}
-            onClearAllFooters={handleClearAllFooters}
-          />
-        )}
       </div>
     </div>
   );

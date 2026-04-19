@@ -179,6 +179,15 @@ The main editor component. Drop it into any React application.
 | `captureHistoryShortcutsOnWindow` | `boolean` | `true` | Capture ⌘Z/⌘⇧Z at the window level |
 | `className` | `string` | — | Additional CSS class for the editor root |
 
+### `Lex4EditorHandle`
+
+The editor ref exposes built-in chrome controls, and extensions can add more methods on top.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `setHistorySidebarOpen(open)` | `(open: boolean) => void` | Opens or closes the history sidebar programmatically |
+| `toggleHistorySidebar()` | `() => void` | Toggles the history sidebar |
+
 ### Extensions
 
 Extensions are opt-in feature modules that add capabilities to the editor without coupling.
@@ -207,10 +216,12 @@ Adds variable placeholders — dynamic tokens rendered as non-editable chips in 
 |--------|-----------|-------------|
 | `insertVariable(key)` | `(key: string) => void` | Inserts a variable at the current cursor position |
 | `refreshVariables(defs)` | `(defs: VariableDefinition[]) => void` | Updates the available variable definitions |
+| `setVariablePanelOpen(open)` | `(open: boolean) => void` | Opens or closes the variable side panel programmatically |
+| `toggleVariablePanel()` | `() => void` | Toggles the variable side panel |
 
 Also adds:
 - **Toolbar button** — variable picker dropdown for inserting variables inline
-- **Side panel toggle** — opens a searchable variable panel on the right
+- **Host-controlled side panel** — opens a searchable variable panel on the right, which can also be controlled from app chrome via the handle methods above
 - **Variable node** — custom Lexical node rendered as a non-editable chip
 
 ```tsx

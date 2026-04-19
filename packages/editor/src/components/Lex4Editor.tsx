@@ -270,7 +270,12 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   onSave?: Lex4EditorProps['onSave'];
   className?: string;
 }>(({ captureHistoryShortcutsOnWindow, onSave, className }, ref) => {
-  const { document: doc, activeEditor } = useDocument();
+  const {
+    document: doc,
+    activeEditor,
+    historySidebarOpen,
+    setHistorySidebarOpen,
+  } = useDocument();
   const { handleFactories } = useExtensions();
 
   const getDocument = useCallback(() => doc, [doc]);
@@ -278,7 +283,14 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   const extensionCtx = useExtensionContext(getDocument, getActiveEditor);
 
   useImperativeHandle(ref, () => {
-    const handle: Record<string, (...args: never[]) => unknown> = {};
+    const handle: Record<string, (...args: never[]) => unknown> = {
+      setHistorySidebarOpen: (open: boolean) => {
+        setHistorySidebarOpen(open);
+      },
+      toggleHistorySidebar: () => {
+        setHistorySidebarOpen(!historySidebarOpen);
+      },
+    };
 
     for (const factory of handleFactories) {
       const methods = factory(extensionCtx);
@@ -286,7 +298,7 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
     }
 
     return handle as unknown as Lex4EditorHandle;
-  }, [extensionCtx, handleFactories]);
+  }, [extensionCtx, handleFactories, historySidebarOpen, setHistorySidebarOpen]);
 
   return (
     <EditorChrome

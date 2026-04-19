@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import { Braces, ChevronDown } from 'lucide-react';
 import { useVariables } from '../variables/variable-context';
 import type { VariableDefinition } from '../variables/types';
 
@@ -71,7 +72,9 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, disabl
         onClick={() => setOpen(!open)}
         title="Insert variable"
       >
-        {'{x}'}
+        <Braces size={14} />
+        Insert variable
+        <ChevronDown size={12} />
       </button>
 
       {open && (

@@ -6,38 +6,38 @@ test.describe('Variable Insert', () => {
     await page.waitForSelector('[data-testid="toolbar"]');
   });
 
-  test('variable picker button is visible', async ({ page }) => {
-    await expect(page.getByTestId('variable-picker-button')).toBeVisible();
+  test('variable panel toggle is visible in the toolbar', async ({ page }) => {
+    await expect(page.getByTestId('toggle-variable-panel')).toBeVisible();
   });
 
-  test('variable picker opens dropdown', async ({ page }) => {
+  test('variable toggle opens the sidebar', async ({ page }) => {
     // Focus body first
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
 
-    await page.getByTestId('variable-picker-button').click();
-    await expect(page.getByTestId('variable-picker-dropdown')).toBeVisible();
+    await page.getByTestId('toggle-variable-panel').click();
+    await expect(page.getByTestId('variable-panel')).toBeVisible();
   });
 
-  test('variable picker shows available variables', async ({ page }) => {
+  test('variable sidebar shows available variables', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
 
-    await page.getByTestId('variable-picker-button').click();
-    await expect(page.getByTestId('variable-option-customer.name')).toBeVisible();
-    await expect(page.getByTestId('variable-option-proposal.date')).toBeVisible();
+    await page.getByTestId('toggle-variable-panel').click();
+    await expect(page.getByTestId('variable-panel-customer.name')).toBeVisible();
+    await expect(page.getByTestId('variable-panel-proposal.date')).toBeVisible();
   });
 
-  test('variable picker supports search', async ({ page }) => {
+  test('variable sidebar supports search', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
 
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-picker-search').fill('seller');
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-search').fill('seller');
 
-    await expect(page.getByTestId('variable-option-seller.name')).toBeVisible();
+    await expect(page.getByTestId('variable-panel-seller.name')).toBeVisible();
     // customer.name should be filtered out
-    await expect(page.getByTestId('variable-option-customer.name')).not.toBeVisible();
+    await expect(page.getByTestId('variable-panel-customer.name')).not.toBeVisible();
   });
 
   test('clicking variable inserts it into editor', async ({ page }) => {
@@ -45,13 +45,9 @@ test.describe('Variable Insert', () => {
     await body.click();
     await page.keyboard.type('Dear ');
 
-    await page.getByTestId('variable-picker-button').click();
-    await page.getByTestId('variable-option-customer.name').click();
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
 
-    // The dropdown should close
-    await expect(page.getByTestId('variable-picker-dropdown')).not.toBeVisible();
-
-    // The variable chip should appear in the editor
     const chip = page.locator('[data-testid="variable-chip-customer.name"]');
     await expect(chip).toBeVisible();
     await expect(chip).toHaveText('Customer Name');

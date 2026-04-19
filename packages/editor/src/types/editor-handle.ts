@@ -1,8 +1,8 @@
 /**
  * Imperative handle exposed by Lex4Editor via React ref.
  *
- * The base interface is empty — all methods are declared by extensions
- * via TypeScript module augmentation of this interface.
+ * Base methods control editor chrome that is always present.
+ * Extensions can still augment this interface with extra methods.
  *
  * @example
  * ```ts
@@ -14,5 +14,7 @@
  * }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Lex4EditorHandle {}
+export interface Lex4EditorHandle {
+  setHistorySidebarOpen: (open: boolean) => void;
+  toggleHistorySidebar: () => void;
+}

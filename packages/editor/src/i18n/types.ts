@@ -70,6 +70,16 @@ export interface Lex4Translations {
     insertVariable: string;
     openPanel: string;
     closePanel: string;
+    newVariable: string;
+    createVariableTitle: string;
+    createVariableLabel: string;
+    createVariableKey: string;
+    createVariableGroup: string;
+    createVariableType: string;
+    createVariableSave: string;
+    createVariableCancel: string;
+    createVariableMissingFields: string;
+    createVariableDuplicateKey: string;
   };
 
   header: {
