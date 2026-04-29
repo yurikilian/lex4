@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
+const devPort = Number(process.env.LEX4_DEMO_PORT ?? process.env.LEX4_E2E_PORT ?? 3000);
+
 export default defineConfig({
   base: process.env.GITHUB_ACTIONS ? '/lex4/' : '/',
   plugins: [react(), tailwindcss()],
@@ -12,6 +14,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: devPort,
+    strictPort: true,
   },
 });

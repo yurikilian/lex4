@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const e2ePort = Number(process.env.LEX4_E2E_PORT ?? 3104);
+const baseURL = `http://127.0.0.1:${e2ePort}`;
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -8,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,9 +21,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm --filter demo dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    command: `pnpm --filter demo dev --host 127.0.0.1 --port ${e2ePort} --strictPort`,
+    url: baseURL,
+    reuseExistingServer: false,
     cwd: '..',
   },
 });
