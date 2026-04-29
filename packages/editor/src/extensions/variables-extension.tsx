@@ -63,7 +63,7 @@ const VariableToolbarToggle: React.FC = () => {
       aria-label={panelOpen ? t.variables.closePanel : t.variables.openPanel}
     >
       <Braces size={14} />
-      Variables
+      {t.variables.title}
     </button>
   );
 };

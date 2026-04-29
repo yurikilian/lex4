@@ -114,6 +114,19 @@ export interface Lex4Translations {
 
   headerFooter: {
     label: string;
+    settingsLabel: string;
+    pageCounter: string;
+    pageCounterModes: {
+      none: string;
+      header: string;
+      footer: string;
+      both: string;
+    };
+    headerSection: string;
+    footerSection: string;
+    copyToAllPages: string;
+    clearThisPage: string;
+    clearAll: string;
   };
 
   sidebar: {

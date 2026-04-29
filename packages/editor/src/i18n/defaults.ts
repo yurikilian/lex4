@@ -102,6 +102,19 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
 
   headerFooter: {
     label: 'Headers & Footers',
+    settingsLabel: 'Header and footer settings',
+    pageCounter: 'Page counter',
+    pageCounterModes: {
+      none: 'None',
+      header: 'Header',
+      footer: 'Footer',
+      both: 'Both',
+    },
+    headerSection: 'Header',
+    footerSection: 'Footer',
+    copyToAllPages: 'Copy to all pages',
+    clearThisPage: 'Clear this page',
+    clearAll: 'Clear all',
   },
 
   sidebar: {

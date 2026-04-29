@@ -102,6 +102,19 @@ export const PT_BR_TRANSLATIONS: Lex4Translations = {
 
   headerFooter: {
     label: 'Cabeçalhos e Rodapés',
+    settingsLabel: 'Configurações de cabeçalho e rodapé',
+    pageCounter: 'Contador de páginas',
+    pageCounterModes: {
+      none: 'Nenhum',
+      header: 'Cabeçalho',
+      footer: 'Rodapé',
+      both: 'Ambos',
+    },
+    headerSection: 'Cabeçalho',
+    footerSection: 'Rodapé',
+    copyToAllPages: 'Copiar para todas as páginas',
+    clearThisPage: 'Limpar esta página',
+    clearAll: 'Limpar tudo',
   },
 
   sidebar: {

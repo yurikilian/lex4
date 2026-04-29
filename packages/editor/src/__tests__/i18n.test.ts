@@ -84,6 +84,22 @@ describe('i18n — DEFAULT_TRANSLATIONS', () => {
     expect(DEFAULT_TRANSLATIONS.footer.placeholder).toBe('Footer');
   });
 
+  it('header footer menu has all expected keys', () => {
+    const h = DEFAULT_TRANSLATIONS.headerFooter;
+    expect(h.label).toBe('Headers & Footers');
+    expect(h.settingsLabel).toBe('Header and footer settings');
+    expect(h.pageCounter).toBe('Page counter');
+    expect(h.pageCounterModes.none).toBe('None');
+    expect(h.pageCounterModes.header).toBe('Header');
+    expect(h.pageCounterModes.footer).toBe('Footer');
+    expect(h.pageCounterModes.both).toBe('Both');
+    expect(h.headerSection).toBe('Header');
+    expect(h.footerSection).toBe('Footer');
+    expect(h.copyToAllPages).toBe('Copy to all pages');
+    expect(h.clearThisPage).toBe('Clear this page');
+    expect(h.clearAll).toBe('Clear all');
+  });
+
   it('sidebar has close string', () => {
     expect(DEFAULT_TRANSLATIONS.sidebar.close).toBe('Close sidebar');
   });

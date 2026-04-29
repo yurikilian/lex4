@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CopyPlus, Eraser, Settings2, Trash2 } from 'lucide-react';
+import { useTranslations } from '../i18n';
 import type { PageCounterMode } from '../types/document';
 
 interface HeaderFooterActionsProps {
@@ -14,12 +15,7 @@ interface HeaderFooterActionsProps {
   onClearAllFooters: () => void;
 }
 
-const PAGE_COUNTER_OPTIONS: { value: PageCounterMode; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'header', label: 'Header' },
-  { value: 'footer', label: 'Footer' },
-  { value: 'both', label: 'Both' },
-];
+const PAGE_COUNTER_OPTIONS: PageCounterMode[] = ['none', 'header', 'footer', 'both'];
 
 export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   activePageId,
@@ -35,6 +31,7 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasActivePage = activePageId !== null;
+  const t = useTranslations();
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -64,8 +61,8 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
         data-testid="header-footer-menu-trigger"
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label="Header and footer settings"
-        title="Header and footer settings"
+        aria-label={t.headerFooter.settingsLabel}
+        title={t.headerFooter.settingsLabel}
       >
         <Settings2 size={14} />
       </button>
@@ -76,9 +73,9 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
           role="menu"
           data-testid="header-footer-menu"
         >
-          <SectionLabel>Page counter</SectionLabel>
+          <SectionLabel>{t.headerFooter.pageCounter}</SectionLabel>
           <div className="lex4-settings-counter-grid" data-testid="page-counter-mode">
-            {PAGE_COUNTER_OPTIONS.map(({ value, label }) => (
+            {PAGE_COUNTER_OPTIONS.map((value) => (
               <button
                 key={value}
                 type="button"
@@ -89,55 +86,55 @@ export const HeaderFooterActions: React.FC<HeaderFooterActionsProps> = ({
                 className="lex4-settings-counter-btn"
                 data-testid={`page-counter-${value}`}
               >
-                {label}
+                {t.headerFooter.pageCounterModes[value]}
               </button>
             ))}
           </div>
 
           <MenuDivider />
 
-          <SectionLabel>Header</SectionLabel>
+          <SectionLabel>{t.headerFooter.headerSection}</SectionLabel>
           <MenuItem
             icon={<CopyPlus size={14} />}
-            label="Copy to all pages"
+            label={t.headerFooter.copyToAllPages}
             onClick={() => handleAction(onCopyHeaderToAll)}
             disabled={!hasActivePage}
             testId="copy-header-all"
           />
           <MenuItem
             icon={<Eraser size={14} />}
-            label="Clear this page"
+            label={t.headerFooter.clearThisPage}
             onClick={() => handleAction(onClearHeader)}
             disabled={!hasActivePage}
             testId="clear-header"
           />
           <MenuItem
             icon={<Trash2 size={14} />}
-            label="Clear all"
+            label={t.headerFooter.clearAll}
             onClick={() => handleAction(onClearAllHeaders)}
             testId="clear-all-headers"
           />
 
           <MenuDivider />
 
-          <SectionLabel>Footer</SectionLabel>
+          <SectionLabel>{t.headerFooter.footerSection}</SectionLabel>
           <MenuItem
             icon={<CopyPlus size={14} />}
-            label="Copy to all pages"
+            label={t.headerFooter.copyToAllPages}
             onClick={() => handleAction(onCopyFooterToAll)}
             disabled={!hasActivePage}
             testId="copy-footer-all"
           />
           <MenuItem
             icon={<Eraser size={14} />}
-            label="Clear this page"
+            label={t.headerFooter.clearThisPage}
             onClick={() => handleAction(onClearFooter)}
             disabled={!hasActivePage}
             testId="clear-footer"
           />
           <MenuItem
             icon={<Trash2 size={14} />}
-            label="Clear all"
+            label={t.headerFooter.clearAll}
             onClick={() => handleAction(onClearAllFooters)}
             testId="clear-all-footers"
           />
