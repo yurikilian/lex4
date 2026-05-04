@@ -64,6 +64,7 @@ import {
   extractFontSizePtFromStyle,
 } from '../utils/text-style';
 import { debug } from '../utils/debug';
+import { BlockTypePicker, getBlockTypeLabel } from './BlockTypePicker';
 import { CanvasControls } from './CanvasControls';
 
 export const Toolbar: React.FC = () => {
@@ -312,20 +313,9 @@ export const Toolbar: React.FC = () => {
   );
 
   const handleBlockTypeChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const blockType = e.target.value as BlockType;
-      const labelMap: Record<BlockType, string> = {
-        paragraph: t.toolbar.paragraph,
-        h1: t.toolbar.heading1,
-        h2: t.toolbar.heading2,
-        h3: t.toolbar.heading3,
-        h4: t.toolbar.heading4,
-        h5: t.toolbar.heading5,
-        h6: t.toolbar.heading6,
-      };
-
+    (blockType: BlockType) => {
       runToolbarAction(
-        interpolate(t.history.actions.blockTypeChanged, { value: labelMap[blockType] }),
+        interpolate(t.history.actions.blockTypeChanged, { value: getBlockTypeLabel(t, blockType) }),
         () => {
           applyToBodyEditors(editor => setBlockType(editor, blockType));
         },
@@ -335,13 +325,7 @@ export const Toolbar: React.FC = () => {
       applyToBodyEditors,
       runToolbarAction,
       t.history.actions.blockTypeChanged,
-      t.toolbar.heading1,
-      t.toolbar.heading2,
-      t.toolbar.heading3,
-      t.toolbar.heading4,
-      t.toolbar.heading5,
-      t.toolbar.heading6,
-      t.toolbar.paragraph,
+      t,
     ],
   );
 
@@ -376,22 +360,11 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
-        <div className="lex4-toolbar-group-gap lex4-toolbar-group-block">
-          <select
-            className="lex4-toolbar-select lex4-toolbar-select-block"
-            data-testid="block-type-selector"
-            aria-label={t.toolbar.blockType}
+        <div className="lex4-toolbar-group">
+          <BlockTypePicker
             value={activeBlockType}
             onChange={handleBlockTypeChange}
-          >
-            <option value="paragraph">{t.toolbar.paragraph}</option>
-            <option value="h1">{t.toolbar.heading1}</option>
-            <option value="h2">{t.toolbar.heading2}</option>
-            <option value="h3">{t.toolbar.heading3}</option>
-            <option value="h4">{t.toolbar.heading4}</option>
-            <option value="h5">{t.toolbar.heading5}</option>
-            <option value="h6">{t.toolbar.heading6}</option>
-          </select>
+          />
         </div>
 
         <Divider />
