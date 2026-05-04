@@ -1243,6 +1243,11 @@
   color: color-mix(in srgb, var(--color-muted-foreground) 82%, transparent);
   pointer-events: none;
   user-select: none;
+  transition: transform 120ms ease;
+}
+
+.lex4-page-body:focus-within .lex4-page-placeholder {
+  transform: translateX(1px);
 }
 
 /* ── Page header / footer ────────────────────────────────── */
