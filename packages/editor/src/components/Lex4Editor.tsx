@@ -317,43 +317,51 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   const getDocument = useCallback(() => documentRef.current, []);
   const getActiveEditor = useCallback(() => activeEditorRef.current, []);
   const extensionCtx = useExtensionContext(getDocument, getActiveEditor);
+  const handleRef = useRef<Record<string, (...args: never[]) => unknown>>({});
+  const extensionMethodKeysRef = useRef<string[]>([]);
 
-  useImperativeHandle(ref, () => {
-    const handle: Record<string, (...args: never[]) => unknown> = {
-      setHistorySidebarOpen: (open: boolean) => {
-        setHistorySidebarOpen(open);
-      },
-      toggleHistorySidebar: () => {
-        setHistorySidebarOpen(!historySidebarOpenRef.current);
-      },
-      insertDocumentContent: (documentToInsert) => {
-        const currentActiveEditor = activeEditorRef.current;
-        if (!currentActiveEditor || activeCaretRegionRef.current !== 'body') {
-          return false;
-        }
-
-        let inserted = false;
-        runHistoryActionRef.current(
-          {
-            label: insertedDocumentContentLabelRef.current,
-            source: 'toolbar',
-            region: 'document',
-          },
-          () => {
-            inserted = insertDocumentContent(currentActiveEditor, documentToInsert);
-          },
-        );
-        return inserted;
-      },
-    };
-
-    for (const factory of handleFactories) {
-      const methods = factory(extensionCtx);
-      Object.assign(handle, methods);
+  const handle = handleRef.current;
+  handle.setHistorySidebarOpen = (open: boolean) => {
+    setHistorySidebarOpen(open);
+  };
+  handle.toggleHistorySidebar = () => {
+    setHistorySidebarOpen(!historySidebarOpenRef.current);
+  };
+  handle.insertDocumentContent = (documentToInsert) => {
+    const currentActiveEditor = activeEditorRef.current;
+    if (!currentActiveEditor || activeCaretRegionRef.current !== 'body') {
+      return false;
     }
 
-    return handle as unknown as Lex4EditorHandle;
-  }, [extensionCtx, handleFactories, setHistorySidebarOpen]);
+    let inserted = false;
+    runHistoryActionRef.current(
+      {
+        label: insertedDocumentContentLabelRef.current,
+        source: 'toolbar',
+        region: 'document',
+      },
+      () => {
+        inserted = insertDocumentContent(currentActiveEditor, documentToInsert);
+      },
+    );
+    return inserted;
+  };
+
+  for (const key of extensionMethodKeysRef.current) {
+    delete handle[key];
+  }
+
+  const extensionMethodKeys: string[] = [];
+  for (const factory of handleFactories) {
+    const methods = factory(extensionCtx);
+    for (const [key, method] of Object.entries(methods)) {
+      handle[key] = method as (...args: never[]) => unknown;
+      extensionMethodKeys.push(key);
+    }
+  }
+  extensionMethodKeysRef.current = extensionMethodKeys;
+
+  useImperativeHandle(ref, () => handle as unknown as Lex4EditorHandle, []);
 
   return (
     <EditorChrome
