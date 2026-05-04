@@ -1120,12 +1120,14 @@
   overflow: visible;
   font-size: var(--lex4-body-font-size);
   line-height: var(--lex4-body-line-height);
+  caret-color: var(--color-canvas-foreground);
 }
 
 .lex4-root {
   outline: none;
   font-size: var(--lex4-body-font-size);
   line-height: var(--lex4-body-line-height);
+  caret-color: var(--color-canvas-foreground);
 }
 
 .lex4-page-body-editable::selection,
@@ -1143,11 +1145,6 @@
 
 .lex4-paragraph:has(> br:only-child) {
   min-height: calc(1em * var(--lex4-body-line-height));
-}
-
-.lex4-paragraph:has(> br:only-child)::before {
-  content: '\00a0';
-  color: transparent;
 }
 
 .lex4-heading {
