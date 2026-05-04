@@ -135,6 +135,20 @@ export const ActiveEditorPlugin: React.FC<ActiveEditorPluginProps> = ({
   ]);
 
   useEffect(() => {
+    const caretPosition: CaretPosition = { pageId, region };
+    const handleFocusIn = () => {
+      setActivePageId(pageId);
+      setActiveEditor(editor, caretPosition);
+      onFocus?.(editor);
+    };
+
+    return editor.registerRootListener((rootElement, prevRootElement) => {
+      prevRootElement?.removeEventListener('focusin', handleFocusIn);
+      rootElement?.addEventListener('focusin', handleFocusIn);
+    });
+  }, [editor, onFocus, pageId, region, setActiveEditor, setActivePageId]);
+
+  useEffect(() => {
     return editor.registerCommand(
       FOCUS_COMMAND,
       () => {
