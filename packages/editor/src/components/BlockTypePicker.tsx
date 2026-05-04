@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import type { Lex4Translations } from '../i18n';
 import { useTranslations } from '../i18n';
 import type { BlockType } from '../lexical/commands/block-commands';
@@ -127,7 +127,12 @@ export const BlockTypePicker: React.FC<BlockTypePickerProps> = ({ value, onChang
                 >
                   {option.shortLabel}
                 </span>
-                <span className="lex4-block-type-item-label">{label}</span>
+                <span className="lex4-block-type-item-label">
+                  {label}
+                </span>
+                <span className="lex4-block-type-item-check" aria-hidden="true">
+                  {active ? <Check size={14} /> : null}
+                </span>
               </button>
             );
           })}

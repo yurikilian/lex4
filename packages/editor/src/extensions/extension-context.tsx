@@ -18,7 +18,9 @@ const EMPTY_RESOLVED: ResolvedExtensions = {
 
 const ExtensionResolvedContext = createContext<ResolvedExtensions>(EMPTY_RESOLVED);
 
-function arraysEqual(a: string[], b: string[]): boolean {
+function extensionArraysEqual(a?: Lex4Extension[], b?: Lex4Extension[]): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;
@@ -28,22 +30,21 @@ function arraysEqual(a: string[], b: string[]): boolean {
 
 /**
  * Provides resolved extension data to all child components.
- * Extensions are resolved when the set of extension names changes,
- * not on every array reference change — preventing unnecessary
- * editor re-initialization.
+ * Extensions are resolved when the extension instances change.
+ * This keeps providers and side panels in sync when an extension
+ * keeps the same name but receives fresh configuration.
  */
 export const ExtensionProvider: React.FC<{
   extensions?: Lex4Extension[];
   children: React.ReactNode;
 }> = ({ extensions, children }) => {
-  const prevNamesRef = useRef<string[]>([]);
+  const prevExtensionsRef = useRef<Lex4Extension[] | undefined>(undefined);
   const resolvedRef = useRef<ResolvedExtensions>(EMPTY_RESOLVED);
 
-  const currentNames = (extensions ?? []).map(e => e.name);
-  if (!arraysEqual(currentNames, prevNamesRef.current)) {
+  if (!extensionArraysEqual(extensions, prevExtensionsRef.current)) {
     resolvedRef.current =
       extensions && extensions.length > 0 ? resolveExtensions(extensions) : EMPTY_RESOLVED;
-    prevNamesRef.current = currentNames;
+    prevExtensionsRef.current = extensions;
   }
   const resolved = resolvedRef.current;
 

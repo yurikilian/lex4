@@ -34,6 +34,8 @@ describe('BlockTypePicker', () => {
     expect(screen.getByText('Parágrafo')).toBeInTheDocument();
     expect(screen.getByText('Título 1')).toBeInTheDocument();
     expect(screen.getByText('Título 6')).toBeInTheDocument();
+    expect(screen.getByText('H1')).toBeInTheDocument();
+    expect(screen.getByText('H6')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('block-type-option-h4'));
 

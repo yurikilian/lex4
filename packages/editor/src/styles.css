@@ -89,6 +89,8 @@
   --lex4-sidebar-width: 320px;
   --lex4-ui-font-family: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --lex4-font-family: 'Calibri', 'Carlito', sans-serif;
+  --lex4-body-font-size: 12pt;
+  --lex4-body-line-height: 1.5;
 
   font-family: var(--lex4-ui-font-family);
   -webkit-font-smoothing: antialiased;
@@ -285,7 +287,10 @@
 }
 
 .lex4-block-type-item-code {
-  min-width: 1.75rem;
+  min-width: 2rem;
+  padding: 0.1875rem 0.4375rem;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--color-secondary) 86%, var(--color-background));
   font-size: 0.8125rem;
   line-height: 1rem;
   font-weight: 600;
@@ -299,12 +304,21 @@
 
 .lex4-block-type-item-code.active {
   color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-background));
 }
 
 .lex4-block-type-item-label {
   font-size: 0.875rem;
   line-height: 1.25rem;
   font-weight: 500;
+}
+
+.lex4-block-type-item-check {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
 }
 
 .lex4-editor button.lex4-toolbar-toggle-btn {
@@ -1104,15 +1118,36 @@
   height: 100%;
   padding: 0;
   overflow: visible;
+  font-size: var(--lex4-body-font-size);
+  line-height: var(--lex4-body-line-height);
 }
 
 .lex4-root {
   outline: none;
+  font-size: var(--lex4-body-font-size);
+  line-height: var(--lex4-body-line-height);
+}
+
+.lex4-page-body-editable::selection,
+.lex4-page-body-editable *::selection,
+.lex4-root::selection,
+.lex4-root *::selection {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-text);
 }
 
 .lex4-paragraph {
   margin: 0;
   text-align: justify;
+}
+
+.lex4-paragraph:has(> br:only-child) {
+  min-height: calc(1em * var(--lex4-body-line-height));
+}
+
+.lex4-paragraph:has(> br:only-child)::before {
+  content: '\00a0';
+  color: transparent;
 }
 
 .lex4-heading {
@@ -1203,8 +1238,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  font-size: inherit;
-  line-height: inherit;
+  font-size: var(--lex4-body-font-size);
+  line-height: var(--lex4-body-line-height);
   color: color-mix(in srgb, var(--color-muted-foreground) 82%, transparent);
   pointer-events: none;
   user-select: none;
