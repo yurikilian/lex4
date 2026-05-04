@@ -283,9 +283,39 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   } = useDocument();
   const { handleFactories } = useExtensions();
   const t = useTranslations();
+  const documentRef = useRef(doc);
+  const activeEditorRef = useRef(activeEditor);
+  const activeCaretRegionRef = useRef(activeCaretPosition?.region);
+  const historySidebarOpenRef = useRef(historySidebarOpen);
+  const runHistoryActionRef = useRef(runHistoryAction);
+  const insertedDocumentContentLabelRef = useRef(t.history.actions.insertedDocumentContent);
 
-  const getDocument = useCallback(() => doc, [doc]);
-  const getActiveEditor = useCallback(() => activeEditor, [activeEditor]);
+  useEffect(() => {
+    documentRef.current = doc;
+  }, [doc]);
+
+  useEffect(() => {
+    activeEditorRef.current = activeEditor;
+  }, [activeEditor]);
+
+  useEffect(() => {
+    activeCaretRegionRef.current = activeCaretPosition?.region;
+  }, [activeCaretPosition?.region]);
+
+  useEffect(() => {
+    historySidebarOpenRef.current = historySidebarOpen;
+  }, [historySidebarOpen]);
+
+  useEffect(() => {
+    runHistoryActionRef.current = runHistoryAction;
+  }, [runHistoryAction]);
+
+  useEffect(() => {
+    insertedDocumentContentLabelRef.current = t.history.actions.insertedDocumentContent;
+  }, [t.history.actions.insertedDocumentContent]);
+
+  const getDocument = useCallback(() => documentRef.current, []);
+  const getActiveEditor = useCallback(() => activeEditorRef.current, []);
   const extensionCtx = useExtensionContext(getDocument, getActiveEditor);
 
   useImperativeHandle(ref, () => {
@@ -294,22 +324,23 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
         setHistorySidebarOpen(open);
       },
       toggleHistorySidebar: () => {
-        setHistorySidebarOpen(!historySidebarOpen);
+        setHistorySidebarOpen(!historySidebarOpenRef.current);
       },
       insertDocumentContent: (documentToInsert) => {
-        if (!activeEditor || activeCaretPosition?.region !== 'body') {
+        const currentActiveEditor = activeEditorRef.current;
+        if (!currentActiveEditor || activeCaretRegionRef.current !== 'body') {
           return false;
         }
 
         let inserted = false;
-        runHistoryAction(
+        runHistoryActionRef.current(
           {
-            label: t.history.actions.insertedDocumentContent,
+            label: insertedDocumentContentLabelRef.current,
             source: 'toolbar',
             region: 'document',
           },
           () => {
-            inserted = insertDocumentContent(activeEditor, documentToInsert);
+            inserted = insertDocumentContent(currentActiveEditor, documentToInsert);
           },
         );
         return inserted;
@@ -322,16 +353,7 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
     }
 
     return handle as unknown as Lex4EditorHandle;
-  }, [
-    activeCaretPosition?.region,
-    activeEditor,
-    extensionCtx,
-    handleFactories,
-    historySidebarOpen,
-    runHistoryAction,
-    setHistorySidebarOpen,
-    t.history.actions.insertedDocumentContent,
-  ]);
+  }, [extensionCtx, handleFactories, setHistorySidebarOpen]);
 
   return (
     <EditorChrome
