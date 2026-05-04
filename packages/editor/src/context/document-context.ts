@@ -55,6 +55,7 @@ export interface DocumentContextValue {
   activePageId: string | null;
   setActivePageId: (id: string | null) => void;
   activeEditor: LexicalEditor | null;
+  activeCaretPosition: CaretPosition | null;
   setActiveEditor: (editor: LexicalEditor | null, caretPosition?: CaretPosition | null) => void;
   consumePendingCaretPosition: (caretPosition: CaretPosition) => CaretSelection | null | undefined;
   consumePendingFocusAtEnd: (caretPosition: CaretPosition) => boolean;

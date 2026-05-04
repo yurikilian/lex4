@@ -93,8 +93,8 @@ function mapParagraph(node: SerializedElementNode): ParagraphAst {
 
 function mapHeading(node: SerializedElementNode): HeadingAst {
   const alignment = decodeAlignment(node.format);
-  const tagMatch = node.tag?.match(/^h(\d)$/);
-  const level = tagMatch ? (parseInt(tagMatch[1], 10) as 1 | 2 | 3 | 4 | 5) : 1;
+  const tagMatch = node.tag?.match(/^h([1-6])$/);
+  const level = tagMatch ? (parseInt(tagMatch[1], 10) as 1 | 2 | 3 | 4 | 5 | 6) : 1;
   return {
     type: 'heading',
     level,

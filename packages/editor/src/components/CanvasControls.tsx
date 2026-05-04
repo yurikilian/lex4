@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDocument } from '../context/document-context';
+import { useToolbarConfig } from '../context/toolbar-config';
 import { useTranslations, interpolate } from '../i18n';
 import type { PageCounterMode } from '../types/document';
 import { HeaderFooterToggle } from './HeaderFooterToggle';
@@ -7,6 +8,7 @@ import { HeaderFooterActions } from './HeaderFooterActions';
 
 export const CanvasControls: React.FC = () => {
   const { document, dispatch, activePageId, runHistoryAction } = useDocument();
+  const toolbarConfig = useToolbarConfig();
   const t = useTranslations();
 
   const runCanvasAction = useCallback((label: string, callback: () => void) => {
@@ -87,11 +89,16 @@ export const CanvasControls: React.FC = () => {
     });
   }, [dispatch, runCanvasAction, t.history.actions.pageCounterSet]);
 
+  if (!toolbarConfig.headerFooter.visible) {
+    return null;
+  }
+
   return (
     <div className="lex4-toolbar-group lex4-toolbar-group-gap" data-testid="header-footer-controls">
       <HeaderFooterToggle
         enabled={document.headerFooterEnabled}
         onToggle={handleToggle}
+        showLabel={toolbarConfig.headerFooter.showLabel}
       />
 
       {document.headerFooterEnabled && (

@@ -18,6 +18,7 @@ declare module '../types/editor-handle' {
 }
 import { useExtensionState } from './extension-context';
 import { useTranslations } from '../i18n';
+import { useToolbarConfig } from '../context/toolbar-config';
 
 // --- Variable panel open/close context ---
 
@@ -50,7 +51,12 @@ const VariablePanelStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
  */
 const VariableToolbarToggle: React.FC = () => {
   const { panelOpen, setPanelOpen } = useVariablePanelState();
+  const toolbarConfig = useToolbarConfig();
   const t = useTranslations();
+
+  if (!toolbarConfig.variables.visible) {
+    return null;
+  }
 
   return (
     <button
@@ -63,7 +69,7 @@ const VariableToolbarToggle: React.FC = () => {
       aria-label={panelOpen ? t.variables.closePanel : t.variables.openPanel}
     >
       <Braces size={14} />
-      {t.variables.title}
+      {toolbarConfig.variables.showLabel && t.variables.title}
     </button>
   );
 };

@@ -7,6 +7,22 @@ type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
+export interface Lex4ToolbarControlConfig {
+  /** Controls whether the toolbar control is rendered. Defaults to true. */
+  visible?: boolean;
+  /** Controls whether the toolbar control renders its text label. Defaults to true. */
+  showLabel?: boolean;
+}
+
+export interface Lex4ToolbarConfig {
+  /** Configuration for the history toggle. */
+  history?: Lex4ToolbarControlConfig;
+  /** Configuration for the variables toggle provided by variablesExtension. */
+  variables?: Lex4ToolbarControlConfig;
+  /** Configuration for the header/footer toggle group. */
+  headerFooter?: Lex4ToolbarControlConfig;
+}
+
 /** Public props for the Lex4Editor component */
 export interface Lex4EditorProps {
   /** Initial document state. Defaults to a single empty page. */
@@ -42,6 +58,9 @@ export interface Lex4EditorProps {
    * @example translations={{ toolbar: { undo: 'Desfazer' } }}
    */
   translations?: DeepPartial<Lex4Translations>;
+
+  /** Configuration for optional toolbar controls such as history and variables. */
+  toolbar?: Lex4ToolbarConfig;
 
   /** Additional CSS class for the editor root element */
   className?: string;

@@ -3,6 +3,7 @@ import type { Lex4EditorProps } from '../types/editor-props';
 import type { Lex4EditorHandle } from '../types/editor-handle';
 import { DocumentProvider } from '../context/document-provider';
 import { useDocument } from '../context/document-context';
+import { useTranslations } from '../i18n';
 import { HistorySidebar } from './HistorySidebar';
 import { Toolbar } from './Toolbar';
 import { DocumentView } from './DocumentView';
@@ -15,6 +16,8 @@ import {
 import { TranslationsProvider } from '../i18n';
 import { serializeDocument } from '../ast/document-serializer';
 import { serializeDocumentJson } from '../ast/payload-builder';
+import { ToolbarConfigProvider } from '../context/toolbar-config';
+import { insertDocumentContent } from '../lexical/utils/import-document-content';
 import '../styles.css';
 
 function selectEntireDocument(
@@ -273,10 +276,13 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   const {
     document: doc,
     activeEditor,
+    activeCaretPosition,
     historySidebarOpen,
+    runHistoryAction,
     setHistorySidebarOpen,
   } = useDocument();
   const { handleFactories } = useExtensions();
+  const t = useTranslations();
 
   const getDocument = useCallback(() => doc, [doc]);
   const getActiveEditor = useCallback(() => activeEditor, [activeEditor]);
@@ -290,6 +296,24 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
       toggleHistorySidebar: () => {
         setHistorySidebarOpen(!historySidebarOpen);
       },
+      insertDocumentContent: (documentToInsert) => {
+        if (!activeEditor || activeCaretPosition?.region !== 'body') {
+          return false;
+        }
+
+        let inserted = false;
+        runHistoryAction(
+          {
+            label: t.history.actions.insertedDocumentContent,
+            source: 'toolbar',
+            region: 'document',
+          },
+          () => {
+            inserted = insertDocumentContent(activeEditor, documentToInsert);
+          },
+        );
+        return inserted;
+      },
     };
 
     for (const factory of handleFactories) {
@@ -298,7 +322,16 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
     }
 
     return handle as unknown as Lex4EditorHandle;
-  }, [extensionCtx, handleFactories, historySidebarOpen, setHistorySidebarOpen]);
+  }, [
+    activeCaretPosition?.region,
+    activeEditor,
+    extensionCtx,
+    handleFactories,
+    historySidebarOpen,
+    runHistoryAction,
+    setHistorySidebarOpen,
+    t.history.actions.insertedDocumentContent,
+  ]);
 
   return (
     <EditorChrome
@@ -331,25 +364,28 @@ export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
   onSave,
   extensions,
   translations,
+  toolbar,
   className,
 }, ref) => {
   return (
     <TranslationsProvider translations={translations}>
-      <ExtensionStateProvider>
-        <ExtensionProvider extensions={extensions}>
-          <DocumentProvider
-            initialDocument={initialDocument}
-            onDocumentChange={onDocumentChange}
-          >
-            <EditorWithHandle
-              ref={ref}
-              captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
-              onSave={onSave}
-              className={className}
-            />
-          </DocumentProvider>
-        </ExtensionProvider>
-      </ExtensionStateProvider>
+      <ToolbarConfigProvider toolbar={toolbar}>
+        <ExtensionStateProvider>
+          <ExtensionProvider extensions={extensions}>
+            <DocumentProvider
+              initialDocument={initialDocument}
+              onDocumentChange={onDocumentChange}
+            >
+              <EditorWithHandle
+                ref={ref}
+                captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
+                onSave={onSave}
+                className={className}
+              />
+            </DocumentProvider>
+          </ExtensionProvider>
+        </ExtensionStateProvider>
+      </ToolbarConfigProvider>
     </TranslationsProvider>
   );
 });

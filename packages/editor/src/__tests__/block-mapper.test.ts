@@ -99,6 +99,19 @@ describe('block-mapper', () => {
         children: [],
       });
     });
+
+    it('maps h6', () => {
+      const result = mapBlockNode({
+        type: 'heading',
+        tag: 'h6',
+        children: [{ type: 'text', text: 'Small title', format: 0 }],
+      });
+      expect(result).toEqual({
+        type: 'heading',
+        level: 6,
+        children: [{ type: 'text', text: 'Small title' }],
+      });
+    });
   });
 
   describe('mapBlockNode — list', () => {

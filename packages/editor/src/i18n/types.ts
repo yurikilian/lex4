@@ -20,6 +20,15 @@ export interface Lex4Translations {
     bulletList: string;
     indent: string;
     outdent: string;
+    history: string;
+    blockType: string;
+    paragraph: string;
+    heading1: string;
+    heading2: string;
+    heading3: string;
+    heading4: string;
+    heading5: string;
+    heading6: string;
     openHistory: string;
     closeHistory: string;
   };
@@ -56,6 +65,9 @@ export interface Lex4Translations {
       fontChanged: string;
       /** Use {{value}} for the size */
       fontSizeChanged: string;
+      /** Use {{value}} for the selected block label */
+      blockTypeChanged: string;
+      insertedDocumentContent: string;
     };
   };
 

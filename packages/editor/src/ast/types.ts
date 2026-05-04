@@ -88,7 +88,7 @@ export interface ParagraphAst {
 
 export interface HeadingAst {
   type: 'heading';
-  level: 1 | 2 | 3 | 4 | 5;
+  level: 1 | 2 | 3 | 4 | 5 | 6;
   alignment?: Alignment;
   children: InlineNodeAst[];
 }

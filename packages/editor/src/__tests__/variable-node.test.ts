@@ -29,11 +29,15 @@ describe('VariableNode', () => {
         type: 'variable-node',
         version: 1,
         variableKey: 'proposal.date',
+        format: 9,
+        style: 'font-family: Inter; font-size: 14pt',
       };
 
       expect(serialized.type).toBe('variable-node');
       expect(serialized.version).toBe(1);
       expect(serialized.variableKey).toBe('proposal.date');
+      expect(serialized.format).toBe(9);
+      expect(serialized.style).toBe('font-family: Inter; font-size: 14pt');
     });
 
     it('variableKey supports dot notation', () => {

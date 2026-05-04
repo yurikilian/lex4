@@ -5,11 +5,13 @@ import { useTranslations } from '../i18n';
 interface HeaderFooterToggleProps {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
+  showLabel?: boolean;
 }
 
 export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
   enabled,
   onToggle,
+  showLabel = true,
 }) => {
   const t = useTranslations();
 
@@ -19,18 +21,22 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
       data-testid="header-footer-toggle"
     >
       <FileText size={14} className="lex4-hf-toggle-icon" />
-      <span className="lex4-hf-toggle-label">
-        {t.headerFooter.label}
-      </span>
+      {showLabel && (
+        <span className="lex4-hf-toggle-label">
+          {t.headerFooter.label}
+        </span>
+      )}
       <button
         type="button"
         role="switch"
         aria-checked={enabled}
+        aria-label={t.headerFooter.label}
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => onToggle(!enabled)}
         className="lex4-hf-switch"
         style={{ backgroundColor: enabled ? 'var(--color-primary)' : 'var(--color-muted)' }}
         data-testid="header-footer-switch"
+        title={t.headerFooter.label}
       >
         <span className="lex4-hf-switch-knob" />
       </button>

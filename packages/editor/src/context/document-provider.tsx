@@ -663,6 +663,7 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
       activePageId,
       setActivePageId,
       activeEditor: activeEditorRef.current,
+      activeCaretPosition: activeCaretPositionRef.current,
       consumePendingCaretPosition,
       consumePendingFocusAtEnd,
       requestFocusAtEnd,

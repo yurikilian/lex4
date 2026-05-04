@@ -1,3 +1,5 @@
+import type { Lex4Document } from './document';
+
 /**
  * Imperative handle exposed by Lex4Editor via React ref.
  *
@@ -17,4 +19,5 @@
 export interface Lex4EditorHandle {
   setHistorySidebarOpen: (open: boolean) => void;
   toggleHistorySidebar: () => void;
+  insertDocumentContent: (document: Lex4Document) => boolean;
 }

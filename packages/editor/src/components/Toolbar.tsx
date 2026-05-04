@@ -1,5 +1,13 @@
-import React, { useCallback } from 'react';
-import { $selectAll, type LexicalEditor } from 'lexical';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  $getSelection,
+  $isRangeSelection,
+  $isTextNode,
+  $selectAll,
+  COMMAND_PRIORITY_LOW,
+  SELECTION_CHANGE_COMMAND,
+  type LexicalEditor,
+} from 'lexical';
 import {
   Undo2,
   Redo2,
@@ -20,13 +28,41 @@ import {
   ALargeSmall,
 } from 'lucide-react';
 import { useDocument } from '../context/document-context';
+import { useToolbarConfig } from '../context/toolbar-config';
 import { useExtensions } from '../extensions/extension-context';
 import { useTranslations, interpolate } from '../i18n';
 import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
-import { applyFontSize, SUPPORTED_FONT_SIZES, type FontSize } from '../lexical/plugins/font-size-plugin';
-import { toggleBold, toggleItalic, toggleUnderline, toggleStrikethrough, setAlignment } from '../lexical/commands/format-commands';
+import {
+  applyFontSize,
+  DEFAULT_FONT_SIZE,
+  SUPPORTED_FONT_SIZES,
+  type FontSize,
+} from '../lexical/plugins/font-size-plugin';
+import {
+  toggleBold,
+  toggleItalic,
+  toggleUnderline,
+  toggleStrikethrough,
+  setAlignment,
+} from '../lexical/commands/format-commands';
 import { insertList, indentContent, outdentContent } from '../lexical/commands/list-commands';
+import {
+  getActiveBlockType,
+  setBlockType,
+  type BlockType,
+} from '../lexical/commands/block-commands';
+import {
+  applyFontFamilyToSelectedVariables,
+  applyFontSizeToSelectedVariables,
+  getSelectedVariableNodes,
+  readSelectedVariableFormatting,
+  toggleSelectedVariableFormat,
+} from '../variables/variable-formatting';
+import {
+  extractFontFamilyFromStyle,
+  extractFontSizePtFromStyle,
+} from '../utils/text-style';
 import { debug } from '../utils/debug';
 import { CanvasControls } from './CanvasControls';
 
@@ -44,7 +80,18 @@ export const Toolbar: React.FC = () => {
     undo,
   } = useDocument();
   const { toolbarItems, toolbarEndItems } = useExtensions();
+  const toolbarConfig = useToolbarConfig();
   const t = useTranslations();
+  const [activeBlockType, setActiveBlockType] = useState<BlockType>('paragraph');
+  const [activeFontFamily, setActiveFontFamily] = useState<FontFamily>('Calibri');
+  const [activeFontSize, setActiveFontSize] = useState<number>(DEFAULT_FONT_SIZE);
+
+  const normalizeFontFamily = useCallback((fontFamily?: string): FontFamily => {
+    if (fontFamily && SUPPORTED_FONTS.includes(fontFamily as FontFamily)) {
+      return fontFamily as FontFamily;
+    }
+    return 'Calibri';
+  }, []);
 
   const withBodySelection = useCallback(
     (editor: LexicalEditor, action: (targetEditor: LexicalEditor) => void) => {
@@ -89,9 +136,73 @@ export const Toolbar: React.FC = () => {
     [runHistoryAction],
   );
 
+  useEffect(() => {
+    if (!activeEditor) {
+      setActiveBlockType('paragraph');
+      setActiveFontFamily('Calibri');
+      setActiveFontSize(DEFAULT_FONT_SIZE);
+      return;
+    }
+
+    const updateSelectionState = () => {
+      const selectedVariables = getSelectedVariableNodes(activeEditor);
+      if (selectedVariables.length > 0) {
+        const formatting = readSelectedVariableFormatting(activeEditor);
+        setActiveBlockType('paragraph');
+        setActiveFontFamily(normalizeFontFamily(formatting.fontFamily));
+        setActiveFontSize(formatting.fontSize ?? DEFAULT_FONT_SIZE);
+        return;
+      }
+
+      setActiveBlockType(getActiveBlockType(activeEditor));
+
+      let nextFontFamily: FontFamily = 'Calibri';
+      let nextFontSize: number = DEFAULT_FONT_SIZE;
+      activeEditor.getEditorState().read(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) {
+          return;
+        }
+
+        const textNode = selection.getNodes().find($isTextNode);
+        if (!textNode) {
+          return;
+        }
+
+        const style = textNode.getStyle();
+        nextFontFamily = normalizeFontFamily(extractFontFamilyFromStyle(style));
+        nextFontSize = extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE;
+      });
+
+      setActiveFontFamily(nextFontFamily);
+      setActiveFontSize(nextFontSize);
+    };
+
+    updateSelectionState();
+    const unregisterSelectionChange = activeEditor.registerCommand(
+      SELECTION_CHANGE_COMMAND,
+      () => {
+        updateSelectionState();
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+    const unregisterUpdateListener = activeEditor.registerUpdateListener(() => {
+      updateSelectionState();
+    });
+
+    return () => {
+      unregisterSelectionChange();
+      unregisterUpdateListener();
+    };
+  }, [activeEditor, normalizeFontFamily]);
+
   const handleBold = useCallback(() => {
     debug('toolbar', `bold (globalSelection=${globalSelectionActive}, editors=${editorRegistry.all().length}, hasEditor=${!!activeEditor})`);
     runToolbarAction(t.history.actions.boldApplied, () => {
+      if (activeEditor && toggleSelectedVariableFormat(activeEditor, 'bold')) {
+        return;
+      }
       applyToBodyEditors(toggleBold);
     });
   }, [activeEditor, applyToBodyEditors, editorRegistry, globalSelectionActive, runToolbarAction, t.history.actions.boldApplied]);
@@ -99,6 +210,9 @@ export const Toolbar: React.FC = () => {
   const handleItalic = useCallback(() => {
     debug('toolbar', `italic (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
     runToolbarAction(t.history.actions.italicApplied, () => {
+      if (activeEditor && toggleSelectedVariableFormat(activeEditor, 'italic')) {
+        return;
+      }
       applyToBodyEditors(toggleItalic);
     });
   }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction, t.history.actions.italicApplied]);
@@ -106,6 +220,9 @@ export const Toolbar: React.FC = () => {
   const handleUnderline = useCallback(() => {
     debug('toolbar', `underline (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
     runToolbarAction(t.history.actions.underlineApplied, () => {
+      if (activeEditor && toggleSelectedVariableFormat(activeEditor, 'underline')) {
+        return;
+      }
       applyToBodyEditors(toggleUnderline);
     });
   }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction, t.history.actions.underlineApplied]);
@@ -113,6 +230,9 @@ export const Toolbar: React.FC = () => {
   const handleStrikethrough = useCallback(() => {
     debug('toolbar', `strikethrough (globalSelection=${globalSelectionActive}, hasEditor=${!!activeEditor})`);
     runToolbarAction(t.history.actions.strikethroughApplied, () => {
+      if (activeEditor && toggleSelectedVariableFormat(activeEditor, 'strikethrough')) {
+        return;
+      }
       applyToBodyEditors(toggleStrikethrough);
     });
   }, [activeEditor, applyToBodyEditors, globalSelectionActive, runToolbarAction, t.history.actions.strikethroughApplied]);
@@ -167,21 +287,62 @@ export const Toolbar: React.FC = () => {
 
   const handleFontChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      runToolbarAction(interpolate(t.history.actions.fontChanged, { value: e.target.value }), () => {
-        applyToBodyEditors(editor => applyFontFamily(editor, e.target.value as FontFamily));
+      const fontFamily = e.target.value as FontFamily;
+      runToolbarAction(interpolate(t.history.actions.fontChanged, { value: fontFamily }), () => {
+        if (activeEditor && applyFontFamilyToSelectedVariables(activeEditor, fontFamily)) {
+          return;
+        }
+        applyToBodyEditors(editor => applyFontFamily(editor, fontFamily));
       });
     },
-    [applyToBodyEditors, runToolbarAction, t.history.actions.fontChanged],
+    [activeEditor, applyToBodyEditors, runToolbarAction, t.history.actions.fontChanged],
   );
 
   const handleFontSizeChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const size = parseInt(e.target.value, 10) as FontSize;
       runToolbarAction(interpolate(t.history.actions.fontSizeChanged, { value: String(size) }), () => {
+        if (activeEditor && applyFontSizeToSelectedVariables(activeEditor, size)) {
+          return;
+        }
         applyToBodyEditors(editor => applyFontSize(editor, size));
       });
     },
-    [applyToBodyEditors, runToolbarAction, t.history.actions.fontSizeChanged],
+    [activeEditor, applyToBodyEditors, runToolbarAction, t.history.actions.fontSizeChanged],
+  );
+
+  const handleBlockTypeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const blockType = e.target.value as BlockType;
+      const labelMap: Record<BlockType, string> = {
+        paragraph: t.toolbar.paragraph,
+        h1: t.toolbar.heading1,
+        h2: t.toolbar.heading2,
+        h3: t.toolbar.heading3,
+        h4: t.toolbar.heading4,
+        h5: t.toolbar.heading5,
+        h6: t.toolbar.heading6,
+      };
+
+      runToolbarAction(
+        interpolate(t.history.actions.blockTypeChanged, { value: labelMap[blockType] }),
+        () => {
+          applyToBodyEditors(editor => setBlockType(editor, blockType));
+        },
+      );
+    },
+    [
+      applyToBodyEditors,
+      runToolbarAction,
+      t.history.actions.blockTypeChanged,
+      t.toolbar.heading1,
+      t.toolbar.heading2,
+      t.toolbar.heading3,
+      t.toolbar.heading4,
+      t.toolbar.heading5,
+      t.toolbar.heading6,
+      t.toolbar.paragraph,
+    ],
   );
 
   const handleToggleHistory = useCallback(() => {
@@ -215,12 +376,32 @@ export const Toolbar: React.FC = () => {
 
         <Divider />
 
+        <div className="lex4-toolbar-group-gap lex4-toolbar-group-block">
+          <select
+            className="lex4-toolbar-select lex4-toolbar-select-block"
+            data-testid="block-type-selector"
+            aria-label={t.toolbar.blockType}
+            value={activeBlockType}
+            onChange={handleBlockTypeChange}
+          >
+            <option value="paragraph">{t.toolbar.paragraph}</option>
+            <option value="h1">{t.toolbar.heading1}</option>
+            <option value="h2">{t.toolbar.heading2}</option>
+            <option value="h3">{t.toolbar.heading3}</option>
+            <option value="h4">{t.toolbar.heading4}</option>
+            <option value="h5">{t.toolbar.heading5}</option>
+            <option value="h6">{t.toolbar.heading6}</option>
+          </select>
+        </div>
+
+        <Divider />
+
         <div className="lex4-toolbar-group-gap">
           <Type size={14} className="lex4-toolbar-icon" />
           <select
             className="lex4-toolbar-select"
             data-testid="font-selector"
-            defaultValue="Calibri"
+            value={activeFontFamily}
             onChange={handleFontChange}
           >
             {SUPPORTED_FONTS.map(font => (
@@ -236,7 +417,7 @@ export const Toolbar: React.FC = () => {
           <select
             className="lex4-toolbar-select lex4-toolbar-select-narrow"
             data-testid="font-size-selector"
-            defaultValue="12"
+            value={String(activeFontSize)}
             onChange={handleFontSizeChange}
           >
             {SUPPORTED_FONT_SIZES.map(size => (
@@ -315,18 +496,20 @@ export const Toolbar: React.FC = () => {
           {toolbarEndItems.map((EndItem, idx) => (
             <EndItem key={idx} />
           ))}
-          <button
-            type="button"
-            className={`lex4-toolbar-toggle-btn${historySidebarOpen ? ' active' : ''}`}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleToggleHistory}
-            data-testid="toggle-history-sidebar"
-            title={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
-            aria-label={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
-          >
-            <History size={14} />
-            History
-          </button>
+          {toolbarConfig.history.visible && (
+            <button
+              type="button"
+              className={`lex4-toolbar-toggle-btn${historySidebarOpen ? ' active' : ''}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleToggleHistory}
+              data-testid="toggle-history-sidebar"
+              title={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
+              aria-label={historySidebarOpen ? t.toolbar.closeHistory : t.toolbar.openHistory}
+            >
+              <History size={14} />
+              {toolbarConfig.history.showLabel && t.toolbar.history}
+            </button>
+          )}
         </div>
       </div>
     </div>

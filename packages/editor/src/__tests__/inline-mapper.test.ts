@@ -151,6 +151,26 @@ describe('inline-mapper', () => {
       });
     });
 
+    it('maps variable node formatting to marks', () => {
+      const result = mapInlineNode({
+        type: 'variable-node',
+        version: 1,
+        variableKey: 'customer.name',
+        format: 9,
+        style: 'font-family: Inter; font-size: 14pt',
+      } as never);
+      expect(result).toEqual({
+        type: 'variable',
+        key: 'customer.name',
+        marks: {
+          bold: true,
+          underline: true,
+          fontFamily: 'Inter',
+          fontSize: 14,
+        },
+      });
+    });
+
     it('maps linebreak to LineBreakAst', () => {
       const result = mapInlineNode({ type: 'linebreak' } as never);
       expect(result).toEqual({ type: 'linebreak' });

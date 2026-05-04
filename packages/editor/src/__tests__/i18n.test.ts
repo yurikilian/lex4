@@ -28,6 +28,15 @@ describe('i18n — DEFAULT_TRANSLATIONS', () => {
     expect(t.bulletList).toBe('Bullet List');
     expect(t.indent).toBe('Indent');
     expect(t.outdent).toBe('Outdent');
+    expect(t.history).toBe('History');
+    expect(t.blockType).toBe('Block type');
+    expect(t.paragraph).toBe('Paragraph');
+    expect(t.heading1).toBe('Heading 1');
+    expect(t.heading2).toBe('Heading 2');
+    expect(t.heading3).toBe('Heading 3');
+    expect(t.heading4).toBe('Heading 4');
+    expect(t.heading5).toBe('Heading 5');
+    expect(t.heading6).toBe('Heading 6');
     expect(t.openHistory).toBe('Open History');
     expect(t.closeHistory).toBe('Close History');
   });
@@ -64,7 +73,9 @@ describe('i18n — DEFAULT_TRANSLATIONS', () => {
     expect(a.outdentedContent).toBe('Outdented content');
     expect(a.fontChanged).toContain('{{value}}');
     expect(a.fontSizeChanged).toContain('{{value}}');
+    expect(a.blockTypeChanged).toContain('{{value}}');
     expect(a.pageCounterSet).toContain('{{value}}');
+    expect(a.insertedDocumentContent).toBe('Inserted document content');
   });
 
   it('variables has all expected keys', () => {

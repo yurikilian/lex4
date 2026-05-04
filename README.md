@@ -175,6 +175,7 @@ The main editor component. Drop it into any React application.
 | `readOnly` | `boolean` | `false` | Disable editing (view-only mode) |
 | `extensions` | `Lex4Extension[]` | `[]` | Extensions to load (e.g., `astExtension()`, `variablesExtension(defs)`) |
 | `translations` | `DeepPartial<Lex4Translations>` | English | Partial i18n overrides, deep-merged with defaults |
+| `toolbar` | `Lex4ToolbarConfig` | All controls visible with labels | Controls visibility and labels for built-in toolbar actions such as history, variables, and header/footer |
 | `onSave` | `(payload: { document, ast, json }) => void` | — | Called when the host app triggers a save (includes full `Lex4Document`) |
 | `captureHistoryShortcutsOnWindow` | `boolean` | `true` | Capture ⌘Z/⌘⇧Z at the window level |
 | `className` | `string` | — | Additional CSS class for the editor root |
@@ -187,6 +188,7 @@ The editor ref exposes built-in chrome controls, and extensions can add more met
 |--------|-----------|-------------|
 | `setHistorySidebarOpen(open)` | `(open: boolean) => void` | Opens or closes the history sidebar programmatically |
 | `toggleHistorySidebar()` | `() => void` | Toggles the history sidebar |
+| `insertDocumentContent(document)` | `(document: Lex4Document) => boolean` | Inserts the body content of another saved Lex4 document at the current cursor position |
 
 ### Extensions
 
@@ -297,7 +299,7 @@ These hooks are exported for advanced use cases where you need to build custom p
 
 ## 🌐 i18n (Internationalization)
 
-All 59 UI strings are externalized and can be overridden via the `translations` prop. No external i18n library is forced on consumers.
+All UI strings are externalized and can be overridden via the `translations` prop. No external i18n library is forced on consumers.
 
 ### Basic Override
 
@@ -339,9 +341,9 @@ function App() {
 
 | Section | Keys | Examples |
 |---------|------|---------|
-| `toolbar` | 16 | `undo`, `redo`, `bold`, `italic`, `alignLeft`, `numberedList`, ... |
-| `history` | 4 + 20 actions | `title`, `empty`, `actions.boldApplied`, `actions.fontChanged`, ... |
-| `variables` | 8 | `title`, `available`, `searchPlaceholder`, `openPanel`, ... |
+| `toolbar` | editing, block type, history | `undo`, `paragraph`, `heading6`, `history`, `openHistory` |
+| `history` | labels and action descriptions | `title`, `empty`, `actions.blockTypeChanged`, `actions.insertedDocumentContent` |
+| `variables` | panel and creation flows | `title`, `available`, `searchPlaceholder`, `openPanel`, `createVariableTitle` |
 | `header` / `footer` | 1 each | `placeholder` |
 | `sidebar` | 1 | `close` |
 

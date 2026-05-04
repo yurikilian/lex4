@@ -1,5 +1,9 @@
 export { Lex4Editor } from './components/Lex4Editor';
-export type { Lex4EditorProps } from './types/editor-props';
+export type {
+  Lex4EditorProps,
+  Lex4ToolbarConfig,
+  Lex4ToolbarControlConfig,
+} from './types/editor-props';
 export type { Lex4EditorHandle } from './types/editor-handle';
 export type { Lex4Document, PageState } from './types/document';
 export { createEmptyDocument, createEmptyPage } from './types/document';

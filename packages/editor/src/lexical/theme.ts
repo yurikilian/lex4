@@ -13,6 +13,7 @@ export const lexicalTheme: EditorThemeClasses = {
     h3: 'lex4-heading lex4-heading-h3',
     h4: 'lex4-heading lex4-heading-h4',
     h5: 'lex4-heading lex4-heading-h5',
+    h6: 'lex4-heading lex4-heading-h6',
   },
   text: {
     bold: 'lex4-text-bold',

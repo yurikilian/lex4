@@ -9,6 +9,10 @@
 
 import type { InlineNodeAst, TextMarks, TextRunAst, VariableAst, LineBreakAst } from './types';
 import type { SerializedVariableNode } from '../variables/variable-node';
+import {
+  extractFontFamilyFromStyle,
+  extractFontSizePtFromStyle,
+} from '../utils/text-style';
 
 // Lexical format bitmask constants
 const IS_BOLD = 1;
@@ -48,16 +52,14 @@ export function decodeFormatBitmask(format: number): Pick<TextMarks, 'bold' | 'i
  * Extracts font-family from a CSS style string.
  */
 export function extractFontFamily(style: string): string | undefined {
-  const match = style.match(/font-family:\s*([^;]+)/);
-  return match ? match[1].trim().replace(/['"]/g, '') : undefined;
+  return extractFontFamilyFromStyle(style);
 }
 
 /**
  * Extracts font-size (in pt) from a CSS style string.
  */
 export function extractFontSizePt(style: string): number | undefined {
-  const match = style.match(/font-size:\s*(\d+(?:\.\d+)?)\s*pt/);
-  return match ? parseFloat(match[1]) : undefined;
+  return extractFontSizePtFromStyle(style);
 }
 
 /**
@@ -104,9 +106,11 @@ function mapTextNode(node: SerializedTextNode): TextRunAst {
 }
 
 function mapVariableNode(node: SerializedVariableNode): VariableAst {
+  const marks = buildTextMarks(node.format ?? 0, node.style);
   return {
     type: 'variable',
     key: node.variableKey,
+    ...(marks ? { marks } : {}),
   };
 }
 
