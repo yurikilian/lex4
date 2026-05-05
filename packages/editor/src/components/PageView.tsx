@@ -33,7 +33,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
   onMoveToPreviousPage,
   onMoveToNextPage,
 }) => {
-  const { document, dispatch, setActivePageId } = useDocument();
+  const { document, dispatch, editorRegistry, setActiveEditor, setActivePageId } = useDocument();
   const t = useTranslations();
   const page = document.pages.find(p => p.id === pageId);
   const showHeaderFooter = document.headerFooterEnabled;
@@ -68,7 +68,11 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
 
   const handleFocus = useCallback(() => {
     setActivePageId(pageId);
-  }, [setActivePageId, pageId]);
+    const editor = editorRegistry.get(pageId);
+    if (editor) {
+      setActiveEditor(editor, { pageId, region: 'body' });
+    }
+  }, [editorRegistry, pageId, setActiveEditor, setActivePageId]);
 
   const handleOverflow = useCallback(
     (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => {

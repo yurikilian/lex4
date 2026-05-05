@@ -43,7 +43,7 @@ export type DocumentAction =
 /** Registry of page editors for direct cross-page content manipulation */
 export interface EditorRegistry {
   register(pageId: string, editor: LexicalEditor): void;
-  unregister(pageId: string): void;
+  unregister(pageId: string, editor?: LexicalEditor): void;
   get(pageId: string): LexicalEditor | undefined;
   all(): LexicalEditor[];
 }

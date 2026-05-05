@@ -316,7 +316,12 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
     register: (pageId: string, editor: LexicalEditor) => {
       editorMapRef.current.set(pageId, editor);
     },
-    unregister: (pageId: string) => {
+    unregister: (pageId: string, editor?: LexicalEditor) => {
+      const currentEditor = editorMapRef.current.get(pageId);
+      if (editor && currentEditor && currentEditor !== editor) {
+        return;
+      }
+
       editorMapRef.current.delete(pageId);
     },
     get: (pageId: string) => editorMapRef.current.get(pageId),

@@ -63,4 +63,21 @@ describe('ActiveEditorPlugin', () => {
     expect(setActiveEditor).toHaveBeenCalledWith(editorMock, { pageId: 'page-1', region: 'body' });
     expect(onFocus).toHaveBeenCalledWith(editorMock);
   });
+
+  it('marks the editor as active when the root receives a mouse interaction', () => {
+    render(
+      <ActiveEditorPlugin
+        pageId="page-1"
+        region="body"
+      />,
+    );
+
+    const listener = editorMock.registerRootListener.mock.calls[0]?.[0];
+    const root = document.createElement('div');
+    listener(root, null);
+    root.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(setActivePageId).toHaveBeenCalledWith('page-1');
+    expect(setActiveEditor).toHaveBeenCalledWith(editorMock, { pageId: 'page-1', region: 'body' });
+  });
 });

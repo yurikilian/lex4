@@ -46,7 +46,7 @@ const EditorRegistryPlugin: React.FC<{ pageId: string }> = ({ pageId }) => {
     editorRegistry.register(pageId, editor);
     debug('registry', `registered editor for page ${shortId(pageId)}`);
     return () => {
-      editorRegistry.unregister(pageId);
+      editorRegistry.unregister(pageId, editor);
       debug('registry', `unregistered editor for page ${shortId(pageId)}`);
     };
   }, [editor, pageId, editorRegistry]);

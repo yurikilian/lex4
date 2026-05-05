@@ -15,6 +15,7 @@ import {
   COMMAND_PRIORITY_LOW,
   KEY_BACKSPACE_COMMAND,
   KEY_DELETE_COMMAND,
+  KEY_DOWN_COMMAND,
 } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection';
@@ -250,9 +251,49 @@ function VariableChip({
       COMMAND_PRIORITY_LOW,
     );
 
+    const moveCaretFromSelectedNode = (direction: 'backward' | 'forward') => {
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey);
+        if (!$isVariableNode(node)) {
+          return;
+        }
+
+        if (direction === 'backward') {
+          node.selectPrevious();
+        } else {
+          node.selectNext();
+        }
+      });
+    };
+
+    const unregisterArrowNavigation = editor.registerCommand(
+      KEY_DOWN_COMMAND,
+      (event: KeyboardEvent) => {
+        if (!isSelected || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+          return false;
+        }
+
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          moveCaretFromSelectedNode('backward');
+          return true;
+        }
+
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          moveCaretFromSelectedNode('forward');
+          return true;
+        }
+
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+
     return () => {
       unregisterBackspace();
       unregisterDelete();
+      unregisterArrowNavigation();
     };
   }, [editor, isSelected, nodeKey]);
 

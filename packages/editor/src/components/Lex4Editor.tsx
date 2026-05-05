@@ -18,6 +18,7 @@ import { serializeDocument } from '../ast/document-serializer';
 import { serializeDocumentJson } from '../ast/payload-builder';
 import { ToolbarConfigProvider } from '../context/toolbar-config';
 import { insertDocumentContent } from '../lexical/utils/import-document-content';
+import { resolveDocumentInsertTarget } from '../utils/document-insert-target';
 import '../styles.css';
 
 function selectEntireDocument(
@@ -275,8 +276,10 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
 }>(({ captureHistoryShortcutsOnWindow, onSave, className }, ref) => {
   const {
     document: doc,
+    activePageId,
     activeEditor,
     activeCaretPosition,
+    editorRegistry,
     historySidebarOpen,
     runHistoryAction,
     setHistorySidebarOpen,
@@ -285,7 +288,6 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   const t = useTranslations();
   const documentRef = useRef(doc);
   const activeEditorRef = useRef(activeEditor);
-  const activeCaretRegionRef = useRef(activeCaretPosition?.region);
   const historySidebarOpenRef = useRef(historySidebarOpen);
   const runHistoryActionRef = useRef(runHistoryAction);
   const insertedDocumentContentLabelRef = useRef(t.history.actions.insertedDocumentContent);
@@ -297,10 +299,6 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   useEffect(() => {
     activeEditorRef.current = activeEditor;
   }, [activeEditor]);
-
-  useEffect(() => {
-    activeCaretRegionRef.current = activeCaretPosition?.region;
-  }, [activeCaretPosition?.region]);
 
   useEffect(() => {
     historySidebarOpenRef.current = historySidebarOpen;
@@ -328,8 +326,13 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
     setHistorySidebarOpen(!historySidebarOpenRef.current);
   };
   handle.insertDocumentContent = (documentToInsert) => {
-    const currentActiveEditor = activeEditorRef.current;
-    if (!currentActiveEditor || activeCaretRegionRef.current !== 'body') {
+    const targetEditor = resolveDocumentInsertTarget({
+      activeEditor: activeEditorRef.current,
+      activeCaretPosition,
+      activePageId,
+      editorRegistry,
+    });
+    if (!targetEditor) {
       return false;
     }
 
@@ -341,7 +344,7 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
         region: 'document',
       },
       () => {
-        inserted = insertDocumentContent(currentActiveEditor, documentToInsert);
+        inserted = insertDocumentContent(targetEditor, documentToInsert);
       },
     );
     return inserted;

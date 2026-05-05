@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Lex4Editor, astExtension, variablesExtension, PT_BR_TRANSLATIONS } from '@yurikilian/lex4';
 import type { Lex4Document, Lex4EditorHandle, VariableDefinition, Lex4Translations } from '@yurikilian/lex4';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,14 @@ export const App: React.FC = () => {
       console.log('[Lex4 Save] Document AST:', ast);
       console.log('[Lex4 Save] JSON payload:', editorRef.current.getDocumentJson());
     }
+  }, []);
+
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__lex4_editor = editorRef;
+
+    return () => {
+      delete (window as unknown as Record<string, unknown>).__lex4_editor;
+    };
   }, []);
 
   return (

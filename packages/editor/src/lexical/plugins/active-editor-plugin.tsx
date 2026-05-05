@@ -136,15 +136,19 @@ export const ActiveEditorPlugin: React.FC<ActiveEditorPluginProps> = ({
 
   useEffect(() => {
     const caretPosition: CaretPosition = { pageId, region };
-    const handleFocusIn = () => {
+    const markEditorActive = () => {
       setActivePageId(pageId);
       setActiveEditor(editor, caretPosition);
       onFocus?.(editor);
     };
 
     return editor.registerRootListener((rootElement, prevRootElement) => {
-      prevRootElement?.removeEventListener('focusin', handleFocusIn);
-      rootElement?.addEventListener('focusin', handleFocusIn);
+      prevRootElement?.removeEventListener('focusin', markEditorActive);
+      prevRootElement?.removeEventListener('mousedown', markEditorActive);
+      prevRootElement?.removeEventListener('pointerdown', markEditorActive);
+      rootElement?.addEventListener('focusin', markEditorActive);
+      rootElement?.addEventListener('mousedown', markEditorActive);
+      rootElement?.addEventListener('pointerdown', markEditorActive);
     });
   }, [editor, onFocus, pageId, region, setActiveEditor, setActivePageId]);
 

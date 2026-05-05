@@ -105,14 +105,28 @@ export function readSelectedVariableFormatting(editor: LexicalEditor): {
   fontFamily?: string;
   fontSize?: number;
 } {
-  const firstNode = getSelectedVariableNodes(editor)[0];
-  if (!firstNode) {
-    return {};
-  }
+  let formatting: {
+    fontFamily?: string;
+    fontSize?: number;
+  } = {};
 
-  const style = firstNode.getStyle();
-  return {
-    fontFamily: extractFontFamilyFromStyle(style),
-    fontSize: extractFontSizePtFromStyle(style),
-  };
+  editor.getEditorState().read(() => {
+    const selection = $getSelection();
+    if (!$isNodeSelection(selection)) {
+      return;
+    }
+
+    const firstNode = selection.getNodes().filter($isVariableNode)[0];
+    if (!firstNode) {
+      return;
+    }
+
+    const style = firstNode.getStyle();
+    formatting = {
+      fontFamily: extractFontFamilyFromStyle(style),
+      fontSize: extractFontSizePtFromStyle(style),
+    };
+  });
+
+  return formatting;
 }
