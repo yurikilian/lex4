@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   $getSelection,
+  $isNodeSelection,
   $isRangeSelection,
   $isTextNode,
   $selectAll,
@@ -8,6 +9,9 @@ import {
   SELECTION_CHANGE_COMMAND,
   type LexicalEditor,
 } from 'lexical';
+import {
+  $isHeadingNode,
+} from '@lexical/rich-text';
 import {
   Undo2,
   Redo2,
@@ -48,17 +52,15 @@ import {
 } from '../lexical/commands/format-commands';
 import { insertList, indentContent, outdentContent } from '../lexical/commands/list-commands';
 import {
-  getActiveBlockType,
   setBlockType,
   type BlockType,
 } from '../lexical/commands/block-commands';
 import {
   applyFontFamilyToSelectedVariables,
   applyFontSizeToSelectedVariables,
-  getSelectedVariableNodes,
-  readSelectedVariableFormatting,
   toggleSelectedVariableFormat,
 } from '../variables/variable-formatting';
+import { $isVariableNode } from '../variables/variable-node';
 import {
   extractFontFamilyFromStyle,
   extractFontSizePtFromStyle,
@@ -145,24 +147,35 @@ export const Toolbar: React.FC = () => {
       return;
     }
 
-    const updateSelectionState = () => {
-      const selectedVariables = getSelectedVariableNodes(activeEditor);
-      if (selectedVariables.length > 0) {
-        const formatting = readSelectedVariableFormatting(activeEditor);
-        setActiveBlockType('paragraph');
-        setActiveFontFamily(normalizeFontFamily(formatting.fontFamily));
-        setActiveFontSize(formatting.fontSize ?? DEFAULT_FONT_SIZE);
-        return;
-      }
-
-      setActiveBlockType(getActiveBlockType(activeEditor));
-
+    const updateSelectionState = (editorState = activeEditor.getEditorState()) => {
+      let nextBlockType: BlockType = 'paragraph';
       let nextFontFamily: FontFamily = 'Calibri';
       let nextFontSize: number = DEFAULT_FONT_SIZE;
-      activeEditor.getEditorState().read(() => {
+      let hasSelectedVariable = false;
+
+      editorState.read(() => {
         const selection = $getSelection();
+        if ($isNodeSelection(selection)) {
+          const firstVariableNode = selection.getNodes().filter($isVariableNode)[0];
+          if (!firstVariableNode) {
+            return;
+          }
+
+          hasSelectedVariable = true;
+          const style = firstVariableNode.__style;
+          nextFontFamily = normalizeFontFamily(extractFontFamilyFromStyle(style));
+          nextFontSize = extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE;
+          return;
+        }
+
         if (!$isRangeSelection(selection)) {
           return;
+        }
+
+        const anchorNode = selection.anchor.getNode();
+        const topLevelElement = anchorNode.getTopLevelElementOrThrow();
+        if ($isHeadingNode(topLevelElement)) {
+          nextBlockType = topLevelElement.getTag();
         }
 
         const textNode = selection.getNodes().find($isTextNode);
@@ -175,6 +188,7 @@ export const Toolbar: React.FC = () => {
         nextFontSize = extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE;
       });
 
+      setActiveBlockType(hasSelectedVariable ? 'paragraph' : nextBlockType);
       setActiveFontFamily(nextFontFamily);
       setActiveFontSize(nextFontSize);
     };
@@ -188,8 +202,8 @@ export const Toolbar: React.FC = () => {
       },
       COMMAND_PRIORITY_LOW,
     );
-    const unregisterUpdateListener = activeEditor.registerUpdateListener(() => {
-      updateSelectionState();
+    const unregisterUpdateListener = activeEditor.registerUpdateListener(({ editorState }) => {
+      updateSelectionState(editorState);
     });
 
     return () => {
