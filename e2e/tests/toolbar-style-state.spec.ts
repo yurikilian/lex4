@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { setTextSelection } from './helpers';
 
 const BODY_SELECTOR = '[data-testid^="page-body-"] [data-lexical-editor="true"]';
 
@@ -13,42 +14,38 @@ test.describe('Toolbar Style State', () => {
     await editable.click();
     await page.keyboard.type('Bold plain');
 
-    await page.keyboard.press('Meta+ArrowLeft');
-    await page.keyboard.press('Shift+Alt+ArrowRight');
+    await setTextSelection(page, BODY_SELECTOR, 0, 4);
     await page.getByTestId('btn-bold').click();
 
-    await page.getByText('Bold', { exact: true }).click();
+    await setTextSelection(page, BODY_SELECTOR, 2, 2);
     await expect(page.getByTestId('btn-bold')).toHaveAttribute('aria-pressed', 'true');
 
-    await page.getByText('plain', { exact: true }).click();
+    await setTextSelection(page, BODY_SELECTOR, 7, 7);
     await expect(page.getByTestId('btn-bold')).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('partial heading selection can be restyled as paragraph on the same line', async ({ page }) => {
     const editable = page.locator(BODY_SELECTOR).first();
     const text = 'THIS IS A HEADING! HERE I WANT P';
+    const paragraphStart = text.indexOf('HERE I WANT P');
 
     await editable.click();
     await page.keyboard.type(text);
-    await page.keyboard.press('Shift+Meta+ArrowLeft');
+    await setTextSelection(page, BODY_SELECTOR, 0, text.length);
     await page.getByTestId('block-type-selector').click();
     await page.getByTestId('block-type-option-h1').click();
 
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('Shift+Alt+ArrowLeft');
-    await page.keyboard.press('Shift+Alt+ArrowLeft');
-    await page.keyboard.press('Shift+Alt+ArrowLeft');
-    await page.keyboard.press('Shift+Alt+ArrowLeft');
+    await setTextSelection(page, BODY_SELECTOR, paragraphStart, text.length);
     await page.getByTestId('block-type-selector').click();
     await page.getByTestId('block-type-option-paragraph').click();
 
     const segments = await page.evaluate(() => {
-      const heading = document.querySelector('[data-testid^="page-body-"] h1');
-      if (!heading) {
+      const editor = document.querySelector<HTMLElement>('[data-testid^="page-body-"] [data-lexical-editor="true"]');
+      if (!editor) {
         return null;
       }
 
-      const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
       const result: Array<{ text: string; fontSize: string; fontWeight: string }> = [];
       let node: Text | null;
 
@@ -57,7 +54,7 @@ test.describe('Toolbar Style State', () => {
         if (!content.trim()) {
           continue;
         }
-        const parent = (node.parentElement ?? heading) as HTMLElement;
+        const parent = (node.parentElement ?? editor) as HTMLElement;
         const styles = getComputedStyle(parent);
         result.push({
           text: content,
