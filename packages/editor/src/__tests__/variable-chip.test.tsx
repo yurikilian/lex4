@@ -51,13 +51,13 @@ vi.mock('lexical', async (importOriginal) => {
   };
 });
 
-function renderVariableChip() {
+function renderVariableChip(style = '') {
   return render(
     VariableNode.prototype.decorate.call({
       __key: 'variable-node-key',
       __variableKey: 'customer.name',
       __format: 0,
-      __style: '',
+      __style: style,
     } as VariableNode),
   );
 }
@@ -116,5 +116,14 @@ describe('VariableChip', () => {
     expect(keyDownHandler?.(moveLeftEvent)).toBe(true);
     expect(moveLeftEvent.preventDefault).toHaveBeenCalledTimes(1);
     expect(mocks.node.selectPrevious).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies inline font weight styles from the stored variable style', () => {
+    renderVariableChip('font-size: 22.5pt; font-weight: 700');
+
+    expect(screen.getByTestId('variable-chip-customer.name')).toHaveStyle({
+      fontSize: '22.5pt',
+      fontWeight: '700',
+    });
   });
 });

@@ -21,6 +21,7 @@ import {
 } from '../utils/history-manager';
 import { useTranslations, interpolate } from '../i18n';
 import type { Lex4Translations } from '../i18n/types';
+import { ToolbarStyleStoreProvider } from './toolbar-style-store';
 
 interface DocumentProviderProps {
   initialDocument?: Lex4Document;
@@ -690,7 +691,9 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({
       redo,
       editorRegistry,
     }}>
-      {children}
+      <ToolbarStyleStoreProvider>
+        {children}
+      </ToolbarStyleStoreProvider>
     </DocumentContext.Provider>
   );
 };

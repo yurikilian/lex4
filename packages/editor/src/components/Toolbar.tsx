@@ -1,17 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
-  $getSelection,
-  $isNodeSelection,
-  $isRangeSelection,
-  $isTextNode,
   $selectAll,
   COMMAND_PRIORITY_LOW,
   SELECTION_CHANGE_COMMAND,
   type LexicalEditor,
 } from 'lexical';
-import {
-  $isHeadingNode,
-} from '@lexical/rich-text';
 import {
   Undo2,
   Redo2,
@@ -39,7 +32,6 @@ import { SUPPORTED_FONTS } from '../lexical/plugins/font-plugin';
 import { applyFontFamily, type FontFamily } from '../lexical/plugins/font-plugin';
 import {
   applyFontSize,
-  DEFAULT_FONT_SIZE,
   SUPPORTED_FONT_SIZES,
   type FontSize,
 } from '../lexical/plugins/font-size-plugin';
@@ -53,21 +45,18 @@ import {
 import { insertList, indentContent, outdentContent } from '../lexical/commands/list-commands';
 import {
   setBlockType,
-  type BlockType,
 } from '../lexical/commands/block-commands';
+import type { BlockType } from '../lexical/commands/block-types';
 import {
   applyFontFamilyToSelectedVariables,
   applyFontSizeToSelectedVariables,
   toggleSelectedVariableFormat,
 } from '../variables/variable-formatting';
-import { $isVariableNode } from '../variables/variable-node';
-import {
-  extractFontFamilyFromStyle,
-  extractFontSizePtFromStyle,
-} from '../utils/text-style';
 import { debug } from '../utils/debug';
 import { BlockTypePicker, getBlockTypeLabel } from './BlockTypePicker';
 import { CanvasControls } from './CanvasControls';
+import { readToolbarStyleSnapshot } from '../context/toolbar-style-snapshot';
+import { useToolbarStyleStore, useToolbarStyleStoreApi } from '../context/toolbar-style-store';
 
 export const Toolbar: React.FC = () => {
   const {
@@ -85,16 +74,15 @@ export const Toolbar: React.FC = () => {
   const { toolbarItems, toolbarEndItems } = useExtensions();
   const toolbarConfig = useToolbarConfig();
   const t = useTranslations();
-  const [activeBlockType, setActiveBlockType] = useState<BlockType>('paragraph');
-  const [activeFontFamily, setActiveFontFamily] = useState<FontFamily>('Calibri');
-  const [activeFontSize, setActiveFontSize] = useState<number>(DEFAULT_FONT_SIZE);
-
-  const normalizeFontFamily = useCallback((fontFamily?: string): FontFamily => {
-    if (fontFamily && SUPPORTED_FONTS.includes(fontFamily as FontFamily)) {
-      return fontFamily as FontFamily;
-    }
-    return 'Calibri';
-  }, []);
+  const toolbarStyleStore = useToolbarStyleStoreApi();
+  const activeBlockType = useToolbarStyleStore(state => state.blockType);
+  const activeFontFamily = useToolbarStyleStore(state => state.fontFamily);
+  const activeFontSize = useToolbarStyleStore(state => state.fontSize);
+  const activeAlignment = useToolbarStyleStore(state => state.alignment);
+  const isBoldActive = useToolbarStyleStore(state => state.isBold);
+  const isItalicActive = useToolbarStyleStore(state => state.isItalic);
+  const isUnderlineActive = useToolbarStyleStore(state => state.isUnderline);
+  const isStrikethroughActive = useToolbarStyleStore(state => state.isStrikethrough);
 
   const withBodySelection = useCallback(
     (editor: LexicalEditor, action: (targetEditor: LexicalEditor) => void) => {
@@ -141,56 +129,12 @@ export const Toolbar: React.FC = () => {
 
   useEffect(() => {
     if (!activeEditor) {
-      setActiveBlockType('paragraph');
-      setActiveFontFamily('Calibri');
-      setActiveFontSize(DEFAULT_FONT_SIZE);
+      toolbarStyleStore.getState().reset();
       return;
     }
 
     const updateSelectionState = (editorState = activeEditor.getEditorState()) => {
-      let nextBlockType: BlockType = 'paragraph';
-      let nextFontFamily: FontFamily = 'Calibri';
-      let nextFontSize: number = DEFAULT_FONT_SIZE;
-      let hasSelectedVariable = false;
-
-      editorState.read(() => {
-        const selection = $getSelection();
-        if ($isNodeSelection(selection)) {
-          const firstVariableNode = selection.getNodes().filter($isVariableNode)[0];
-          if (!firstVariableNode) {
-            return;
-          }
-
-          hasSelectedVariable = true;
-          const style = firstVariableNode.__style;
-          nextFontFamily = normalizeFontFamily(extractFontFamilyFromStyle(style));
-          nextFontSize = extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE;
-          return;
-        }
-
-        if (!$isRangeSelection(selection)) {
-          return;
-        }
-
-        const anchorNode = selection.anchor.getNode();
-        const topLevelElement = anchorNode.getTopLevelElementOrThrow();
-        if ($isHeadingNode(topLevelElement)) {
-          nextBlockType = topLevelElement.getTag();
-        }
-
-        const textNode = selection.getNodes().find($isTextNode);
-        if (!textNode) {
-          return;
-        }
-
-        const style = textNode.getStyle();
-        nextFontFamily = normalizeFontFamily(extractFontFamilyFromStyle(style));
-        nextFontSize = extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE;
-      });
-
-      setActiveBlockType(hasSelectedVariable ? 'paragraph' : nextBlockType);
-      setActiveFontFamily(nextFontFamily);
-      setActiveFontSize(nextFontSize);
+      toolbarStyleStore.getState().setSnapshot(readToolbarStyleSnapshot(activeEditor, editorState));
     };
 
     updateSelectionState();
@@ -210,7 +154,7 @@ export const Toolbar: React.FC = () => {
       unregisterSelectionChange();
       unregisterUpdateListener();
     };
-  }, [activeEditor, normalizeFontFamily]);
+  }, [activeEditor, toolbarStyleStore]);
 
   const handleBold = useCallback(() => {
     debug('toolbar', `bold (globalSelection=${globalSelectionActive}, editors=${editorRegistry.all().length}, hasEditor=${!!activeEditor})`);
@@ -418,16 +362,16 @@ export const Toolbar: React.FC = () => {
         <Divider />
 
         <div className="lex4-toolbar-group" data-testid="format-group">
-          <ToolbarIconButton title={t.toolbar.bold} testId="btn-bold" onClick={handleBold}>
+          <ToolbarIconButton title={t.toolbar.bold} testId="btn-bold" active={isBoldActive} onClick={handleBold}>
             <Bold size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.italic} testId="btn-italic" onClick={handleItalic}>
+          <ToolbarIconButton title={t.toolbar.italic} testId="btn-italic" active={isItalicActive} onClick={handleItalic}>
             <Italic size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.underline} testId="btn-underline" onClick={handleUnderline}>
+          <ToolbarIconButton title={t.toolbar.underline} testId="btn-underline" active={isUnderlineActive} onClick={handleUnderline}>
             <Underline size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.strikethrough} testId="btn-strike" onClick={handleStrikethrough}>
+          <ToolbarIconButton title={t.toolbar.strikethrough} testId="btn-strike" active={isStrikethroughActive} onClick={handleStrikethrough}>
             <Strikethrough size={15} />
           </ToolbarIconButton>
         </div>
@@ -435,16 +379,16 @@ export const Toolbar: React.FC = () => {
         <Divider />
 
         <div className="lex4-toolbar-group" data-testid="align-group">
-          <ToolbarIconButton title={t.toolbar.alignLeft} testId="btn-align-left" onClick={handleAlignLeft}>
+          <ToolbarIconButton title={t.toolbar.alignLeft} testId="btn-align-left" active={activeAlignment === 'left'} onClick={handleAlignLeft}>
             <AlignLeft size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.alignCenter} testId="btn-align-center" onClick={handleAlignCenter}>
+          <ToolbarIconButton title={t.toolbar.alignCenter} testId="btn-align-center" active={activeAlignment === 'center'} onClick={handleAlignCenter}>
             <AlignCenter size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.alignRight} testId="btn-align-right" onClick={handleAlignRight}>
+          <ToolbarIconButton title={t.toolbar.alignRight} testId="btn-align-right" active={activeAlignment === 'right'} onClick={handleAlignRight}>
             <AlignRight size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.justify} testId="btn-align-justify" onClick={handleAlignJustify}>
+          <ToolbarIconButton title={t.toolbar.justify} testId="btn-align-justify" active={activeAlignment === 'justify'} onClick={handleAlignJustify}>
             <AlignJustify size={15} />
           </ToolbarIconButton>
         </div>
@@ -524,6 +468,7 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     type="button"
     title={title}
     aria-label={title}
+    aria-pressed={active}
     disabled={disabled}
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}

@@ -31,6 +31,7 @@ A paginated document editor built as a **reusable React library** on top of [Met
 - **True A4 pagination** — every page is exactly 794 × 1123 CSS pixels (210 mm × 297 mm at 96 DPI)
 - **Automatic content flow** — overflow splits at block boundaries with mid-block splitting for oversized paragraphs and lists
 - **Rich text formatting** — bold, italic, underline, strikethrough, alignment, lists, indentation
+- **Selection-aware formatting** — toolbar pressed state follows the caret, partial same-line block restyling is preserved, and selected variable chips can be promoted to headings
 - **Headers & footers** — global toggle with per-page editable regions and page counters
 - **Multiple font families** — Inter, Arial, Times New Roman, Courier New, Georgia, Verdana and more
 - **Font size control** — per-selection font size with AST-level preservation
@@ -225,6 +226,7 @@ Also adds:
 - **Toolbar button** — variable picker dropdown for inserting variables inline
 - **Host-controlled side panel** — opens a searchable variable panel on the right, which can also be controlled from app chrome via the handle methods above
 - **Variable node** — custom Lexical node rendered as a non-editable chip
+- **Selection formatting** — selected chips participate in toolbar inline/block formatting and keep heading/paragraph styling in sync with export
 
 ```tsx
 const variables: VariableDefinition[] = [
@@ -608,8 +610,8 @@ pnpm --filter e2e test:ui
 
 | Category | Framework | Count | Description |
 |----------|-----------|-------|-------------|
-| Unit | Vitest | 186 | Engine logic, reducers, AST serializers, i18n, variable nodes |
-| E2E | Playwright | 118 | Full user flows — typing, formatting, pagination, header/footer, variables, theme, i18n |
+| Unit | Vitest | 221 | Engine logic, reducers, AST serializers, i18n, variable nodes |
+| E2E | Playwright | 129 | Full user flows — typing, formatting, pagination, header/footer, variables, theme, i18n |
 
 ## 🔧 Build & Bundle
 

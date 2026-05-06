@@ -23,6 +23,7 @@ import { useCallback, useEffect, useMemo, type MouseEvent } from 'react';
 import { useVariables } from './variable-context';
 import {
   extractFontFamilyFromStyle,
+  extractStyleValue,
   extractFontSizePtFromStyle,
 } from '../utils/text-style';
 
@@ -183,9 +184,11 @@ function VariableChip({
   const style = useMemo(() => {
     const fontFamily = extractFontFamilyFromStyle(styleValue);
     const fontSize = extractFontSizePtFromStyle(styleValue);
+    const fontWeight = extractStyleValue(styleValue, 'font-weight');
     return {
       ...(fontFamily ? { fontFamily } : {}),
       ...(fontSize ? { fontSize: `${fontSize}pt` } : {}),
+      ...(fontWeight ? { fontWeight } : {}),
     };
   }, [styleValue]);
   const className = [

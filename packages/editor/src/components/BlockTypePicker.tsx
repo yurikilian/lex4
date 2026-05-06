@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import type { Lex4Translations } from '../i18n';
 import { useTranslations } from '../i18n';
-import type { BlockType } from '../lexical/commands/block-commands';
+import type { BlockType } from '../lexical/commands/block-types';
 
 const BLOCK_TYPE_OPTIONS: Array<{ value: BlockType; shortLabel: string }> = [
   { value: 'paragraph', shortLabel: 'P' },

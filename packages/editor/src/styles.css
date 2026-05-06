@@ -1046,8 +1046,8 @@
   border: 1px solid var(--lex4-variable-border, var(--color-border));
   background-color: var(--lex4-variable-bg, color-mix(in srgb, var(--color-surface-elevated) 92%, var(--color-secondary)));
   padding: 0.0625rem 0.3125rem;
-  font-size: 10px;
-  font-weight: 500;
+  font-size: inherit;
+  font-weight: inherit;
   color: var(--color-foreground);
   user-select: none;
   cursor: default;

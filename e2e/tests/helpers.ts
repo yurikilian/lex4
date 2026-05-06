@@ -46,6 +46,71 @@ export async function pasteText(page: Page, text: string): Promise<void> {
   await page.waitForTimeout(100);
 }
 
+export async function setTextSelection(
+  page: Page,
+  selector: string,
+  anchorOffset: number,
+  focusOffset = anchorOffset,
+): Promise<void> {
+  await page.evaluate(({ targetSelector, start, end }) => {
+    const editable = document.querySelector<HTMLElement>(targetSelector);
+    if (!editable) {
+      throw new Error(`No editable element found for selector: ${targetSelector}`);
+    }
+
+    editable.focus();
+
+    const locatePoint = (offset: number) => {
+      const walker = document.createTreeWalker(editable, NodeFilter.SHOW_TEXT);
+      let remaining = offset;
+      let currentTextNode: Text | null = null;
+      let lastTextNode: Text | null = null;
+
+      while ((currentTextNode = walker.nextNode() as Text | null)) {
+        lastTextNode = currentTextNode;
+        const textLength = currentTextNode.textContent?.length ?? 0;
+        if (remaining <= textLength) {
+          return {
+            node: currentTextNode,
+            offset: remaining,
+          };
+        }
+        remaining -= textLength;
+      }
+
+      if (!lastTextNode) {
+        throw new Error('No text node found inside editable element');
+      }
+
+      return {
+        node: lastTextNode,
+        offset: lastTextNode.textContent?.length ?? 0,
+      };
+    };
+
+    const anchor = locatePoint(start);
+    const focus = locatePoint(end);
+    const selection = window.getSelection();
+    if (!selection) {
+      throw new Error('Window selection is unavailable');
+    }
+
+    const range = document.createRange();
+    range.setStart(anchor.node, anchor.offset);
+    range.setEnd(focus.node, focus.offset);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  }, {
+    targetSelector: selector,
+    start: anchorOffset,
+    end: focusOffset,
+  });
+
+  await page.waitForTimeout(100);
+}
+
 /**
  * Wait for pagination/overflow to settle after a content change.
  * Waits until no new pages appear for `stableMs` consecutive milliseconds.
