@@ -67,7 +67,7 @@ describe('toolbar-style-snapshot', () => {
 
     expect(readToolbarStyleSnapshot(createEditor())).toEqual({
       blockType: 'paragraph',
-      fontFamily: 'Calibri',
+      fontFamily: 'Inter',
       fontSize: 12,
       alignment: 'center',
       isBold: true,
@@ -104,7 +104,7 @@ describe('toolbar-style-snapshot', () => {
 
     expect(readToolbarStyleSnapshot(createEditor())).toEqual({
       blockType: 'paragraph',
-      fontFamily: 'Calibri',
+      fontFamily: 'Inter',
       fontSize: 12,
       alignment: 'left',
       isBold: true,

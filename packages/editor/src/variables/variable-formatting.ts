@@ -1,4 +1,5 @@
 import {
+  $getNodeByKey,
   $getSelection,
   $isNodeSelection,
   type LexicalEditor,
@@ -19,6 +20,50 @@ const FORMAT_MASKS: Partial<Record<TextFormatType, number>> = {
   underline: 8,
 };
 
+function dedupeVariableNodes(nodes: VariableNode[]): VariableNode[] {
+  return Array.from(new Map(nodes.map(node => [node.getKey(), node])).values());
+}
+
+function getSelectedVariableNodesFromSelection(
+  selection: ReturnType<typeof $getSelection>,
+): VariableNode[] {
+  if (
+    !selection
+    || typeof selection !== 'object'
+    || !('getNodes' in selection)
+    || typeof selection.getNodes !== 'function'
+  ) {
+    return [];
+  }
+
+  return dedupeVariableNodes(selection.getNodes().filter($isVariableNode));
+}
+
+export function getVisuallySelectedVariableNodes(editor: LexicalEditor): VariableNode[] {
+  const rootElement = editor.getRootElement();
+  if (!rootElement) {
+    return [];
+  }
+
+  const nodes: VariableNode[] = [];
+  rootElement
+    .querySelectorAll<HTMLElement>('.lex4-variable-chip-selected')
+    .forEach((chip) => {
+      const variableElement = chip.closest<HTMLElement>('[data-node-key]');
+      const nodeKey = variableElement?.dataset.nodeKey;
+      if (!nodeKey) {
+        return;
+      }
+
+      const node = $getNodeByKey(nodeKey);
+      if ($isVariableNode(node)) {
+        nodes.push(node);
+      }
+    });
+
+  return dedupeVariableNodes(nodes);
+}
+
 function withSelectedVariableNodes(
   editor: LexicalEditor,
   updater: (nodes: VariableNode[]) => void,
@@ -26,17 +71,16 @@ function withSelectedVariableNodes(
   let updated = false;
 
   editor.update(() => {
-    const selection = $getSelection();
-    if (!$isNodeSelection(selection)) {
+    const nodes = [
+      ...getSelectedVariableNodesFromSelection($getSelection()),
+      ...getVisuallySelectedVariableNodes(editor),
+    ];
+    const uniqueNodes = dedupeVariableNodes(nodes);
+    if (uniqueNodes.length === 0) {
       return;
     }
 
-    const nodes = selection.getNodes().filter($isVariableNode);
-    if (nodes.length === 0) {
-      return;
-    }
-
-    updater(nodes);
+    updater(uniqueNodes);
     updated = true;
   });
 
@@ -47,12 +91,13 @@ export function getSelectedVariableNodes(editor: LexicalEditor): VariableNode[] 
   let nodes: VariableNode[] = [];
 
   editor.getEditorState().read(() => {
-    const selection = $getSelection();
-    if (!$isNodeSelection(selection)) {
+    nodes = dedupeVariableNodes([
+      ...getSelectedVariableNodesFromSelection($getSelection()),
+      ...getVisuallySelectedVariableNodes(editor),
+    ]);
+    if (nodes.length === 0) {
       return;
     }
-
-    nodes = selection.getNodes().filter($isVariableNode);
   });
 
   return nodes;

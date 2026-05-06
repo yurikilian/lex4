@@ -34,7 +34,7 @@ function normalizeFontFamily(fontFamily?: string): FontFamily {
   if (fontFamily && SUPPORTED_FONTS.includes(fontFamily as FontFamily)) {
     return fontFamily as FontFamily;
   }
-  return 'Calibri';
+  return 'Inter';
 }
 
 function normalizeAlignment(alignment: string): ElementFormatType {

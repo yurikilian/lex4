@@ -20,7 +20,7 @@ export interface ToolbarStyleSnapshot {
 
 export const DEFAULT_TOOLBAR_STYLE_SNAPSHOT: ToolbarStyleSnapshot = {
   blockType: 'paragraph',
-  fontFamily: 'Calibri',
+  fontFamily: 'Inter',
   fontSize: DEFAULT_FONT_SIZE,
   alignment: 'left',
   isBold: false,

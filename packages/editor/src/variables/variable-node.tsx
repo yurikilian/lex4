@@ -1,8 +1,10 @@
 import {
   $applyNodeReplacement,
+  $createNodeSelection,
   $getNodeByKey,
   $getSelection,
   $isNodeSelection,
+  $setSelection,
   DecoratorNode,
   type DOMConversionMap,
   type DOMExportOutput,
@@ -116,6 +118,7 @@ export class VariableNode extends DecoratorNode<JSX.Element> {
     const span = document.createElement('span');
     span.className = 'lex4-variable';
     span.setAttribute('data-variable-key', this.__variableKey);
+    span.setAttribute('data-node-key', this.__key);
     span.setAttribute('data-testid', `variable-${this.__variableKey}`);
     span.contentEditable = 'false';
     return span;
@@ -177,7 +180,7 @@ function VariableChip({
 }): JSX.Element {
   const { getDefinition } = useVariables();
   const [editor] = useLexicalComposerContext();
-  const [isSelected, setSelected, clearOtherSelections] = useLexicalNodeSelection(nodeKey);
+  const [isSelected] = useLexicalNodeSelection(nodeKey);
   const def = getDefinition(variableKey);
   const label = def?.label ?? variableKey;
   const group = def?.group;
@@ -200,15 +203,52 @@ function VariableChip({
     format & 4 ? 'lex4-text-strikethrough' : '',
   ].filter(Boolean).join(' ');
 
-  const handleClick = useCallback((event: MouseEvent<HTMLSpanElement>) => {
-    event.preventDefault();
-
-    if (!event.shiftKey) {
-      clearOtherSelections();
+  const clearDomSelection = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
     }
 
-    setSelected(!isSelected);
-  }, [clearOtherSelections, isSelected, setSelected]);
+    window.getSelection()?.removeAllRanges();
+  }, []);
+
+  const selectNode = useCallback((extendSelection: boolean) => {
+    editor.focus();
+    editor.update(() => {
+      const nextSelection = $createNodeSelection();
+      if (extendSelection) {
+        const currentSelection = $getSelection();
+        if ($isNodeSelection(currentSelection)) {
+          for (const node of currentSelection.getNodes()) {
+            if ($isVariableNode(node)) {
+              nextSelection.add(node.getKey());
+            }
+          }
+        }
+      }
+      nextSelection.add(nodeKey);
+      $setSelection(nextSelection);
+    });
+    clearDomSelection();
+  }, [clearDomSelection, editor, nodeKey]);
+
+  const handleMouseDown = useCallback((event: MouseEvent<HTMLSpanElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isSelected || event.shiftKey) {
+      selectNode(event.shiftKey);
+    }
+  }, [isSelected, selectNode]);
+
+  const handleClick = useCallback((event: MouseEvent<HTMLSpanElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  const handleMouseUp = useCallback((event: MouseEvent<HTMLSpanElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clearDomSelection();
+  }, [clearDomSelection]);
 
   useEffect(() => {
     const removeSelectedNodes = () => {
@@ -307,7 +347,8 @@ function VariableChip({
       data-variable-group={group}
       title={variableKey}
       style={style}
-      onMouseDown={(event) => event.preventDefault()}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       onClick={handleClick}
     >
       {label}

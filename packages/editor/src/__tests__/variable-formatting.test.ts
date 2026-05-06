@@ -51,6 +51,7 @@ describe('readSelectedVariableFormatting', () => {
           }
         },
       }),
+      getRootElement: () => null,
     } as unknown as LexicalEditor;
 
     expect(readSelectedVariableFormatting(editor)).toEqual({

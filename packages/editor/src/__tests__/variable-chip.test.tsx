@@ -6,17 +6,22 @@ import { VariableNode } from '../variables/variable-node';
 const mocks = vi.hoisted(() => ({
   selection: {
     isSelected: false,
+    current: null as unknown,
   },
   editor: {
     registerCommand: vi.fn(() => () => {}),
     update: vi.fn((callback: () => void) => callback()),
+    focus: vi.fn((callback?: () => void) => callback?.()),
   },
   node: null as unknown as {
+    getKey: () => string;
     selectPrevious: ReturnType<typeof vi.fn>;
     selectNext: ReturnType<typeof vi.fn>;
   },
-  clearOtherSelections: vi.fn(),
-  setSelected: vi.fn(),
+  nodeSelection: {
+    add: vi.fn(),
+  },
+  setSelection: vi.fn(),
 }));
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -26,8 +31,8 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
 vi.mock('@lexical/react/useLexicalNodeSelection', () => ({
   useLexicalNodeSelection: () => [
     mocks.selection.isSelected,
-    mocks.setSelected,
-    mocks.clearOtherSelections,
+    vi.fn(),
+    vi.fn(),
   ],
 }));
 
@@ -46,8 +51,10 @@ vi.mock('lexical', async (importOriginal) => {
   return {
     ...actual,
     $getNodeByKey: () => mocks.node,
-    $getSelection: () => null,
-    $isNodeSelection: () => false,
+    $createNodeSelection: () => mocks.nodeSelection,
+    $getSelection: () => mocks.selection.current,
+    $isNodeSelection: (selection: unknown) => selection === mocks.selection.current,
+    $setSelection: mocks.setSelection,
   };
 });
 
@@ -65,20 +72,49 @@ function renderVariableChip(style = '') {
 describe('VariableChip', () => {
   beforeEach(() => {
     mocks.selection.isSelected = false;
+    mocks.selection.current = null;
     vi.clearAllMocks();
     mocks.node = Object.assign(Object.create(VariableNode.prototype), {
+      getKey: () => 'variable-node-key',
       selectPrevious: vi.fn(),
       selectNext: vi.fn(),
     });
   });
 
-  it('toggles node selection when clicked', () => {
+  it('selects the variable on mouse down', () => {
     renderVariableChip();
 
-    fireEvent.click(screen.getByTestId('variable-chip-customer.name'));
+    fireEvent.mouseDown(screen.getByTestId('variable-chip-customer.name'));
 
-    expect(mocks.clearOtherSelections).toHaveBeenCalledTimes(1);
-    expect(mocks.setSelected).toHaveBeenCalledWith(true);
+    expect(mocks.editor.focus).toHaveBeenCalledTimes(1);
+    expect(mocks.nodeSelection.add).toHaveBeenCalledWith('variable-node-key');
+    expect(mocks.setSelection).toHaveBeenCalledWith(mocks.nodeSelection);
+  });
+
+  it('keeps an already-selected variable selected when clicked again', () => {
+    mocks.selection.isSelected = true;
+
+    renderVariableChip();
+
+    fireEvent.mouseDown(screen.getByTestId('variable-chip-customer.name'));
+
+    expect(mocks.editor.focus).not.toHaveBeenCalled();
+    expect(mocks.setSelection).not.toHaveBeenCalled();
+  });
+
+  it('extends variable selection on shift+mouse down', () => {
+    mocks.selection.current = {
+      getNodes: () => [mocks.node],
+    };
+
+    renderVariableChip();
+
+    fireEvent.mouseDown(screen.getByTestId('variable-chip-customer.name'), { shiftKey: true });
+
+    expect(mocks.editor.focus).toHaveBeenCalledTimes(1);
+    expect(mocks.nodeSelection.add).toHaveBeenNthCalledWith(1, 'variable-node-key');
+    expect(mocks.nodeSelection.add).toHaveBeenNthCalledWith(2, 'variable-node-key');
+    expect(mocks.setSelection).toHaveBeenCalledWith(mocks.nodeSelection);
   });
 
   it('moves the caret around a selected variable with arrow keys', () => {

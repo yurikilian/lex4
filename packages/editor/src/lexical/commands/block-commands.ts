@@ -24,6 +24,7 @@ import {
   mergeInlineBlockTypeStyle,
 } from '../../utils/text-style';
 import { $isVariableNode, type VariableNode } from '../../variables/variable-node';
+import { getVisuallySelectedVariableNodes } from '../../variables/variable-formatting';
 
 function getElementBlockType(element: ElementNode): BlockType {
   if ($isHeadingNode(element)) {
@@ -112,8 +113,33 @@ function getStandaloneVariableChildren(topLevelElement: ElementNode): VariableNo
   return meaningfulChildren;
 }
 
+function getSelectedVariableNodesFromRangeSelection(
+  editor: LexicalEditor,
+  selection: RangeSelection,
+): VariableNode[] {
+  const seen = new Set<string>();
+  const variables: VariableNode[] = [];
+
+  for (const node of [
+    selection.anchor.getNode(),
+    selection.focus.getNode(),
+    ...selection.getNodes(),
+    ...getVisuallySelectedVariableNodes(editor),
+  ]) {
+    if (!$isVariableNode(node) || seen.has(node.getKey())) {
+      continue;
+    }
+
+    seen.add(node.getKey());
+    variables.push(node);
+  }
+
+  return variables;
+}
+
 export function setBlockType(editor: LexicalEditor, blockType: BlockType): void {
   editor.update(() => {
+    const visuallySelectedVariables = getVisuallySelectedVariableNodes(editor);
     const currentSelection = $getSelection();
     const selection = $isNodeSelection(currentSelection)
       ? currentSelection
@@ -124,7 +150,12 @@ export function setBlockType(editor: LexicalEditor, blockType: BlockType): void 
     }
 
     if ($isNodeSelection(selection)) {
-      const variables = selection.getNodes().filter($isVariableNode);
+      const variables = Array.from(new Map(
+        [
+          ...selection.getNodes().filter($isVariableNode),
+          ...visuallySelectedVariables,
+        ].map(variable => [variable.getKey(), variable]),
+      ).values());
       if (variables.length === 0) {
         return;
       }
@@ -157,6 +188,13 @@ export function setBlockType(editor: LexicalEditor, blockType: BlockType): void 
     }
 
     if (!$isRangeSelection(selection)) {
+      if (visuallySelectedVariables.length === 0) {
+        return;
+      }
+
+      for (const variable of visuallySelectedVariables) {
+        variable.setStyle(mergeInlineBlockTypeStyle(variable.getStyle(), blockType));
+      }
       return;
     }
 
@@ -164,13 +202,19 @@ export function setBlockType(editor: LexicalEditor, blockType: BlockType): void 
     const standaloneVariables = $isElementNode(anchorTopLevel)
       ? getStandaloneVariableChildren(anchorTopLevel)
       : null;
+    const selectedVariables = getSelectedVariableNodesFromRangeSelection(editor, selection);
 
     if (isPartialSingleBlockSelection(selection)) {
       $patchStyleText(selection, createInlineBlockTypeStylePatch(blockType));
+      for (const variable of selectedVariables) {
+        variable.setStyle(mergeInlineBlockTypeStyle(variable.getStyle(), blockType));
+      }
       return;
     }
 
-    for (const variable of standaloneVariables ?? []) {
+    for (const variable of new Map(
+      [...(standaloneVariables ?? []), ...selectedVariables].map(variable => [variable.getKey(), variable]),
+    ).values()) {
       variable.setStyle(mergeInlineBlockTypeStyle(variable.getStyle(), blockType));
     }
 
