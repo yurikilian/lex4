@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, ChevronDown } from 'lucide-react';
 import { EditorSidebar } from './EditorSidebar';
 import { useVariables } from '../variables/variable-context';
 import { useDocument } from '../context/document-context';
@@ -24,8 +24,13 @@ export const VariablePanel: React.FC<{
   const { activeEditor, runHistoryAction } = useDocument();
   const t = useTranslations();
   const [filter, setFilter] = useState('');
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const toggleGroup = useCallback((group: string) => {
+    setCollapsedGroups((current) => ({ ...current, [group]: !current[group] }));
+  }, []);
   const [draft, setDraft] = useState<{
     label: string;
     key: string;
@@ -157,27 +162,46 @@ export const VariablePanel: React.FC<{
           {Object.keys(grouped).length === 0 && (
             <div className="lex4-variable-list-empty">{t.variables.noVariablesFound}</div>
           )}
-          {Object.entries(grouped).map(([group, defs]) => (
-            <div key={group} className="lex4-variable-group" data-variable-group={group}>
-              <div className="lex4-variable-group-label">{group}</div>
-              <div className="lex4-variable-group-items">
-                {defs.map(def => (
-                  <button
-                    key={def.key}
-                    type="button"
-                    className="lex4-variable-list-item"
-                    data-testid={`variable-panel-${def.key}`}
-                    data-variable-group={group}
-                    onClick={() => handleInsert(def.key)}
-                    disabled={!activeEditor}
-                    title={def.key}
-                  >
-                    {def.label}
-                  </button>
-                ))}
+          {Object.entries(grouped).map(([group, defs]) => {
+            const isCollapsed = !filter && Boolean(collapsedGroups[group]);
+            return (
+              <div
+                key={group}
+                className={`lex4-variable-group${isCollapsed ? ' is-collapsed' : ''}`}
+                data-variable-group={group}
+              >
+                <button
+                  type="button"
+                  className="lex4-variable-group-header"
+                  data-testid={`variable-panel-group-${group}`}
+                  aria-expanded={!isCollapsed}
+                  onClick={() => toggleGroup(group)}
+                >
+                  <span className="lex4-variable-group-header-left">
+                    <ChevronDown size={12} className="lex4-variable-group-chevron" />
+                    <span className="lex4-variable-group-label">{group}</span>
+                  </span>
+                  <span className="lex4-variable-group-count">{defs.length}</span>
+                </button>
+                <div className="lex4-variable-group-items">
+                  {defs.map(def => (
+                    <button
+                      key={def.key}
+                      type="button"
+                      className="lex4-variable-list-item"
+                      data-testid={`variable-panel-${def.key}`}
+                      data-variable-group={group}
+                      onClick={() => handleInsert(def.key)}
+                      disabled={!activeEditor}
+                      title={def.key}
+                    >
+                      <span className="lex4-variable-list-item-label">{def.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="lex4-variable-create">
