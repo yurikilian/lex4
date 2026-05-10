@@ -161,6 +161,29 @@ describe('block-mapper', () => {
       });
     });
 
+    it('maps alphabetic ordered list', () => {
+      const result = mapBlockNode({
+        type: 'alpha-list',
+        listType: 'number',
+        children: [
+          {
+            type: 'listitem',
+            children: [{ type: 'text', text: 'Alpha', format: 0 }],
+          },
+        ],
+      });
+      expect(result).toEqual({
+        type: 'list',
+        listType: 'ordered-alpha',
+        items: [
+          {
+            type: 'list-item',
+            children: [{ type: 'text', text: 'Alpha' }],
+          },
+        ],
+      });
+    });
+
     it('maps nested list', () => {
       const result = mapBlockNode({
         type: 'list',

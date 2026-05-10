@@ -10,8 +10,10 @@ import {
   type EditorState,
   type LexicalNode,
 } from 'lexical';
+import { $isListNode } from '@lexical/list';
 import { $isHeadingNode } from '@lexical/rich-text';
-import type { ToolbarStyleSnapshot } from './toolbar-style-store';
+import { $findMatchingParent } from '@lexical/utils';
+import type { ToolbarActiveList, ToolbarStyleSnapshot } from './toolbar-style-store';
 import { DEFAULT_TOOLBAR_STYLE_SNAPSHOT } from './toolbar-style-store';
 import type { BlockType } from '../lexical/commands/block-types';
 import { SUPPORTED_FONTS, type FontFamily } from '../lexical/plugins/font-plugin';
@@ -22,6 +24,7 @@ import {
   extractInlineBlockTypeFromStyle,
 } from '../utils/text-style';
 import { $isVariableNode } from '../variables/variable-node';
+import { $isAlphaListNode } from '../lexical/nodes/alpha-list-node';
 
 const FORMAT_MASKS = {
   bold: 1,
@@ -58,6 +61,49 @@ function getElementAlignment(node: LexicalNode): ElementFormatType {
     return normalizeAlignment(topLevelElement.getFormatType());
   }
   return 'left';
+}
+
+function getNearestListNode(node: LexicalNode): LexicalNode | null {
+  if ($isListNode(node)) {
+    return node;
+  }
+  return $findMatchingParent(node, $isListNode);
+}
+
+function getNodeActiveList(node: LexicalNode): ToolbarActiveList {
+  const listNode = getNearestListNode(node);
+  if (!$isListNode(listNode)) {
+    return 'none';
+  }
+  if ($isAlphaListNode(listNode)) {
+    return 'alpha';
+  }
+  return listNode.getListType() === 'number'
+    ? 'number'
+    : listNode.getListType() === 'bullet'
+      ? 'bullet'
+      : 'none';
+}
+
+function getActiveList(nodes: LexicalNode[], anchorNode: LexicalNode): ToolbarActiveList {
+  const activeLists = new Set<ToolbarActiveList>();
+  const anchorList = getNodeActiveList(anchorNode);
+  if (anchorList !== 'none') {
+    activeLists.add(anchorList);
+  }
+
+  for (const node of nodes) {
+    const activeList = getNodeActiveList(node);
+    if (activeList === 'none') {
+      continue;
+    }
+    activeLists.add(activeList);
+    if (activeLists.size > 1) {
+      return 'none';
+    }
+  }
+
+  return activeLists.values().next().value ?? 'none';
 }
 
 function getInlineStyleTarget(nodes: LexicalNode[], anchorNode: LexicalNode): LexicalNode | null {
@@ -106,7 +152,7 @@ export function readToolbarStyleSnapshot(
 
   editorState.read(() => {
     const currentSelection = $getSelection();
-    const selection = $isNodeSelection(currentSelection)
+    const selection = $isNodeSelection(currentSelection) || $isRangeSelection(currentSelection)
       ? currentSelection
       : $createRangeSelectionFromDom(window.getSelection(), editor) ?? currentSelection;
 
@@ -124,6 +170,7 @@ export function readToolbarStyleSnapshot(
         fontFamily: normalizeFontFamily(extractFontFamilyFromStyle(style)),
         fontSize: extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE,
         alignment: getElementAlignment(firstVariableNode),
+        activeList: getActiveList(variableNodes, firstVariableNode),
         isBold: variableNodes.every(node => (node.getFormat() & FORMAT_MASKS.bold) !== 0),
         isItalic: variableNodes.every(node => (node.getFormat() & FORMAT_MASKS.italic) !== 0),
         isUnderline: variableNodes.every(node => (node.getFormat() & FORMAT_MASKS.underline) !== 0),
@@ -146,6 +193,7 @@ export function readToolbarStyleSnapshot(
       fontFamily: normalizeFontFamily(extractFontFamilyFromStyle(style)),
       fontSize: extractFontSizePtFromStyle(style) ?? DEFAULT_FONT_SIZE,
       alignment: getElementAlignment(anchorNode),
+      activeList: getActiveList(selection.getNodes(), anchorNode),
       isBold: selection.hasFormat('bold') || (isCollapsed && hasInlineFormat(inlineStyleTarget, 'bold')),
       isItalic: selection.hasFormat('italic') || (isCollapsed && hasInlineFormat(inlineStyleTarget, 'italic')),
       isUnderline: selection.hasFormat('underline') || (isCollapsed && hasInlineFormat(inlineStyleTarget, 'underline')),

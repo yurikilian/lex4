@@ -26,6 +26,7 @@ describe('i18n — DEFAULT_TRANSLATIONS', () => {
     expect(t.justify).toBe('Justify');
     expect(t.numberedList).toBe('Numbered List');
     expect(t.bulletList).toBe('Bullet List');
+    expect(t.alphabeticList).toBe('Alphabetic List');
     expect(t.indent).toBe('Indent');
     expect(t.outdent).toBe('Outdent');
     expect(t.history).toBe('History');
@@ -69,6 +70,7 @@ describe('i18n — DEFAULT_TRANSLATIONS', () => {
     expect(a.justifiedText).toBe('Justified text');
     expect(a.insertedNumberedList).toBe('Inserted numbered list');
     expect(a.insertedBulletList).toBe('Inserted bullet list');
+    expect(a.insertedAlphabeticList).toBe('Inserted alphabetic list');
     expect(a.indentedContent).toBe('Indented content');
     expect(a.outdentedContent).toBe('Outdented content');
     expect(a.fontChanged).toContain('{{value}}');

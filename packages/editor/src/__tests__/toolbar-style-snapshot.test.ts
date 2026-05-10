@@ -29,8 +29,29 @@ vi.mock('@lexical/rich-text', () => ({
   $isHeadingNode: (node: unknown) => !!node && (node as { kind?: string }).kind === 'heading',
 }));
 
+vi.mock('@lexical/list', () => ({
+  $isListNode: (node: unknown) => !!node && (node as { kind?: string }).kind === 'list',
+}));
+
+vi.mock('@lexical/utils', () => ({
+  $findMatchingParent: (node: { getParent?: () => unknown } | null | undefined, predicate: (candidate: unknown) => boolean) => {
+    let current = node?.getParent?.() ?? null;
+    while (current) {
+      if (predicate(current)) {
+        return current;
+      }
+      current = (current as { getParent?: () => unknown }).getParent?.() ?? null;
+    }
+    return null;
+  },
+}));
+
 vi.mock('../variables/variable-node', () => ({
   $isVariableNode: (node: unknown) => !!node && (node as { kind?: string }).kind === 'variable',
+}));
+
+vi.mock('../lexical/nodes/alpha-list-node', () => ({
+  $isAlphaListNode: (node: unknown) => !!node && (node as { variant?: string }).variant === 'alpha',
 }));
 
 function createEditor(): LexicalEditor {
@@ -70,6 +91,7 @@ describe('toolbar-style-snapshot', () => {
       fontFamily: 'Inter',
       fontSize: 12,
       alignment: 'center',
+      activeList: 'none',
       isBold: true,
       isItalic: false,
       isUnderline: true,
@@ -107,6 +129,7 @@ describe('toolbar-style-snapshot', () => {
       fontFamily: 'Inter',
       fontSize: 12,
       alignment: 'left',
+      activeList: 'none',
       isBold: true,
       isItalic: false,
       isUnderline: false,
@@ -139,11 +162,56 @@ describe('toolbar-style-snapshot', () => {
       fontFamily: 'Georgia',
       fontSize: 22.5,
       alignment: 'right',
+      activeList: 'none',
       isBold: true,
       isItalic: false,
       isUnderline: true,
       isStrikethrough: false,
       hasSelectedVariable: true,
+    });
+  });
+
+  it('reads active list state from a collapsed selection inside an alpha list', () => {
+    const alphaList = {
+      kind: 'list',
+      variant: 'alpha',
+      getListType: () => 'number',
+    };
+    const listItem = {
+      kind: 'element',
+      getFormatType: () => 'left',
+      getParent: () => alphaList,
+    };
+    const textNode = {
+      kind: 'text',
+      getStyle: () => '',
+      getTopLevelElementOrThrow: () => listItem,
+      hasFormat: () => false,
+      getParent: () => listItem,
+    };
+
+    selectionState.selection = {
+      kind: 'range',
+      style: '',
+      isCollapsed: () => true,
+      anchor: {
+        getNode: () => textNode,
+      },
+      getNodes: () => [textNode],
+      hasFormat: () => false,
+    };
+
+    expect(readToolbarStyleSnapshot(createEditor())).toEqual({
+      blockType: 'paragraph',
+      fontFamily: 'Inter',
+      fontSize: 12,
+      alignment: 'left',
+      activeList: 'alpha',
+      isBold: false,
+      isItalic: false,
+      isUnderline: false,
+      isStrikethrough: false,
+      hasSelectedVariable: false,
     });
   });
 });

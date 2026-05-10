@@ -68,6 +68,7 @@ export function mapBlockNode(node: SerializedElementNode): BlockNodeAst {
     case 'heading':
       return mapHeading(node);
     case 'list':
+    case 'alpha-list':
       return mapList(node);
     case 'quote':
       return mapBlockQuote(node);
@@ -104,7 +105,11 @@ function mapHeading(node: SerializedElementNode): HeadingAst {
 }
 
 function mapList(node: SerializedElementNode): ListAst {
-  const listType = node.listType === 'number' ? 'ordered' : 'unordered';
+  const listType = node.type === 'alpha-list'
+    ? 'ordered-alpha'
+    : node.listType === 'number'
+      ? 'ordered'
+      : 'unordered';
   const items = (node.children ?? [])
     .filter(c => c.type === 'listitem')
     .map(mapListItem);
@@ -120,7 +125,7 @@ function mapListItem(node: SerializedElementNode): ListItemAst {
   let nestedList: ListAst | undefined;
 
   for (const child of node.children ?? []) {
-    if (child.type === 'list') {
+    if (child.type === 'list' || child.type === 'alpha-list') {
       nestedList = mapList(child);
     } else {
       // Inline children

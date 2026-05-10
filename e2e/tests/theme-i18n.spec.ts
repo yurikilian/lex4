@@ -137,7 +137,7 @@ test.describe('Theme — Visual Design', () => {
     expect(pillStyles.borderRadius).toBe('6px');
     expect(pillStyles.fontSize).toBe('12px');
     expect(pillStyles.minHeight).toBe('28px');
-    expect(pillStyles.paddingLeft).toBe('12px');
+    expect(pillStyles.paddingLeft).toBe('8px');
     expect(pillStyles.boxShadow).toBe('none');
 
     await page.getByTestId('header-footer-toggle').click();

@@ -119,7 +119,7 @@
     @apply bg-secondary text-primary;
   }
 
-  *:focus-visible {
+  :where(button, input, select, textarea, a, [role="button"], [tabindex]:not([contenteditable="true"])):focus-visible {
     @apply outline-none ring-1 ring-accent ring-offset-0;
   }
 }

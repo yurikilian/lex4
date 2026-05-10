@@ -30,6 +30,7 @@ test.describe('Toolbar & Formatting', () => {
   test('toolbar renders list controls', async ({ page }) => {
     await expect(page.getByTestId('btn-list-number')).toBeVisible();
     await expect(page.getByTestId('btn-list-bullet')).toBeVisible();
+    await expect(page.getByTestId('btn-list-alpha')).toBeVisible();
     await expect(page.getByTestId('btn-indent')).toBeVisible();
     await expect(page.getByTestId('btn-outdent')).toBeVisible();
   });

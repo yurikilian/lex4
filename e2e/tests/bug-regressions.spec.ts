@@ -1,5 +1,25 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { waitForPageCount, pasteText, waitForPaginationStable } from './helpers';
+
+async function readListPresentation(
+  body: Locator,
+  selector: 'ol' | 'ul',
+) {
+  return body.evaluate(
+    (el: HTMLElement, listSelector: 'ol' | 'ul') => {
+      const list = el.querySelector(listSelector);
+      if (!(list instanceof HTMLElement)) {
+        return null;
+      }
+      return {
+        listStyleType: getComputedStyle(list).listStyleType,
+        paddingLeft: parseFloat(getComputedStyle(list).paddingLeft),
+        variant: list.getAttribute('data-lex4-list-variant'),
+      };
+    },
+    selector,
+  );
+}
 
 test.describe('Bug Fix Regressions', () => {
   test.beforeEach(async ({ page }) => {
@@ -207,30 +227,83 @@ test.describe('Bug Fix Regressions', () => {
     expect(isCentered).toBe(true);
   });
 
-  test('numbered list button creates an ordered list', async ({ page }) => {
+  test('numbered list button creates visible ordered list markers', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"]').first();
     await body.click();
     await page.keyboard.type('item one');
 
     await page.getByTestId('btn-list-number').click();
 
-    const hasOl = await body.evaluate(el => {
-      return el.querySelector('ol') !== null;
-    });
-    expect(hasOl).toBe(true);
+    const list = await readListPresentation(body, 'ol');
+    expect(list).not.toBeNull();
+    expect(list?.listStyleType).toBe('decimal');
+    expect(list?.paddingLeft).toBeGreaterThan(0);
   });
 
-  test('bullet list button creates an unordered list', async ({ page }) => {
+  test('bullet list button creates visible bullet markers', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"]').first();
     await body.click();
     await page.keyboard.type('item one');
 
     await page.getByTestId('btn-list-bullet').click();
 
-    const hasUl = await body.evaluate(el => {
-      return el.querySelector('ul') !== null;
-    });
-    expect(hasUl).toBe(true);
+    const list = await readListPresentation(body, 'ul');
+    expect(list).not.toBeNull();
+    expect(list?.listStyleType).toBe('disc');
+    expect(list?.paddingLeft).toBeGreaterThan(0);
+  });
+
+  test('alphabetic list button creates a visible alpha ordered list', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+    await page.keyboard.type('item one');
+
+    await page.getByTestId('btn-list-alpha').click();
+
+    const list = await readListPresentation(body, 'ol');
+    expect(list).not.toBeNull();
+    expect(list?.listStyleType).toBe('lower-alpha');
+    expect(list?.paddingLeft).toBeGreaterThan(0);
+    expect(list?.variant).toBe('alpha');
+  });
+
+  test('list insertion does not add demo accent ring to the body editor', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+    await page.keyboard.type('item one');
+
+    await page.getByTestId('btn-list-bullet').click();
+
+    const boxShadow = await body.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(boxShadow).toBe('none');
+  });
+
+  test('alphabetic list converts cleanly back to numbered list', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+    await page.keyboard.type('item one');
+
+    await page.getByTestId('btn-list-alpha').click();
+    await page.getByTestId('btn-list-number').click();
+
+    const list = await readListPresentation(body, 'ol');
+    expect(list).not.toBeNull();
+    expect(list?.listStyleType).toBe('decimal');
+    expect(list?.variant).toBeNull();
+  });
+
+  test('alphabetic list converts cleanly to bullet list', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"]').first();
+    await body.click();
+    await page.keyboard.type('item one');
+
+    await page.getByTestId('btn-list-alpha').click();
+    await page.getByTestId('btn-list-bullet').click();
+
+    const list = await readListPresentation(body, 'ul');
+    expect(list).not.toBeNull();
+    expect(list?.listStyleType).toBe('disc');
+    expect(list?.variant).toBeNull();
   });
 
   test('toolbar buttons do nothing when no editor is focused', async ({ page }) => {

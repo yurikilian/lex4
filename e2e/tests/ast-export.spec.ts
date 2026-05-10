@@ -91,6 +91,22 @@ test.describe('AST Export', () => {
     expect(list.items.length).toBeGreaterThanOrEqual(1);
   });
 
+  test('export AST with alphabetic ordered list', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
+    await body.click();
+    await page.keyboard.type('Item A');
+
+    await page.getByTestId('btn-list-alpha').click();
+
+    await page.getByTestId('btn-export-ast').click();
+    const ast = await page.evaluate(() => (window as any).__lex4_last_ast);
+
+    const list = ast.pages[0].body.find((b: any) => b.type === 'list');
+    expect(list).toBeDefined();
+    expect(list.listType).toBe('ordered-alpha');
+    expect(list.items.length).toBeGreaterThanOrEqual(1);
+  });
+
   test('export AST includes variable metadata', async ({ page }) => {
     await page.getByTestId('btn-export-ast').click();
     const ast = await page.evaluate(() => (window as any).__lex4_last_ast);

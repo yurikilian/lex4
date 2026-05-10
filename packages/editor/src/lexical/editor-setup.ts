@@ -4,10 +4,11 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { ListNode, ListItemNode } from '@lexical/list';
 
 import { lexicalTheme } from './theme';
+import { AlphaListNode } from './nodes/alpha-list-node';
 
 export type EditorMode = 'body' | 'header' | 'footer';
 
-const DEFAULT_NODES: Klass<LexicalNode>[] = [HeadingNode, QuoteNode, ListNode, ListItemNode];
+const DEFAULT_NODES: Klass<LexicalNode>[] = [HeadingNode, QuoteNode, ListNode, ListItemNode, AlphaListNode];
 
 /**
  * Creates a Lexical editor configuration for the given mode.

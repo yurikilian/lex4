@@ -95,7 +95,7 @@ export interface HeadingAst {
 
 export interface ListAst {
   type: 'list';
-  listType: 'ordered' | 'unordered';
+  listType: 'ordered' | 'ordered-alpha' | 'unordered';
   items: ListItemAst[];
 }
 

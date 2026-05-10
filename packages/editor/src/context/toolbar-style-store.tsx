@@ -6,11 +6,14 @@ import type { BlockType } from '../lexical/commands/block-types';
 import type { FontFamily } from '../lexical/plugins/font-plugin';
 import { DEFAULT_FONT_SIZE } from '../lexical/plugins/font-size-plugin';
 
+export type ToolbarActiveList = 'none' | 'number' | 'bullet' | 'alpha';
+
 export interface ToolbarStyleSnapshot {
   blockType: BlockType;
   fontFamily: FontFamily;
   fontSize: number;
   alignment: ElementFormatType;
+  activeList: ToolbarActiveList;
   isBold: boolean;
   isItalic: boolean;
   isUnderline: boolean;
@@ -23,6 +26,7 @@ export const DEFAULT_TOOLBAR_STYLE_SNAPSHOT: ToolbarStyleSnapshot = {
   fontFamily: 'Inter',
   fontSize: DEFAULT_FONT_SIZE,
   alignment: 'left',
+  activeList: 'none',
   isBold: false,
   isItalic: false,
   isUnderline: false,

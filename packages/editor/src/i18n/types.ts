@@ -18,6 +18,7 @@ export interface Lex4Translations {
     justify: string;
     numberedList: string;
     bulletList: string;
+    alphabeticList: string;
     indent: string;
     outdent: string;
     history: string;
@@ -59,6 +60,7 @@ export interface Lex4Translations {
       justifiedText: string;
       insertedNumberedList: string;
       insertedBulletList: string;
+      insertedAlphabeticList: string;
       indentedContent: string;
       outdentedContent: string;
       /** Use {{value}} for the font name */

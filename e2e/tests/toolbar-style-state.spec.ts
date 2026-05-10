@@ -24,6 +24,27 @@ test.describe('Toolbar Style State', () => {
     await expect(page.getByTestId('btn-bold')).toHaveAttribute('aria-pressed', 'false');
   });
 
+  test('list buttons pressed state follows active list type', async ({ page }) => {
+    const editable = page.locator(BODY_SELECTOR).first();
+    await editable.click();
+    await page.keyboard.type('List state');
+
+    await page.getByTestId('btn-list-number').click();
+    await expect(page.getByTestId('btn-list-number')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('btn-list-bullet')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('btn-list-alpha')).toHaveAttribute('aria-pressed', 'false');
+
+    await page.getByTestId('btn-list-bullet').click();
+    await expect(page.getByTestId('btn-list-number')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('btn-list-bullet')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('btn-list-alpha')).toHaveAttribute('aria-pressed', 'false');
+
+    await page.getByTestId('btn-list-alpha').click();
+    await expect(page.getByTestId('btn-list-number')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('btn-list-bullet')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('btn-list-alpha')).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('partial heading selection can be restyled as paragraph on the same line', async ({ page }) => {
     const editable = page.locator(BODY_SELECTOR).first();
     const text = 'THIS IS A HEADING! HERE I WANT P';

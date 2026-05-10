@@ -18,6 +18,7 @@ import {
 import { $createListItemNode, $createListNode } from '@lexical/list';
 import type { Lex4Document } from '../../types/document';
 import { $createVariableNode } from '../../variables/variable-node';
+import { $createAlphaListNode } from '../nodes/alpha-list-node';
 
 interface SerializedLexicalBaseNode {
   type: string;
@@ -25,6 +26,7 @@ interface SerializedLexicalBaseNode {
   format?: number | string;
   indent?: number;
   listType?: string;
+  markerStyle?: string;
   start?: number;
   text?: string;
   style?: string;
@@ -89,6 +91,13 @@ function buildLexicalNode(serializedNode: SerializedLexicalBaseNode): LexicalNod
     case 'list': {
       const listType = serializedNode.listType === 'number' ? 'number' : 'bullet';
       const node = $createListNode(listType, typeof serializedNode.start === 'number' ? serializedNode.start : 1);
+      appendChildren(node, serializedNode.children);
+      return node;
+    }
+    case 'alpha-list': {
+      const node = $createAlphaListNode(
+        typeof serializedNode.start === 'number' ? serializedNode.start : 1,
+      );
       appendChildren(node, serializedNode.children);
       return node;
     }

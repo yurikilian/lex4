@@ -5,11 +5,12 @@ import { describe, expect, it } from 'vitest';
 import { insertDocumentContent } from '../lexical/utils/import-document-content';
 import type { Lex4Document } from '../types/document';
 import { VariableNode } from '../variables/variable-node';
+import { AlphaListNode } from '../lexical/nodes/alpha-list-node';
 
 function createTestEditor() {
   const editor = createEditor({
     namespace: 'import-document-content-test',
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, VariableNode],
+    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, AlphaListNode, VariableNode],
     onError: (error) => {
       throw error;
     },
@@ -131,5 +132,91 @@ describe('insertDocumentContent', () => {
     };
 
     expect(insertDocumentContent(editor, document)).toBe(false);
+  });
+
+  it('preserves alphabetic list nodes from serialized body content', async () => {
+    const editor = createTestEditor();
+
+    editor.update(() => {
+      const root = $getRoot();
+      const paragraph = $createParagraphNode();
+      paragraph.append($createTextNode('Before'));
+      root.append(paragraph);
+      paragraph.selectEnd();
+    }, { discrete: true });
+
+    const document: Lex4Document = {
+      headerFooterEnabled: false,
+      pageCounterMode: 'none',
+      defaultHeaderState: null,
+      defaultFooterState: null,
+      defaultHeaderHeight: 0,
+      defaultFooterHeight: 0,
+      pages: [
+        {
+          id: 'page-1',
+          headerState: null,
+          footerState: null,
+          headerHeight: 0,
+          footerHeight: 0,
+          bodySyncVersion: 0,
+          headerSyncVersion: 0,
+          footerSyncVersion: 0,
+          bodyState: {
+            root: {
+              type: 'root',
+              format: '',
+              indent: 0,
+              version: 1,
+              direction: null,
+              children: [
+                {
+                  type: 'alpha-list',
+                  listType: 'number',
+                  tag: 'ol',
+                  start: 1,
+                  version: 1,
+                  format: '',
+                  indent: 0,
+                  direction: null,
+                  markerStyle: 'alpha',
+                  children: [
+                    {
+                      type: 'listitem',
+                      value: 1,
+                      format: 0,
+                      indent: 0,
+                      direction: null,
+                      version: 1,
+                      children: [
+                        { type: 'text', text: 'Alpha item', format: 0, style: '', version: 1, detail: 0, mode: 'normal' },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    };
+
+    expect(insertDocumentContent(editor, document)).toBe(true);
+    await Promise.resolve();
+
+    const serialized = editor.getEditorState().toJSON();
+    expect(serialized.root.children[1]).toMatchObject({
+      type: 'alpha-list',
+      listType: 'number',
+      markerStyle: 'alpha',
+      children: [
+        {
+          type: 'listitem',
+          children: [
+            { type: 'text', text: 'Alpha item' },
+          ],
+        },
+      ],
+    });
   });
 });

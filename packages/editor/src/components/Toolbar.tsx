@@ -79,6 +79,7 @@ export const Toolbar: React.FC = () => {
   const activeFontFamily = useToolbarStyleStore(state => state.fontFamily);
   const activeFontSize = useToolbarStyleStore(state => state.fontSize);
   const activeAlignment = useToolbarStyleStore(state => state.alignment);
+  const activeList = useToolbarStyleStore(state => state.activeList);
   const isBoldActive = useToolbarStyleStore(state => state.isBold);
   const isItalicActive = useToolbarStyleStore(state => state.isItalic);
   const isUnderlineActive = useToolbarStyleStore(state => state.isUnderline);
@@ -115,16 +116,28 @@ export const Toolbar: React.FC = () => {
 
   const runToolbarAction = useCallback(
     (label: string, callback: () => void) => {
+      const refreshSnapshot = () => {
+        if (!activeEditor) {
+          return;
+        }
+        queueMicrotask(() => {
+          toolbarStyleStore.getState().setSnapshot(readToolbarStyleSnapshot(activeEditor));
+        });
+      };
+
       runHistoryAction(
         {
           label,
           source: 'toolbar',
           region: 'document',
         },
-        callback,
+        () => {
+          callback();
+          refreshSnapshot();
+        },
       );
     },
-    [runHistoryAction],
+    [activeEditor, runHistoryAction, toolbarStyleStore],
   );
 
   useEffect(() => {
@@ -231,6 +244,12 @@ export const Toolbar: React.FC = () => {
       applyToBodyEditors(editor => insertList(editor, 'bullet'));
     });
   }, [applyToBodyEditors, runToolbarAction, t.history.actions.insertedBulletList]);
+
+  const handleListAlpha = useCallback(() => {
+    runToolbarAction(t.history.actions.insertedAlphabeticList, () => {
+      applyToBodyEditors(editor => insertList(editor, 'alpha'));
+    });
+  }, [applyToBodyEditors, runToolbarAction, t.history.actions.insertedAlphabeticList]);
 
   const handleIndent = useCallback(() => {
     runToolbarAction(t.history.actions.indentedContent, () => {
@@ -396,11 +415,14 @@ export const Toolbar: React.FC = () => {
         <Divider />
 
         <div className="lex4-toolbar-group" data-testid="list-group">
-          <ToolbarIconButton title={t.toolbar.numberedList} testId="btn-list-number" onClick={handleListNumber}>
+          <ToolbarIconButton title={t.toolbar.numberedList} testId="btn-list-number" active={activeList === 'number'} onClick={handleListNumber}>
             <ListOrdered size={15} />
           </ToolbarIconButton>
-          <ToolbarIconButton title={t.toolbar.bulletList} testId="btn-list-bullet" onClick={handleListBullet}>
+          <ToolbarIconButton title={t.toolbar.bulletList} testId="btn-list-bullet" active={activeList === 'bullet'} onClick={handleListBullet}>
             <List size={15} />
+          </ToolbarIconButton>
+          <ToolbarIconButton title={t.toolbar.alphabeticList} testId="btn-list-alpha" active={activeList === 'alpha'} onClick={handleListAlpha}>
+            <span className="lex4-toolbar-text-icon">a)</span>
           </ToolbarIconButton>
           <ToolbarIconButton title={t.toolbar.indent} testId="btn-indent" onClick={handleIndent}>
             <IndentIncrease size={15} />
