@@ -18,6 +18,7 @@ export type {
   TextRunAst,
   VariableAst,
   LineBreakAst,
+  OptionalSegmentAst,
   VariableDefinitionAst,
   SaveDocumentRequest,
 } from './types';

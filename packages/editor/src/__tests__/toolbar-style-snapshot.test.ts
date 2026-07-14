@@ -97,6 +97,8 @@ describe('toolbar-style-snapshot', () => {
       isUnderline: true,
       isStrikethrough: false,
       hasSelectedVariable: false,
+      hasTextSelection: true,
+      insideOptionalSegment: false,
     });
   });
 
@@ -135,6 +137,8 @@ describe('toolbar-style-snapshot', () => {
       isUnderline: false,
       isStrikethrough: false,
       hasSelectedVariable: false,
+      hasTextSelection: false,
+      insideOptionalSegment: false,
     });
 
     selectionState.domSelection = null;
@@ -168,6 +172,8 @@ describe('toolbar-style-snapshot', () => {
       isUnderline: true,
       isStrikethrough: false,
       hasSelectedVariable: true,
+      hasTextSelection: false,
+      insideOptionalSegment: false,
     });
   });
 
@@ -212,6 +218,8 @@ describe('toolbar-style-snapshot', () => {
       isUnderline: false,
       isStrikethrough: false,
       hasSelectedVariable: false,
+      hasTextSelection: false,
+      insideOptionalSegment: false,
     });
   });
 });

@@ -345,7 +345,7 @@ function VariableChip({
       className={className}
       data-testid={`variable-chip-${variableKey}`}
       data-variable-group={group}
-      title={variableKey}
+      title={label}
       style={style}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}

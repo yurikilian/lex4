@@ -24,6 +24,7 @@ import {
   extractInlineBlockTypeFromStyle,
 } from '../utils/text-style';
 import { $isVariableNode } from '../variables/variable-node';
+import { $getAncestorOptionalSegment } from '../variables/optional-segment-commands';
 import { $isAlphaListNode } from '../lexical/nodes/alpha-list-node';
 
 const FORMAT_MASKS = {
@@ -176,6 +177,8 @@ export function readToolbarStyleSnapshot(
         isUnderline: variableNodes.every(node => (node.getFormat() & FORMAT_MASKS.underline) !== 0),
         isStrikethrough: variableNodes.every(node => (node.getFormat() & FORMAT_MASKS.strikethrough) !== 0),
         hasSelectedVariable: true,
+        hasTextSelection: false,
+        insideOptionalSegment: $getAncestorOptionalSegment(firstVariableNode) !== null,
       };
       return;
     }
@@ -200,6 +203,10 @@ export function readToolbarStyleSnapshot(
       isStrikethrough:
         selection.hasFormat('strikethrough') || (isCollapsed && hasInlineFormat(inlineStyleTarget, 'strikethrough')),
       hasSelectedVariable: false,
+      hasTextSelection: !isCollapsed,
+      insideOptionalSegment:
+        $getAncestorOptionalSegment(anchorNode) !== null
+        || $getAncestorOptionalSegment(selection.focus?.getNode() ?? null) !== null,
     };
   });
 

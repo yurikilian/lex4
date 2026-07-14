@@ -18,6 +18,7 @@ import {
 import { $createListItemNode, $createListNode } from '@lexical/list';
 import type { Lex4Document } from '../../types/document';
 import { $createVariableNode } from '../../variables/variable-node';
+import { $createOptionalSegmentNode } from '../../variables/optional-segment-node';
 import { $createAlphaListNode } from '../nodes/alpha-list-node';
 
 interface SerializedLexicalBaseNode {
@@ -124,6 +125,11 @@ function buildLexicalNode(serializedNode: SerializedLexicalBaseNode): LexicalNod
         typeof serializedNode.format === 'number' ? serializedNode.format : 0,
         typeof serializedNode.style === 'string' ? serializedNode.style : '',
       );
+    case 'optional-segment': {
+      const node = $createOptionalSegmentNode();
+      appendChildren(node, serializedNode.children);
+      return node;
+    }
     default:
       return null;
   }

@@ -21,6 +21,7 @@ const DEMO_VARIABLES: VariableDefinition[] = [
   { key: 'proposal.validUntil', label: 'Valid Until', valueType: 'date', group: 'Proposal' },
   { key: 'seller.name', label: 'Seller Name', valueType: 'string', group: 'Seller' },
   { key: 'company.address.city', label: 'City', valueType: 'string', group: 'Company' },
+  { key: 'customer.identificationType', label: 'Cliente - Tipo de identificação', valueType: 'string', group: 'Customer' },
 ];
 
 function makeEditorState(children: object[]): SerializedEditorState {

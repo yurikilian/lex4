@@ -7,7 +7,7 @@
  * - LineBreakNode → LineBreakAst
  */
 
-import type { InlineNodeAst, TextMarks, TextRunAst, VariableAst, LineBreakAst } from './types';
+import type { InlineNodeAst, TextMarks, TextRunAst, VariableAst, LineBreakAst, OptionalSegmentAst } from './types';
 import type { SerializedVariableNode } from '../variables/variable-node';
 import {
   extractFontFamilyFromStyle,
@@ -34,7 +34,18 @@ interface SerializedLineBreak {
   [key: string]: unknown;
 }
 
-type SerializedInlineNode = SerializedTextNode | SerializedVariableNode | SerializedLineBreak;
+/** Serialized OptionalSegmentNode shape (inline element with children). */
+interface SerializedOptionalSegment {
+  type: 'optional-segment';
+  children?: SerializedInlineNode[];
+  [key: string]: unknown;
+}
+
+type SerializedInlineNode =
+  | SerializedTextNode
+  | SerializedVariableNode
+  | SerializedLineBreak
+  | SerializedOptionalSegment;
 
 /**
  * Decodes Lexical's format bitmask into named boolean marks.
@@ -90,6 +101,8 @@ export function mapInlineNode(node: SerializedInlineNode): InlineNodeAst {
       return mapVariableNode(node as SerializedVariableNode);
     case 'linebreak':
       return mapLineBreak();
+    case 'optional-segment':
+      return mapOptionalSegment(node as SerializedOptionalSegment);
     default:
       // Fallback: treat unknown inline nodes as empty text
       return { type: 'text', text: '' };
@@ -116,6 +129,13 @@ function mapVariableNode(node: SerializedVariableNode): VariableAst {
 
 function mapLineBreak(): LineBreakAst {
   return { type: 'linebreak' };
+}
+
+function mapOptionalSegment(node: SerializedOptionalSegment): OptionalSegmentAst {
+  return {
+    type: 'optional-segment',
+    children: mapInlineNodes(node.children ?? []),
+  };
 }
 
 /**

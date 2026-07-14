@@ -19,6 +19,8 @@ export interface ToolbarStyleSnapshot {
   isUnderline: boolean;
   isStrikethrough: boolean;
   hasSelectedVariable: boolean;
+  hasTextSelection: boolean;
+  insideOptionalSegment: boolean;
 }
 
 export const DEFAULT_TOOLBAR_STYLE_SNAPSHOT: ToolbarStyleSnapshot = {
@@ -32,6 +34,8 @@ export const DEFAULT_TOOLBAR_STYLE_SNAPSHOT: ToolbarStyleSnapshot = {
   isUnderline: false,
   isStrikethrough: false,
   hasSelectedVariable: false,
+  hasTextSelection: false,
+  insideOptionalSegment: false,
 };
 
 export interface ToolbarStyleStoreState extends ToolbarStyleSnapshot {

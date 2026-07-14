@@ -70,6 +70,7 @@ export interface Lex4Translations {
       /** Use {{value}} for the selected block label */
       blockTypeChanged: string;
       insertedDocumentContent: string;
+      optionalSegmentToggled: string;
     };
   };
 
@@ -94,6 +95,8 @@ export interface Lex4Translations {
     createVariableCancel: string;
     createVariableMissingFields: string;
     createVariableDuplicateKey: string;
+    optionalSegmentToggle: string;
+    optionalSegmentTooltip: string;
   };
 
   header: {

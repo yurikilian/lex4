@@ -117,7 +117,8 @@ export interface BlockQuoteAst {
 export type InlineNodeAst =
   | TextRunAst
   | VariableAst
-  | LineBreakAst;
+  | LineBreakAst
+  | OptionalSegmentAst;
 
 export interface TextMarks {
   bold?: boolean;
@@ -142,6 +143,15 @@ export interface VariableAst {
 
 export interface LineBreakAst {
   type: 'linebreak';
+}
+
+/**
+ * Conditional inline fragment: dropped entirely at generation time
+ * when any variable inside it resolves to an empty value.
+ */
+export interface OptionalSegmentAst {
+  type: 'optional-segment';
+  children: InlineNodeAst[];
 }
 
 // ---------------------------------------------------------------------------

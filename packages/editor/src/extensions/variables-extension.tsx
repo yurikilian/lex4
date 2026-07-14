@@ -1,12 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Braces } from 'lucide-react';
+import { Braces, Brackets } from 'lucide-react';
 import type { Lex4Extension, ExtensionContext } from './types';
 import type { VariableDefinition } from '../variables/types';
 import { VariableNode } from '../variables/variable-node';
 import { VariablePlugin } from '../variables/variable-plugin';
+import { OptionalSegmentNode } from '../variables/optional-segment-node';
+import { OptionalSegmentPlugin } from '../variables/optional-segment-plugin';
+import { TOGGLE_OPTIONAL_SEGMENT_COMMAND } from '../variables/optional-segment-commands';
 import { VariableProvider, useVariables } from '../variables/variable-context';
 import { VariablePanel } from '../components/VariablePanel';
 import { INSERT_VARIABLE_COMMAND } from '../variables/variable-commands';
+import { useDocument } from '../context/document-context';
+import { useToolbarStyleStore } from '../context/toolbar-style-store';
 
 declare module '../types/editor-handle' {
   interface Lex4EditorHandle {
@@ -70,6 +75,59 @@ const VariableToolbarToggle: React.FC = () => {
     >
       <Braces size={14} />
       {toolbarConfig.variables.showLabel && t.variables.title}
+    </button>
+  );
+};
+
+/**
+ * Toolbar button contributed by the variables extension.
+ * Wraps the current selection in an optional segment, or unwraps the
+ * segment the caret is inside. Hidden unless there is a non-empty
+ * selection or the caret is inside a segment.
+ */
+const OptionalSegmentToolbarButton: React.FC = () => {
+  const { activeEditor, runHistoryAction } = useDocument();
+  const toolbarConfig = useToolbarConfig();
+  const t = useTranslations();
+  const hasTextSelection = useToolbarStyleStore(state => state.hasTextSelection);
+  const insideOptionalSegment = useToolbarStyleStore(state => state.insideOptionalSegment);
+
+  if (!toolbarConfig.variables.visible) {
+    return null;
+  }
+
+  if (!hasTextSelection && !insideOptionalSegment) {
+    return null;
+  }
+
+  const handleClick = () => {
+    if (!activeEditor) {
+      return;
+    }
+    runHistoryAction(
+      {
+        label: t.history.actions.optionalSegmentToggled,
+        source: 'toolbar',
+        region: 'document',
+      },
+      () => {
+        activeEditor.dispatchCommand(TOGGLE_OPTIONAL_SEGMENT_COMMAND, undefined);
+      },
+    );
+  };
+
+  return (
+    <button
+      type="button"
+      title={t.variables.optionalSegmentToggle}
+      aria-label={t.variables.optionalSegmentToggle}
+      aria-pressed={insideOptionalSegment}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={handleClick}
+      className={`lex4-toolbar-btn${insideOptionalSegment ? ' active' : ''}`}
+      data-testid="btn-optional-segment"
+    >
+      <Brackets size={15} />
     </button>
   );
 };
@@ -147,8 +205,9 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
 
   return {
     name: 'variables',
-    nodes: [VariableNode],
-    bodyPlugins: [VariablePlugin],
+    nodes: [VariableNode, OptionalSegmentNode],
+    bodyPlugins: [VariablePlugin, OptionalSegmentPlugin],
+    toolbarItems: [OptionalSegmentToolbarButton],
     toolbarEndItems: [VariableToolbarToggle],
     sidePanel: VariablePanelWithState,
     provider: ProviderWrapper,

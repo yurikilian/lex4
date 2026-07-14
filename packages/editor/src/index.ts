@@ -37,6 +37,7 @@ export type {
   TextMarks,
   VariableAst,
   LineBreakAst,
+  OptionalSegmentAst,
   ParagraphAst,
   HeadingAst,
   ListAst,
@@ -51,6 +52,13 @@ export { AST_VERSION, serializeDocument, buildSavePayload, serializeDocumentJson
 // Variable exports
 export type { VariableDefinition, VariableContextValue } from './variables';
 export { VariableNode, $createVariableNode, $isVariableNode, INSERT_VARIABLE_COMMAND } from './variables';
+export type { SerializedOptionalSegmentNode } from './variables';
+export {
+  OptionalSegmentNode,
+  $createOptionalSegmentNode,
+  $isOptionalSegmentNode,
+  TOGGLE_OPTIONAL_SEGMENT_COMMAND,
+} from './variables';
 
 // i18n exports
 export type { Lex4Translations } from './i18n';

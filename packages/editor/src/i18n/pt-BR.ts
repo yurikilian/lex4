@@ -62,6 +62,7 @@ export const PT_BR_TRANSLATIONS: Lex4Translations = {
       fontSizeChanged: 'Tamanho da fonte alterado para {{value}}pt',
       blockTypeChanged: 'Tipo de bloco alterado para {{value}}',
       insertedDocumentContent: 'Conteúdo do documento inserido',
+      optionalSegmentToggled: 'Seção opcional alternada',
     },
   },
 
@@ -84,6 +85,8 @@ export const PT_BR_TRANSLATIONS: Lex4Translations = {
     createVariableCancel: 'Cancelar',
     createVariableMissingFields: 'Rótulo e chave são obrigatórios.',
     createVariableDuplicateKey: 'A variável {{key}} já existe.',
+    optionalSegmentToggle: 'Seção opcional',
+    optionalSegmentTooltip: 'Seção opcional — aparece apenas quando todos os campos têm valor',
   },
 
   header: {

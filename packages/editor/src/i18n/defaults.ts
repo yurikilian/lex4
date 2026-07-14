@@ -62,6 +62,7 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
       fontSizeChanged: 'Font size changed to {{value}}pt',
       blockTypeChanged: 'Block type changed to {{value}}',
       insertedDocumentContent: 'Inserted document content',
+      optionalSegmentToggled: 'Optional section toggled',
     },
   },
 
@@ -84,6 +85,8 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
     createVariableCancel: 'Cancel',
     createVariableMissingFields: 'Label and key are required.',
     createVariableDuplicateKey: 'Variable {{key}} already exists.',
+    optionalSegmentToggle: 'Optional section',
+    optionalSegmentTooltip: 'Optional section — appears only when all fields have a value',
   },
 
   header: {

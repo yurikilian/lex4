@@ -1106,8 +1106,19 @@
 }
 
 /* ── Variable chip (inline node) ─────────────────────────── */
+/* Zero-width spaces restore a soft-wrap opportunity around the
+   non-editable decorator wrapper so a chip that does not fit the
+   remaining line wraps instead of being clipped by the page body. */
+.lex4-variable::before,
+.lex4-variable::after {
+  content: '\200B';
+}
+
 .lex4-variable-chip {
   display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   border-radius: 0.22em;
   border: 1px solid var(--lex4-variable-border, var(--color-border));
   background-color: var(--lex4-variable-bg, color-mix(in srgb, var(--color-surface-elevated) 92%, var(--color-secondary)));
@@ -1119,7 +1130,9 @@
   user-select: none;
   cursor: default;
   white-space: nowrap;
-  vertical-align: -0.04em;
+  /* overflow: hidden moves the inline-block baseline to the box bottom
+     edge; shift the chip down so it visually sits on the text baseline. */
+  vertical-align: -0.26em;
   margin: 0 0.0625em;
   transition: border-color 150ms, background-color 150ms, box-shadow 150ms;
 }
@@ -1135,6 +1148,32 @@
   border-radius: 50%;
   background-color: var(--lex4-variable-accent, var(--color-muted-foreground));
   vertical-align: middle;
+}
+
+/* ── Optional segment (inline conditional fragment) ──────── */
+.lex4-optional-segment {
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-muted-foreground) 55%, transparent);
+  background-color: color-mix(in srgb, var(--color-secondary) 26%, transparent);
+  border-radius: 0.18em;
+  padding: 0 0.05em;
+}
+
+.lex4-optional-segment::before,
+.lex4-optional-segment::after {
+  color: var(--color-muted-foreground);
+  font-size: 0.9em;
+  user-select: none;
+  pointer-events: none;
+}
+
+.lex4-optional-segment::before {
+  content: '⟮';
+  margin-right: 0.04em;
+}
+
+.lex4-optional-segment::after {
+  content: '⟯';
+  margin-left: 0.04em;
 }
 
 .lex4-variable-chip:hover {
