@@ -21,7 +21,13 @@ import {
 } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection';
-import { useCallback, useEffect, useMemo, type MouseEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  type JSX,
+  type MouseEvent,
+} from 'react';
 import { useVariables } from './variable-context';
 import {
   extractFontFamilyFromStyle,

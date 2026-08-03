@@ -74,7 +74,7 @@ memory**, **144/144 E2E**.
 | `@testing-library/react` | dev | `^16.0.0` | `^16.3.2` | 1 |
 | `@types/react` | dev | `^18.3.0` | `^19.2.0` | 2 |
 | `@types/react-dom` | dev | `^18.3.0` | `^19.2.0` | 2 |
-| `@vitejs/plugin-react` | dev | `^4.3.0` | `^6.0.0` | 2 |
+| `@vitejs/plugin-react` | dev | `^4.3.0` | `^5.2.0` (Wave 2) → `^6.0.0` (Wave 4, needs vite 8) | 2/4 |
 | `autoprefixer` | dev | `^10.4.0` | `^10.5.0` | 1 |
 | `jsdom` | dev | `^25.0.0` | `^30.0.0` | 4 |
 | `postcss` | dev | `^8.4.0` | `^8.5.0` | 1 |
@@ -115,7 +115,7 @@ memory**, **144/144 E2E**.
 | `@tailwindcss/vite` | dev | `^4.2.2` | `^4.3.0` | 1 |
 | `tailwindcss` | dev | `^4.2.2` | `^4.3.0` | 1 |
 | `@types/react` / `@types/react-dom` | dev | `^18.3.0` | `^19.2.0` | 2 |
-| `@vitejs/plugin-react` | dev | `^4.3.0` | `^6.0.0` | 2 |
+| `@vitejs/plugin-react` | dev | `^4.3.0` | `^5.2.0` (Wave 2) → `^6.0.0` (Wave 4) | 2/4 |
 | `typescript` | dev | `^5.5.0` | TS 7 or latest 5.9 | 5 |
 | `vite` | dev | `^5.4.0` | `^8.0.0` | 4 |
 
@@ -172,6 +172,43 @@ memory**, **144/144 E2E**.
 
 ---
 
+## 4b. Wave decisions & deviations
+
+### Wave 2 — React 18 → 19
+
+Landed: `react` / `react-dom` `19.2.8`, `@types/react` `19.2.18`,
+`@types/react-dom` `19.2.4` in `packages/editor` (dev) and `demo`.
+`packages/editor` `peerDependencies` left at `^18.0.0 || ^19.0.0`.
+
+**Deviation — `@vitejs/plugin-react` pinned to `^5.2.0` instead of `^6.0.0`.**
+`@vitejs/plugin-react@6` dropped support for Vite < 8; with the current
+Vite 5 it fails at config load time:
+
+```
+failed to load config from packages/editor/vite.config.ts
+Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './internal' is not
+defined by "exports" in .../vite/package.json imported from
+.../@vitejs/plugin-react/dist/index.js
+```
+
+`@vitejs/plugin-react@5.2.0` declares `vite: ^4.2.0 || ^5 || ^6 || ^7 || ^8`,
+so it is compatible with both the current Vite 5 and the Wave 4 target Vite 8.
+Wave 2 therefore lands the 4 → 5 major, and the 5 → 6 major moves to Wave 4
+where Vite 8 arrives. No peer-dependency warnings remain
+(`pnpm peers check` → clean).
+
+**Code migration required (1 file).** React 19 types removed the implicit
+global `JSX` namespace. `packages/editor/src/variables/variable-node.tsx`
+references `JSX.Element` three times (the `DecoratorNode<JSX.Element>` type
+argument, `decorate()` and the decorator component return type); it now imports
+`type JSX` from `react`. No other migration was needed: there are no
+`defaultProps`/`propTypes` on function components, no argument-less `useRef()`
+calls, and the two `forwardRef` usages in the editor plus two in the demo remain
+valid in React 19 (deprecated, not removed) so they were left untouched to keep
+the wave minimal and revertible.
+
+No tests were modified.
+
 ## 5. Rollback strategy
 
 - All work lives on `chore/dependency-upgrade`; `main` is never touched and the
@@ -191,8 +228,8 @@ memory**, **144/144 E2E**.
 | Wave | Status | Commit | Gate |
 | --- | --- | --- | --- |
 | 0 — Baseline & plan | ✅ done | see PR | lint ✅ / build ✅ / unit 241 ✅ / demo ✅ / memory 13 ✅ / e2e 144 ✅ |
-| 1 — Minor & patch | ⏳ pending | | |
-| 2 — React 19 | ⏳ pending | | |
+| 1 — Minor & patch | ✅ done | `a6f6339` | lint ✅ / build ✅ / unit 241 ✅ / memory 13 ✅ / demo ✅ / e2e 144 ✅ |
+| 2 — React 19 | ✅ done | `d6f5e26` | lint ✅ / build ✅ / unit 241/241 ✅ / memory 13/13 ✅ / demo ✅ / e2e 144/144 ✅ |
 | 3 — Lexical 0.49 | ⏳ pending | | |
 | 4 — Toolchain majors | ⏳ pending | | |
 | 5 — TypeScript & CI | ⏳ pending | | |
