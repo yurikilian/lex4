@@ -7,3 +7,6 @@ allowBuilds:
   better-sqlite3: true
   esbuild: true
   msw: true
+
+minimumReleaseAgeExclude:
+  - tsx@4.23.5
