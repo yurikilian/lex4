@@ -98,7 +98,7 @@ export function getSelectedVariableNodes(editor: LexicalEditor): VariableNode[] 
     if (nodes.length === 0) {
       return;
     }
-  });
+  }, { editor });
 
   return nodes;
 }
@@ -171,7 +171,7 @@ export function readSelectedVariableFormatting(editor: LexicalEditor): {
       fontFamily: extractFontFamilyFromStyle(style),
       fontSize: extractFontSizePtFromStyle(style),
     };
-  });
+  }, { editor });
 
   return formatting;
 }

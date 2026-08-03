@@ -80,8 +80,9 @@ function replaceWithPlainList(listNode: ListNode, listType: PlainListType): void
 }
 
 function insertAlphaList(editor: LexicalEditor): void {
-  const hasAlphaListSelection = editor.getEditorState().read(() =>
-    getSelectedListNodes().some($isAlphaListNode),
+  const hasAlphaListSelection = editor.getEditorState().read(
+    () => getSelectedListNodes().some($isAlphaListNode),
+    { editor },
   );
 
   if (hasAlphaListSelection) {
@@ -96,8 +97,9 @@ function insertAlphaList(editor: LexicalEditor): void {
 }
 
 function normalizeSelectedAlphaLists(editor: LexicalEditor, listType: PlainListType): boolean {
-  const hasAlphaListSelection = editor.getEditorState().read(() =>
-    getSelectedListNodes().some($isAlphaListNode),
+  const hasAlphaListSelection = editor.getEditorState().read(
+    () => getSelectedListNodes().some($isAlphaListNode),
+    { editor },
   );
 
   if (!hasAlphaListSelection) {

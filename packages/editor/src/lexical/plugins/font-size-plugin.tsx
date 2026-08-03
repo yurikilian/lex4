@@ -70,7 +70,7 @@ export const FontSizePlugin: React.FC<FontSizePluginProps> = ({ onFontSizeChange
         const size = extractFontSize(style);
         onFontSizeChange?.(size ?? DEFAULT_FONT_SIZE);
       }
-    });
+    }, { editor });
   }, [editor, onFontSizeChange]);
 
   useEffect(() => {

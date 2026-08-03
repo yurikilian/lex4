@@ -251,7 +251,7 @@ export function getActiveBlockType(editor: LexicalEditor): BlockType {
       || (($isTextNode(styleTarget) || $isVariableNode(styleTarget)) ? styleTarget.getStyle() : '');
     blockType = extractInlineBlockTypeFromStyle(style)
       ?? getElementBlockType(anchorNode.getTopLevelElementOrThrow());
-  });
+  }, { editor });
 
   return blockType;
 }

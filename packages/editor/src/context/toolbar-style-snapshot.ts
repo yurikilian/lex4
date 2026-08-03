@@ -208,7 +208,7 @@ export function readToolbarStyleSnapshot(
         $getAncestorOptionalSegment(anchorNode) !== null
         || $getAncestorOptionalSegment(selection.focus?.getNode() ?? null) !== null,
     };
-  });
+  }, { editor });
 
   return snapshot;
 }

@@ -209,6 +209,58 @@ the wave minimal and revertible.
 
 No tests were modified.
 
+(The status table SHA for Wave 2 was corrected in the Wave 3 commit: the row was
+written before the final `--amend` rewrote the hash.)
+
+### Wave 3 — Lexical 0.22 → 0.49
+
+Landed: `lexical` and the eight `@lexical/*` packages at `^0.49.0`, the identical
+range in `packages/editor` and `demo`. Verified single resolution — every
+`lexical`/`@lexical/*` entry in `pnpm-lock.yaml` resolves to `0.49.0` and
+`pnpm ls -r --depth 0 lexical` reports `lexical@0.49.0` for both workspaces.
+
+**Migration 1 — `EditorState.read()` no longer binds an active editor (9 files,
+11 call sites).** This is the breaking change that matters for this codebase.
+Since Lexical 0.21+/0.30 the read context only exposes the *editor state*; APIs
+that need the editor itself (`$getNodeFromDOM`, and therefore
+`$createRangeSelectionFromDom`) throw:
+
+```
+Unable to find an active editor. This method can only be used synchronously
+during the callback of editor.update(), editor.read(), or
+editor.getEditorState().read(..., {editor}).
+```
+
+The editor silently stopped accepting input in the browser (caught by the
+`[Lex4 body editor error]` boundary, 84 of 144 E2E specs failed) while `tsc` and
+the unit suite stayed green — the E2E net was what caught it. Fixed by passing
+the documented `{ editor }` read option:
+
+- `src/context/document-provider.tsx`
+- `src/context/toolbar-style-snapshot.ts`
+- `src/lexical/commands/block-commands.ts`
+- `src/lexical/commands/list-commands.ts` (2 sites)
+- `src/lexical/plugins/font-plugin.tsx`
+- `src/lexical/plugins/font-size-plugin.tsx`
+- `src/lexical/plugins/paragraph-indent-plugin.tsx`
+- `src/variables/optional-segment-plugin.tsx`
+- `src/variables/variable-formatting.ts` (2 sites)
+
+**Migration 2 — `PASTE_COMMAND` payload widened.** It is now
+`LexicalCommand<PasteCommandType>` (`ClipboardEvent | InputEvent |
+KeyboardEvent`) instead of `LexicalCommand<ClipboardEvent>`.
+`src/lexical/plugins/history-capture-plugin.tsx` now types its handler with
+`PasteCommandType` and narrows with `'clipboardData' in event` — behaviour is
+unchanged (only clipboard events carried `clipboardData` before).
+
+No other API used by this repo changed: all node classes (`DecoratorNode`,
+`ElementNode`, `ListNode`, `HeadingNode`), the `importDOM`/`exportDOM`/
+`importJSON`/`exportJSON` signatures, `registerCommand` priorities, the
+`LexicalComposer` `InitialConfigType` and every `$`-prefixed helper in use
+compiled and ran unchanged.
+
+No tests were modified.
+
 ## 5. Rollback strategy
 
 - All work lives on `chore/dependency-upgrade`; `main` is never touched and the
@@ -229,7 +281,7 @@ No tests were modified.
 | --- | --- | --- | --- |
 | 0 — Baseline & plan | ✅ done | see PR | lint ✅ / build ✅ / unit 241 ✅ / demo ✅ / memory 13 ✅ / e2e 144 ✅ |
 | 1 — Minor & patch | ✅ done | `a6f6339` | lint ✅ / build ✅ / unit 241 ✅ / memory 13 ✅ / demo ✅ / e2e 144 ✅ |
-| 2 — React 19 | ✅ done | `d6f5e26` | lint ✅ / build ✅ / unit 241/241 ✅ / memory 13/13 ✅ / demo ✅ / e2e 144/144 ✅ |
-| 3 — Lexical 0.49 | ⏳ pending | | |
+| 2 — React 19 | ✅ done | `977f41c` | lint ✅ / build ✅ / unit 241/241 ✅ / memory 13/13 ✅ / demo ✅ / e2e 144/144 ✅ |
+| 3 — Lexical 0.49 | ✅ done | `0514d4c` | lint ✅ / build ✅ / unit 241/241 ✅ / memory 13/13 ✅ / demo ✅ / e2e 144/144 ✅ |
 | 4 — Toolchain majors | ⏳ pending | | |
 | 5 — TypeScript & CI | ⏳ pending | | |

@@ -10,6 +10,7 @@ import {
   KEY_DOWN_COMMAND,
   KEY_ENTER_COMMAND,
   PASTE_COMMAND,
+  type PasteCommandType,
 } from 'lexical';
 
 import { useDocument } from '../../context/document-context';
@@ -100,8 +101,11 @@ export const HistoryCapturePlugin: React.FC<HistoryCapturePluginProps> = ({ page
 
     return editor.registerCommand(
       PASTE_COMMAND,
-      (event: ClipboardEvent) => {
-        const text = event.clipboardData?.getData('text/plain') ?? '';
+      (event: PasteCommandType) => {
+        // Since lexical 0.30 PASTE_COMMAND is dispatched with a
+        // ClipboardEvent | InputEvent | KeyboardEvent payload.
+        const clipboardData = 'clipboardData' in event ? event.clipboardData : null;
+        const text = clipboardData?.getData('text/plain') ?? '';
         if (text.trim().length === 0) {
           return false;
         }

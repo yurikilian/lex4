@@ -62,7 +62,7 @@ export const FontPlugin: React.FC<FontPluginProps> = ({ onFontChange }) => {
         const match = style.match(/font-family:\s*([^;]+)/);
         onFontChange?.(match ? match[1].trim() : 'Inter');
       }
-    });
+    }, { editor });
   }, [editor, onFontChange]);
 
   useEffect(() => {

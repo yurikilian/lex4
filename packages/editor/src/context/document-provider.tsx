@@ -112,7 +112,7 @@ function captureCaretSelection(editor: LexicalEditor | null): CaretSelection | n
       format: selection.format,
       style: selection.style,
     };
-  });
+  }, { editor });
 
   return caretSelection;
 }

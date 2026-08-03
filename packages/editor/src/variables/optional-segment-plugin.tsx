@@ -43,7 +43,7 @@ export const OptionalSegmentPlugin: React.FC = () => {
               }
             }
           }
-        });
+        }, { editor });
       },
       { skipInitialization: false },
     );

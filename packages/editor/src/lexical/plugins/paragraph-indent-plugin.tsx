@@ -37,7 +37,7 @@ export const ParagraphIndentPlugin: React.FC = () => {
         element.style.paddingInlineStart = '0px';
         element.style.textIndent = indent > 0 ? `${indent * FIRST_LINE_INDENT_PX}px` : '';
       });
-    });
+    }, { editor });
 
     syncParagraphIndents();
 
