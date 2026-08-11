@@ -1248,9 +1248,18 @@
 }
 
 .lex4-variable-chip-selected {
-  border-color: color-mix(in srgb, var(--lex4-variable-accent, var(--color-border-strong)) 34%, var(--color-border-strong));
-  background-color: color-mix(in srgb, var(--lex4-variable-bg, var(--color-surface-elevated)) 82%, var(--color-surface-elevated));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--lex4-variable-accent, var(--color-border-strong)) 18%, transparent);
+  border-color: color-mix(in srgb, var(--lex4-variable-accent, var(--color-primary)) 72%, var(--color-border-strong));
+  background-color: color-mix(in srgb, var(--lex4-variable-bg, var(--color-secondary)) 62%, var(--color-secondary));
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--color-foreground) 12%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--lex4-variable-accent, var(--color-primary)) 38%, transparent);
+}
+
+@media (forced-colors: active) {
+  .lex4-variable-chip-selected {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
 }
 
 /* ── Document view ───────────────────────────────────────── */

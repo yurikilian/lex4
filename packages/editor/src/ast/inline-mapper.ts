@@ -22,7 +22,7 @@ const IS_UNDERLINE = 8;
 
 /** Serialized Lexical text node shape (subset of fields we need). */
 interface SerializedTextNode {
-  type: 'text';
+  type: 'text' | 'variable-caret';
   text: string;
   format: number;
   style?: string;
@@ -96,6 +96,8 @@ export function buildTextMarks(format: number, style?: string): TextMarks | unde
 export function mapInlineNode(node: SerializedInlineNode): InlineNodeAst {
   switch (node.type) {
     case 'text':
+      return mapTextNode(node as SerializedTextNode);
+    case 'variable-caret':
       return mapTextNode(node as SerializedTextNode);
     case 'variable-node':
       return mapVariableNode(node as SerializedVariableNode);

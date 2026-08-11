@@ -1,7 +1,10 @@
 import {
   $getSelection,
+  $createNodeSelection,
   $isElementNode,
+  $isNodeSelection,
   $isRangeSelection,
+  $setSelection,
   createCommand,
   type LexicalNode,
 } from 'lexical';
@@ -10,6 +13,7 @@ import {
   $isOptionalSegmentNode,
   OptionalSegmentNode,
 } from './optional-segment-node';
+import { $isVariableNode } from './variable-node';
 
 /**
  * Command that toggles an optional segment around the current selection.
@@ -65,6 +69,31 @@ function containsOptionalSegment(node: LexicalNode): boolean {
  */
 export function $toggleOptionalSegment(): boolean {
   const selection = $getSelection();
+  if ($isNodeSelection(selection)) {
+    const variables = selection.getNodes().filter($isVariableNode);
+    if (variables.length !== 1) {
+      return false;
+    }
+
+    const variable = variables[0];
+    const existingSegment = $getAncestorOptionalSegment(variable);
+    if (existingSegment !== null) {
+      $unwrapOptionalSegment(existingSegment);
+      const nextSelection = $createNodeSelection();
+      nextSelection.add(variable.getKey());
+      $setSelection(nextSelection);
+      return true;
+    }
+
+    const segment = $createOptionalSegmentNode();
+    variable.insertBefore(segment);
+    segment.append(variable);
+    const nextSelection = $createNodeSelection();
+    nextSelection.add(variable.getKey());
+    $setSelection(nextSelection);
+    return true;
+  }
+
   if (!$isRangeSelection(selection)) {
     return false;
   }

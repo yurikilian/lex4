@@ -3,6 +3,7 @@ import { Braces, Brackets } from 'lucide-react';
 import type { Lex4Extension, ExtensionContext } from './types';
 import type { VariableDefinition } from '../variables/types';
 import { VariableNode } from '../variables/variable-node';
+import { VariableCaretNode } from '../variables/variable-caret-node';
 import { VariablePlugin } from '../variables/variable-plugin';
 import { OptionalSegmentNode } from '../variables/optional-segment-node';
 import { OptionalSegmentPlugin } from '../variables/optional-segment-plugin';
@@ -90,13 +91,14 @@ const OptionalSegmentToolbarButton: React.FC = () => {
   const toolbarConfig = useToolbarConfig();
   const t = useTranslations();
   const hasTextSelection = useToolbarStyleStore(state => state.hasTextSelection);
+  const hasSelectedVariable = useToolbarStyleStore(state => state.hasSelectedVariable);
   const insideOptionalSegment = useToolbarStyleStore(state => state.insideOptionalSegment);
 
   if (!toolbarConfig.variables.visible) {
     return null;
   }
 
-  if (!hasTextSelection && !insideOptionalSegment) {
+  if (!hasTextSelection && !hasSelectedVariable && !insideOptionalSegment) {
     return null;
   }
 
@@ -205,7 +207,7 @@ export function variablesExtension(definitions: VariableDefinition[] = []): Lex4
 
   return {
     name: 'variables',
-    nodes: [VariableNode, OptionalSegmentNode],
+    nodes: [VariableNode, VariableCaretNode, OptionalSegmentNode],
     bodyPlugins: [VariablePlugin, OptionalSegmentPlugin],
     toolbarItems: [OptionalSegmentToolbarButton],
     toolbarEndItems: [VariableToolbarToggle],

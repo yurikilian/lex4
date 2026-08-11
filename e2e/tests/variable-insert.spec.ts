@@ -53,6 +53,59 @@ test.describe('Variable Insert', () => {
     await expect(chip).toHaveText('Customer Name');
   });
 
+  test('typing continues after a variable inserted at the end of a paragraph', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
+    await body.click();
+    await page.keyboard.type('Hello ');
+
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
+    await page.keyboard.type(' — welcome');
+
+    await expect(body).toContainText('Hello Customer Name — welcome');
+    await expect(page.getByTestId('variable-chip-customer.name')).not.toHaveClass(
+      /lex4-variable-chip-selected/,
+    );
+  });
+
+  test('arrow keys select the variable as one atomic step and never place the DOM caret inside it', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
+    await body.click();
+    await page.keyboard.type('Before ');
+
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
+    await page.keyboard.type(' after');
+
+    const chip = page.getByTestId('variable-chip-customer.name');
+    for (let i = 0; i < ' after'.length + 3; i += 1) {
+      await page.keyboard.press('ArrowLeft');
+      if (await chip.evaluate(node => node.classList.contains('lex4-variable-chip-selected'))) {
+        break;
+      }
+    }
+    await expect(chip).toHaveClass(/lex4-variable-chip-selected/);
+
+    await expect.poll(() => page.evaluate(() => window.getSelection()?.rangeCount ?? 0)).toBe(0);
+    const selectedDomCaret = await page.evaluate(() => {
+      const selection = window.getSelection();
+      const anchorElement = selection?.anchorNode instanceof Element
+        ? selection.anchorNode
+        : selection?.anchorNode?.parentElement;
+      return {
+        rangeCount: selection?.rangeCount ?? 0,
+        insideVariable: Boolean(anchorElement?.closest('[data-variable-key]')),
+      };
+    });
+    expect(selectedDomCaret.rangeCount).toBe(0);
+    expect(selectedDomCaret.insideVariable).toBe(false);
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(chip).not.toHaveClass(/lex4-variable-chip-selected/);
+    await page.keyboard.type('X');
+    await expect(body).toContainText('Before XCustomer Name after');
+  });
+
   test('inserted variable stays compact and aligned with surrounding text', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();

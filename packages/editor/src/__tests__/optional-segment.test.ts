@@ -47,6 +47,16 @@ describe('OptionalSegmentNode', () => {
 });
 
 describe('inline-mapper: optional-segment', () => {
+  it('removes the invisible caret anchor from exported text', () => {
+    const result = mapInlineNode({
+      type: 'variable-caret',
+      text: 'continues',
+      format: 0,
+    } as never);
+
+    expect(result).toEqual({ type: 'text', text: 'continues' });
+  });
+
   it('maps an optional segment with its children', () => {
     const result = mapInlineNode({
       type: 'optional-segment',

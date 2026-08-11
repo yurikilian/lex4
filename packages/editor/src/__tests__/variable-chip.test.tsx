@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { KEY_DOWN_COMMAND } from 'lexical';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { VariableNode } from '../variables/variable-node';
 
@@ -15,8 +14,6 @@ const mocks = vi.hoisted(() => ({
   },
   node: null as unknown as {
     getKey: () => string;
-    selectPrevious: ReturnType<typeof vi.fn>;
-    selectNext: ReturnType<typeof vi.fn>;
   },
   nodeSelection: {
     add: vi.fn(),
@@ -76,8 +73,6 @@ describe('VariableChip', () => {
     vi.clearAllMocks();
     mocks.node = Object.assign(Object.create(VariableNode.prototype), {
       getKey: () => 'variable-node-key',
-      selectPrevious: vi.fn(),
-      selectNext: vi.fn(),
     });
   });
 
@@ -115,43 +110,6 @@ describe('VariableChip', () => {
     expect(mocks.nodeSelection.add).toHaveBeenNthCalledWith(1, 'variable-node-key');
     expect(mocks.nodeSelection.add).toHaveBeenNthCalledWith(2, 'variable-node-key');
     expect(mocks.setSelection).toHaveBeenCalledWith(mocks.nodeSelection);
-  });
-
-  it('moves the caret around a selected variable with arrow keys', () => {
-    mocks.selection.isSelected = true;
-
-    renderVariableChip();
-
-    const keyDownHandler = mocks.editor.registerCommand.mock.calls.find(
-      ([command]) => command === KEY_DOWN_COMMAND,
-    )?.[1];
-
-    expect(keyDownHandler).toBeTypeOf('function');
-
-    const moveRightEvent = {
-      key: 'ArrowRight',
-      metaKey: false,
-      ctrlKey: false,
-      altKey: false,
-      shiftKey: false,
-      preventDefault: vi.fn(),
-    } as unknown as KeyboardEvent;
-    const moveLeftEvent = {
-      key: 'ArrowLeft',
-      metaKey: false,
-      ctrlKey: false,
-      altKey: false,
-      shiftKey: false,
-      preventDefault: vi.fn(),
-    } as unknown as KeyboardEvent;
-
-    expect(keyDownHandler?.(moveRightEvent)).toBe(true);
-    expect(moveRightEvent.preventDefault).toHaveBeenCalledTimes(1);
-    expect(mocks.node.selectNext).toHaveBeenCalledTimes(1);
-
-    expect(keyDownHandler?.(moveLeftEvent)).toBe(true);
-    expect(moveLeftEvent.preventDefault).toHaveBeenCalledTimes(1);
-    expect(mocks.node.selectPrevious).toHaveBeenCalledTimes(1);
   });
 
   it('applies inline font weight styles from the stored variable style', () => {

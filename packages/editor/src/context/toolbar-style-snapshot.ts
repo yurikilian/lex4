@@ -1,5 +1,4 @@
 import {
-  $createRangeSelectionFromDom,
   $getSelection,
   $isElementNode,
   $isNodeSelection,
@@ -153,9 +152,7 @@ export function readToolbarStyleSnapshot(
 
   editorState.read(() => {
     const currentSelection = $getSelection();
-    const selection = $isNodeSelection(currentSelection) || $isRangeSelection(currentSelection)
-      ? currentSelection
-      : $createRangeSelectionFromDom(window.getSelection(), editor) ?? currentSelection;
+    const selection = currentSelection;
 
     if ($isNodeSelection(selection)) {
       const variableNodes = selection.getNodes().filter($isVariableNode);

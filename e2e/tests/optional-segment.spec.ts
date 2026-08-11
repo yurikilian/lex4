@@ -49,6 +49,66 @@ test.describe('Optional Segment', () => {
     await expect(body).toContainText('Address optional');
   });
 
+  test('a selected variable exposes the optional action and can be wrapped directly', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
+    await body.click();
+    await page.keyboard.type('Hello ');
+
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
+
+    const chip = page.getByTestId('variable-chip-customer.name');
+    await chip.click();
+
+    const button = page.getByTestId('btn-optional-segment');
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+
+    await button.click();
+    await expect(page.locator('[data-lex4-optional-segment]')).toHaveCount(1);
+    await expect(page.locator('[data-lex4-optional-segment]')).toContainText('Customer Name');
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('arrow keys enter, highlight, and leave a variable at the optional-segment boundary', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
+    await body.click();
+    await page.keyboard.type('Hello ');
+
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
+
+    const chip = page.getByTestId('variable-chip-customer.name');
+    await chip.click();
+    await page.getByTestId('btn-optional-segment').click();
+
+    await chip.click();
+    await expect(chip).toHaveClass(/lex4-variable-chip-selected/);
+    expect(await page.evaluate(() => window.getSelection()?.rangeCount ?? -1)).toBe(0);
+
+    await page.keyboard.press('ArrowRight');
+    await expect(chip).not.toHaveClass(/lex4-variable-chip-selected/);
+    await page.keyboard.type(' continues');
+
+    await expect(body).toContainText('Hello Customer Name continues');
+    await expect(page.locator('[data-lex4-optional-segment]')).toHaveText('Customer Name');
+
+    for (let i = 0; i < ' continues'.length + 3; i += 1) {
+      await page.keyboard.press('ArrowLeft');
+      if (await chip.evaluate(node => node.classList.contains('lex4-variable-chip-selected'))) {
+        break;
+      }
+    }
+    await expect(chip).toHaveClass(/lex4-variable-chip-selected/);
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(chip).not.toHaveClass(/lex4-variable-chip-selected/);
+    await page.keyboard.type('before ');
+
+    await expect(body).toContainText('Hello before Customer Name continues');
+    await expect(page.locator('[data-lex4-optional-segment]')).toHaveText('Customer Name');
+  });
+
   test('undo restores the wrapped segment', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();

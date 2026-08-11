@@ -6,7 +6,7 @@ import type {
   HistoryActionDescriptor,
   HistoryState,
 } from '../types/history';
-import { $createRangeSelectionFromDom, $getRoot, $getSelection, $isRangeSelection } from 'lexical';
+import { $getRoot, $getSelection, $isRangeSelection } from 'lexical';
 import type { LexicalEditor } from 'lexical';
 import { createEmptyDocument } from '../types/document';
 import { DocumentContext, type DocumentAction, type EditorRegistry } from './document-context';
@@ -85,7 +85,7 @@ function captureCaretSelection(editor: LexicalEditor | null): CaretSelection | n
 
   let caretSelection: CaretSelection | null = null;
   editor.getEditorState().read(() => {
-    const selection = $createRangeSelectionFromDom(window.getSelection(), editor) ?? $getSelection();
+    const selection = $getSelection();
     if (!$isRangeSelection(selection)) {
       return;
     }

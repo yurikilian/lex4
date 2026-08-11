@@ -20,11 +20,7 @@ export const OptionalSegmentPlugin: React.FC = () => {
     return editor.registerCommand(
       TOGGLE_OPTIONAL_SEGMENT_COMMAND,
       () => {
-        let handled = false;
-        editor.update(() => {
-          handled = $toggleOptionalSegment();
-        });
-        return handled;
+        return $toggleOptionalSegment();
       },
       COMMAND_PRIORITY_EDITOR,
     );

@@ -1,7 +1,6 @@
 import {
   $applyNodeReplacement,
   $createNodeSelection,
-  $getNodeByKey,
   $getSelection,
   $isNodeSelection,
   $setSelection,
@@ -13,17 +12,10 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical';
-import {
-  COMMAND_PRIORITY_LOW,
-  KEY_BACKSPACE_COMMAND,
-  KEY_DELETE_COMMAND,
-  KEY_DOWN_COMMAND,
-} from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection';
 import {
   useCallback,
-  useEffect,
   useMemo,
   type JSX,
   type MouseEvent,
@@ -255,96 +247,6 @@ function VariableChip({
     event.stopPropagation();
     clearDomSelection();
   }, [clearDomSelection]);
-
-  useEffect(() => {
-    const removeSelectedNodes = () => {
-      editor.update(() => {
-        const selection = $getSelection();
-        if (!$isNodeSelection(selection)) {
-          const node = $getNodeByKey(nodeKey);
-          if ($isVariableNode(node)) {
-            node.remove();
-          }
-          return;
-        }
-
-        for (const node of selection.getNodes()) {
-          if ($isVariableNode(node)) {
-            node.remove();
-          }
-        }
-      });
-    };
-
-    const unregisterBackspace = editor.registerCommand(
-      KEY_BACKSPACE_COMMAND,
-      () => {
-        if (!isSelected) {
-          return false;
-        }
-        removeSelectedNodes();
-        return true;
-      },
-      COMMAND_PRIORITY_LOW,
-    );
-
-    const unregisterDelete = editor.registerCommand(
-      KEY_DELETE_COMMAND,
-      () => {
-        if (!isSelected) {
-          return false;
-        }
-        removeSelectedNodes();
-        return true;
-      },
-      COMMAND_PRIORITY_LOW,
-    );
-
-    const moveCaretFromSelectedNode = (direction: 'backward' | 'forward') => {
-      editor.update(() => {
-        const node = $getNodeByKey(nodeKey);
-        if (!$isVariableNode(node)) {
-          return;
-        }
-
-        if (direction === 'backward') {
-          node.selectPrevious();
-        } else {
-          node.selectNext();
-        }
-      });
-    };
-
-    const unregisterArrowNavigation = editor.registerCommand(
-      KEY_DOWN_COMMAND,
-      (event: KeyboardEvent) => {
-        if (!isSelected || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
-          return false;
-        }
-
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-          event.preventDefault();
-          moveCaretFromSelectedNode('backward');
-          return true;
-        }
-
-        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-          event.preventDefault();
-          moveCaretFromSelectedNode('forward');
-          return true;
-        }
-
-        return false;
-      },
-      COMMAND_PRIORITY_LOW,
-    );
-
-    return () => {
-      unregisterBackspace();
-      unregisterDelete();
-      unregisterArrowNavigation();
-    };
-  }, [editor, isSelected, nodeKey]);
 
   return (
     <span

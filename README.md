@@ -239,6 +239,8 @@ Also adds:
 - **Toolbar button** — variable picker dropdown for inserting variables inline
 - **Host-controlled side panel** — opens a searchable variable panel on the right, which can also be controlled from app chrome via the handle methods above
 - **Variable node** — custom Lexical node rendered as a non-editable chip
+- **Atomic keyboard navigation** — arrow keys select a chip as one stop, highlight it, and always expose a writable caret position on either side
+- **Optional segments** — a selected variable or text range can be toggled as conditional content; boundary navigation exits cleanly without trapping the caret
 - **Selection formatting** — selected chips participate in toolbar inline/block formatting and keep heading/paragraph styling in sync with export
 
 ```tsx
