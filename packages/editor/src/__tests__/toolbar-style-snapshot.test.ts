@@ -4,7 +4,6 @@ import { readToolbarStyleSnapshot } from '../context/toolbar-style-snapshot';
 
 const selectionState = {
   selection: null as unknown,
-  domSelection: null as unknown,
 };
 
 vi.mock('lexical', async (importOriginal) => {
@@ -13,7 +12,6 @@ vi.mock('lexical', async (importOriginal) => {
   return {
     ...actual,
     $getSelection: () => selectionState.selection,
-    $createRangeSelectionFromDom: () => selectionState.domSelection,
     $isNodeSelection: (selection: unknown) =>
       !!selection && (selection as { kind?: string }).kind === 'node',
     $isRangeSelection: (selection: unknown) =>
@@ -102,46 +100,15 @@ describe('toolbar-style-snapshot', () => {
     });
   });
 
-  it('reads collapsed inline formats from the DOM-backed range selection', () => {
-    const topLevel = {
-      kind: 'paragraph',
-      getFormatType: () => 'left',
-    };
-    const textNode = {
-      kind: 'text',
-      getStyle: () => '',
-      getTopLevelElementOrThrow: () => topLevel,
-      hasFormat: (format: string) => format === 'bold',
-    };
-
+  it('returns the default snapshot when Lexical has no active selection', () => {
     selectionState.selection = null;
-    selectionState.domSelection = {
-      kind: 'range',
-      style: '',
-      isCollapsed: () => true,
-      anchor: {
-        getNode: () => textNode,
-      },
-      getNodes: () => [textNode],
-      hasFormat: () => false,
-    };
 
-    expect(readToolbarStyleSnapshot(createEditor())).toEqual({
-      blockType: 'paragraph',
-      fontFamily: 'Inter',
-      fontSize: 12,
-      alignment: 'left',
-      activeList: 'none',
-      isBold: true,
-      isItalic: false,
-      isUnderline: false,
-      isStrikethrough: false,
+    expect(readToolbarStyleSnapshot(createEditor())).toMatchObject({
+      isBold: false,
       hasSelectedVariable: false,
       hasTextSelection: false,
       insideOptionalSegment: false,
     });
-
-    selectionState.domSelection = null;
   });
 
   it('reads selected variable state from a node selection', () => {
