@@ -14,10 +14,9 @@
   --color-popover: hsl(0 0% 100%);
   --color-popover-foreground: hsl(222 47% 11%);
 
-  /* Primary — blue-500 */
-  --color-primary: hsl(217 91% 60%);
+  /* Primary — accessible action blue */
+  --color-primary: hsl(211 76% 44%);
   --color-primary-foreground: hsl(0 0% 100%);
-  --color-primary-glow: hsl(213 94% 68%);
 
   --color-secondary: hsl(210 40% 96%);
   --color-secondary-foreground: hsl(222 47% 11%);
@@ -69,7 +68,65 @@
 :root {
   --color-selection-bg: hsl(214 95% 87%);
   --color-selection-text: hsl(224 71% 25%);
-  --gradient-brand: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-glow) 100%);
+}
+
+[data-theme="dark"] {
+  --color-background: hsl(215 20% 18%);
+  --color-foreground: hsl(210 25% 94%);
+  --color-card: hsl(215 18% 23%);
+  --color-card-foreground: hsl(210 25% 94%);
+  --color-popover: hsl(215 18% 23%);
+  --color-popover-foreground: hsl(210 25% 94%);
+  --color-primary: hsl(211 76% 44%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(214 18% 26%);
+  --color-secondary-foreground: hsl(210 25% 94%);
+  --color-muted: hsl(214 18% 26%);
+  --color-muted-foreground: hsl(214 17% 72%);
+  --color-border: hsl(214 17% 32%);
+  --color-border-strong: hsl(214 18% 40%);
+  --color-input: hsl(214 17% 34%);
+  --color-ring: hsl(211 86% 70%);
+  --color-surface: hsl(215 19% 21%);
+  --color-surface-elevated: hsl(215 18% 24%);
+  color-scheme: dark;
+}
+
+.lex4-demo-shell {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.lex4-demo-header {
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+.lex4-demo-heading {
+  color: var(--color-foreground);
+}
+
+.lex4-demo-muted {
+  color: var(--color-muted-foreground);
+}
+
+.lex4-demo-control {
+  background-color: var(--color-background);
+  border-color: var(--color-input);
+  color: var(--color-foreground);
+}
+
+.lex4-demo-control:hover {
+  background-color: var(--color-secondary);
+}
+
+.lex4-demo-primary-control {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.lex4-demo-primary-control:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 88%, black);
 }
 
 @keyframes fade-in {

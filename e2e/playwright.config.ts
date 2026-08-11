@@ -19,6 +19,11 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'mobile-chromium',
+      testMatch: /(?:smoke|theme-i18n)\.spec\.ts/,
+      use: { ...devices['Pixel 5'] },
+    },
   ],
   webServer: {
     command: `pnpm --filter demo dev --host 127.0.0.1 --port ${e2ePort} --strictPort`,

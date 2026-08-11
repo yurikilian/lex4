@@ -41,6 +41,7 @@ A paginated document editor built as a **reusable React library** on top of [Met
 - **Variables & placeholders** — insert dynamic tokens like `{{customer.name}}` with metadata export
 - **i18n support** — all UI strings externalized; override any subset for localization
 - **Read-only mode** — disable editing while keeping the document viewable
+- **Native light, dark, and system themes** — matte editor chrome with print-faithful white document pages
 - **Zero config** — drop in the component and start editing
 
 ## 📸 Screenshots
@@ -161,6 +162,17 @@ function App() {
 />
 ```
 
+### Dark Mode
+
+Lex4 themes its application chrome while keeping the A4 sheet white, so the on-screen document remains faithful to print and export output.
+
+```tsx
+<Lex4Editor theme="dark" />
+<Lex4Editor theme="system" />
+```
+
+The `theme` prop accepts `light`, `dark`, or `system` and defaults to `light` for backwards compatibility. Every palette value is exposed as a CSS custom property on `.lex4-editor`; consuming applications can override individual tokens without leaking Lex4 defaults into their global `:root` theme.
+
 ## 📖 API Reference
 
 ### `<Lex4Editor />` Component
@@ -174,6 +186,7 @@ The main editor component. Drop it into any React application.
 | `headerFooterEnabled` | `boolean` | `false` | Initial header/footer toggle state |
 | `onHeaderFooterToggle` | `(enabled: boolean) => void` | — | Called when the user toggles headers/footers |
 | `readOnly` | `boolean` | `false` | Disable editing (view-only mode) |
+| `theme` | `"light" \| "dark" \| "system"` | `"light"` | Theme the editor chrome; the A4 page remains print-white |
 | `extensions` | `Lex4Extension[]` | `[]` | Extensions to load (e.g., `astExtension()`, `variablesExtension(defs)`) |
 | `translations` | `DeepPartial<Lex4Translations>` | English | Partial i18n overrides, deep-merged with defaults |
 | `toolbar` | `Lex4ToolbarConfig` | All controls visible with labels | Controls visibility and labels for built-in toolbar actions such as history, variables, and header/footer |

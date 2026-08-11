@@ -30,6 +30,8 @@ describe('i18n — DEFAULT_TRANSLATIONS', () => {
     expect(t.indent).toBe('Indent');
     expect(t.outdent).toBe('Outdent');
     expect(t.history).toBe('History');
+    expect(t.fontFamily).toBe('Font family');
+    expect(t.fontSize).toBe('Font size');
     expect(t.blockType).toBe('Block type');
     expect(t.paragraph).toBe('Paragraph');
     expect(t.heading1).toBe('Heading 1');

@@ -18,6 +18,8 @@ export const DEFAULT_TRANSLATIONS: Lex4Translations = {
     indent: 'Indent',
     outdent: 'Outdent',
     history: 'History',
+    fontFamily: 'Font family',
+    fontSize: 'Font size',
     blockType: 'Block type',
     paragraph: 'Paragraph',
     heading1: 'Heading 1',

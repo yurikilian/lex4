@@ -1,27 +1,26 @@
 /* ───────────────────────────────────────────────────────────
-   Lex4 Editor — Tailwind + shadcn themed
-   Uses shadcn CSS variables (--color-*) for all colors.
-   Consuming apps provide values via their Tailwind/shadcn theme.
+   Lex4 Editor — self-contained, consumer-overridable theme.
+   Chrome follows the requested theme; the A4 page stays print-white.
    ─────────────────────────────────────────────────────────── */
 
 /* ── Default theme (low-priority layer, overridable) ─────── */
 @layer lex4-defaults {
-  :root {
+  .lex4-editor {
     --color-primary: hsl(217 91% 60%);
+    --color-primary-text: hsl(211 76% 44%);
     --color-primary-foreground: hsl(0 0% 100%);
-    --color-primary-glow: hsl(213 94% 68%);
 
-    --color-background: hsl(210 20% 98%);
+    --color-background: hsl(214 24% 96%);
     --color-foreground: hsl(222 47% 11%);
 
     --color-card: hsl(0 0% 100%);
     --color-card-foreground: hsl(222 47% 11%);
 
-    --color-secondary: hsl(210 40% 96%);
+    --color-secondary: hsl(214 26% 93%);
     --color-secondary-foreground: hsl(222 47% 11%);
 
-    --color-muted: hsl(210 40% 96%);
-    --color-muted-foreground: hsl(215 16% 47%);
+    --color-muted: hsl(214 26% 93%);
+    --color-muted-foreground: hsl(215 22% 36%);
 
     --color-accent: hsl(158 64% 42%);
     --color-accent-foreground: hsl(0 0% 100%);
@@ -33,10 +32,12 @@
     --color-input: hsl(214 32% 91%);
     --color-ring: hsl(213 94% 68%);
 
-    --color-surface: hsl(210 40% 98%);
+    --color-surface: hsl(214 28% 94%);
     --color-surface-elevated: hsl(0 0% 100%);
     --color-canvas: hsl(0 0% 100%);
     --color-canvas-foreground: hsl(222 47% 11%);
+    --color-canvas-muted: hsl(215 16% 47%);
+    --color-canvas-border: hsl(214 32% 91%);
 
     --color-token-customer: hsl(217 91% 60%);
     --color-token-customer-bg: hsl(214 95% 95%);
@@ -54,6 +55,73 @@
 
     --color-selection-bg: hsl(214 95% 87%);
     --color-selection-text: hsl(224 71% 25%);
+    color-scheme: light;
+  }
+
+  .lex4-editor:is([data-lex4-theme='dark'], .lex4-theme-dark) {
+    --color-primary: hsl(211 76% 44%);
+    --color-primary-text: hsl(211 90% 75%);
+    --color-primary-foreground: hsl(0 0% 100%);
+
+    --color-background: hsl(215 20% 18%);
+    --color-foreground: hsl(210 25% 94%);
+
+    --color-card: hsl(215 18% 23%);
+    --color-card-foreground: hsl(210 25% 94%);
+
+    --color-secondary: hsl(214 18% 26%);
+    --color-secondary-foreground: hsl(210 25% 94%);
+
+    --color-muted: hsl(214 18% 26%);
+    --color-muted-foreground: hsl(214 17% 72%);
+
+    --color-accent: hsl(158 55% 48%);
+    --color-accent-foreground: hsl(0 0% 100%);
+    --color-destructive: hsl(355 82% 67%);
+
+    --color-border: hsl(214 17% 32%);
+    --color-border-strong: hsl(214 18% 40%);
+    --color-input: hsl(214 17% 34%);
+    --color-ring: hsl(211 86% 70%);
+
+    --color-surface: hsl(215 19% 21%);
+    --color-surface-elevated: hsl(215 18% 24%);
+
+    --shadow-sm: 0 1px 2px 0 hsl(220 50% 4% / 0.28);
+    --shadow-md: 0 4px 10px -3px hsl(220 50% 4% / 0.38);
+    --shadow-lg: 0 18px 36px -14px hsl(220 50% 4% / 0.62);
+    --shadow-paper: 0 1px 2px hsl(220 50% 4% / 0.28), 0 18px 42px -16px hsl(220 50% 4% / 0.64);
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .lex4-editor[data-lex4-theme='system'] {
+      --color-primary: hsl(211 76% 44%);
+      --color-primary-text: hsl(211 90% 75%);
+      --color-primary-foreground: hsl(0 0% 100%);
+      --color-background: hsl(215 20% 18%);
+      --color-foreground: hsl(210 25% 94%);
+      --color-card: hsl(215 18% 23%);
+      --color-card-foreground: hsl(210 25% 94%);
+      --color-secondary: hsl(214 18% 26%);
+      --color-secondary-foreground: hsl(210 25% 94%);
+      --color-muted: hsl(214 18% 26%);
+      --color-muted-foreground: hsl(214 17% 72%);
+      --color-accent: hsl(158 55% 48%);
+      --color-accent-foreground: hsl(0 0% 100%);
+      --color-destructive: hsl(355 82% 67%);
+      --color-border: hsl(214 17% 32%);
+      --color-border-strong: hsl(214 18% 40%);
+      --color-input: hsl(214 17% 34%);
+      --color-ring: hsl(211 86% 70%);
+      --color-surface: hsl(215 19% 21%);
+      --color-surface-elevated: hsl(215 18% 24%);
+      --shadow-sm: 0 1px 2px 0 hsl(220 50% 4% / 0.28);
+      --shadow-md: 0 4px 10px -3px hsl(220 50% 4% / 0.38);
+      --shadow-lg: 0 18px 36px -14px hsl(220 50% 4% / 0.62);
+      --shadow-paper: 0 1px 2px hsl(220 50% 4% / 0.28), 0 18px 42px -16px hsl(220 50% 4% / 0.64);
+      color-scheme: dark;
+    }
   }
 }
 
@@ -86,7 +154,7 @@
 /* ── Structural tokens (non-color) ───────────────────────── */
 .lex4-editor {
   --lex4-sidebar-width: 320px;
-  --lex4-ui-font-family: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --lex4-ui-font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", sans-serif;
   --lex4-font-family: 'Inter', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --lex4-body-font-size: 12pt;
   --lex4-body-line-height: 1.5;
@@ -129,13 +197,15 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: linear-gradient(to bottom, var(--color-surface), var(--color-background));
+  background-color: var(--color-surface);
+  color: var(--color-foreground);
 }
 
 .lex4-canvas-scroll {
   min-width: 0;
   flex: 1;
   overflow: auto;
+  scrollbar-color: var(--color-border-strong) var(--color-surface);
 }
 
 .lex4-canvas-toolbar {
@@ -143,9 +213,7 @@
   top: 0;
   z-index: 15;
   padding: 0 1.5rem;
-  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background-color: var(--color-surface);
 }
 
 .lex4-canvas-toolbar-inner {
@@ -168,9 +236,7 @@
   top: 0;
   z-index: 10;
   font-size: 12px;
-  background: color-mix(in srgb, var(--color-surface-elevated) 80%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background-color: var(--color-surface-elevated);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -244,7 +310,7 @@
 }
 
 .lex4-block-type-trigger-code.heading {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .lex4-block-type-trigger-chevron {
@@ -302,7 +368,7 @@
 }
 
 .lex4-block-type-item-code.active {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-background));
 }
 
@@ -317,7 +383,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .lex4-editor button.lex4-toolbar-toggle-btn {
@@ -346,7 +412,7 @@
 .lex4-editor button.lex4-toolbar-toggle-btn.active {
   background-color: var(--color-secondary);
   border-color: var(--color-input);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .lex4-editor button.lex4-toolbar-toggle-btn svg {
@@ -380,7 +446,7 @@
 }
 .lex4-editor button.lex4-toolbar-btn.active {
   background-color: var(--color-secondary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 .lex4-editor button.lex4-toolbar-btn:disabled {
   color: color-mix(in srgb, var(--color-muted-foreground) 50%, transparent);
@@ -472,7 +538,7 @@
   height: 0.75rem;
   width: 0.75rem;
   border-radius: 9999px;
-  background-color: white;
+  background-color: var(--color-primary-foreground);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   transition: transform 200ms;
   transform: translateX(0.125rem);
@@ -510,7 +576,7 @@
 }
 .lex4-editor button.lex4-settings-trigger[aria-expanded="true"] {
   background-color: var(--color-secondary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .lex4-settings-menu {
@@ -740,7 +806,7 @@
 }
 .lex4-editor button.lex4-history-entry.active .lex4-history-entry-label {
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .lex4-history-entry-meta {
@@ -1095,7 +1161,7 @@
   min-width: 0;
   overflow: hidden;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -1207,6 +1273,12 @@
   border-radius: 0.375rem;
   overflow: hidden;
   animation: lex4-fade-in 300ms ease-out;
+  --color-foreground: var(--color-canvas-foreground);
+  --color-muted-foreground: var(--color-canvas-muted);
+  --color-border: var(--color-canvas-border);
+  --color-border-strong: color-mix(in srgb, var(--color-canvas-foreground) 24%, var(--color-canvas));
+  --color-surface-elevated: var(--color-canvas);
+  --color-secondary: color-mix(in srgb, var(--color-canvas-border) 42%, var(--color-canvas));
 }
 
 .lex4-page,
@@ -1344,8 +1416,10 @@
 
 .lex4-quote {
   margin: 0;
-  border-left: 4px solid var(--color-border);
-  padding-left: 1rem;
+  border-left: 2px solid var(--color-border-strong);
+  padding: 0.5rem 0.875rem;
+  background: color-mix(in srgb, var(--color-border) 32%, transparent);
+  border-radius: 0 0.375rem 0.375rem 0;
   color: var(--color-muted-foreground);
   font-style: italic;
 }
@@ -1356,7 +1430,7 @@
   left: 0;
   font-size: var(--lex4-body-font-size);
   line-height: var(--lex4-body-line-height);
-  color: color-mix(in srgb, var(--color-muted-foreground) 82%, transparent);
+  color: var(--color-canvas-muted);
   pointer-events: none;
   user-select: none;
   opacity: 1;
@@ -1404,7 +1478,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-muted-foreground) 60%, transparent);
+  color: var(--color-canvas-muted);
   pointer-events: none;
   user-select: none;
 }
@@ -1524,8 +1598,12 @@
 }
 
 .lex4-editor button.lex4-variable-create-submit {
-  background: var(--gradient-brand);
+  background-color: var(--color-primary);
   color: var(--color-primary-foreground);
+}
+
+.lex4-editor button.lex4-variable-create-submit:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 88%, black);
 }
 
 .lex4-page-counter {
@@ -1650,4 +1728,51 @@
 .lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] u,
 .lex4-editor[data-global-selection-active="true"] [data-testid^="page-body-"] [contenteditable="true"] s {
   color: inherit !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lex4-page,
+  .lex4-sidebar,
+  .lex4-variable-picker-dropdown,
+  .lex4-block-type-menu {
+    animation: none;
+  }
+
+  .lex4-block-type-trigger-chevron,
+  .lex4-variable-group-chevron,
+  .lex4-hf-switch,
+  .lex4-hf-switch-knob {
+    transition-duration: 0s;
+  }
+}
+
+@media (pointer: coarse) {
+  .lex4-editor button.lex4-toolbar-btn,
+  .lex4-editor button.lex4-toolbar-toggle-btn,
+  .lex4-editor button.lex4-block-type-trigger,
+  .lex4-toolbar-select,
+  .lex4-editor button.lex4-settings-trigger-icon,
+  .lex4-editor button.lex4-sidebar-action-btn,
+  .lex4-variable-picker-btn,
+  .lex4-hf-switch {
+    min-height: 44px;
+  }
+
+  .lex4-editor button.lex4-toolbar-btn,
+  .lex4-editor button.lex4-settings-trigger-icon,
+  .lex4-editor button.lex4-sidebar-action-btn,
+  .lex4-hf-switch {
+    min-width: 44px;
+  }
+}
+
+@media (max-width: 720px) {
+  .lex4-document-view {
+    align-items: flex-start;
+    padding: 1.25rem;
+  }
+
+  .lex4-sidebar {
+    width: min(var(--lex4-sidebar-width), calc(100vw - 1rem));
+  }
 }

@@ -22,6 +22,8 @@ export interface Lex4Translations {
     indent: string;
     outdent: string;
     history: string;
+    fontFamily?: string;
+    fontSize?: string;
     blockType: string;
     paragraph: string;
     heading1: string;

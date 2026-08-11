@@ -314,6 +314,8 @@ export const Toolbar: React.FC = () => {
     <div
       className="lex4-toolbar"
       data-testid="toolbar"
+      role="toolbar"
+      aria-label={t.regions.toolbar}
     >
       <div className="lex4-toolbar-row">
         <div className="lex4-toolbar-group" data-testid="history-controls">
@@ -351,6 +353,7 @@ export const Toolbar: React.FC = () => {
           <select
             className="lex4-toolbar-select"
             data-testid="font-selector"
+            aria-label={t.toolbar.fontFamily}
             value={activeFontFamily}
             onChange={handleFontChange}
           >
@@ -367,6 +370,7 @@ export const Toolbar: React.FC = () => {
           <select
             className="lex4-toolbar-select lex4-toolbar-select-narrow"
             data-testid="font-size-selector"
+            aria-label={t.toolbar.fontSize}
             value={String(activeFontSize)}
             onChange={handleFontSizeChange}
           >

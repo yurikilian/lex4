@@ -16,7 +16,7 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
   const t = useTranslations();
 
   return (
-    <label
+    <div
       className="lex4-hf-toggle"
       data-testid="header-footer-toggle"
     >
@@ -40,6 +40,6 @@ export const HeaderFooterToggle: React.FC<HeaderFooterToggleProps> = ({
       >
         <span className="lex4-hf-switch-knob" />
       </button>
-    </label>
+    </div>
   );
 };

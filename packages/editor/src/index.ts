@@ -1,6 +1,7 @@
 export { Lex4Editor } from './components/Lex4Editor';
 export type {
   Lex4EditorProps,
+  Lex4Theme,
   Lex4ToolbarConfig,
   Lex4ToolbarControlConfig,
 } from './types/editor-props';

@@ -126,6 +126,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
           contentEditable={
             <ContentEditable
               className="lex4-page-body-editable"
+              aria-label={t.regions.body}
             />
           }
           placeholder={

@@ -7,6 +7,9 @@ type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
+/** Visual theme used by the editor chrome. The document page remains print-white in every theme. */
+export type Lex4Theme = 'light' | 'dark' | 'system';
+
 export interface Lex4ToolbarControlConfig {
   /** Controls whether the toolbar control is rendered. Defaults to true. */
   visible?: boolean;
@@ -39,6 +42,12 @@ export interface Lex4EditorProps {
 
   /** Whether the editor is read-only */
   readOnly?: boolean;
+
+  /**
+   * Visual theme for the editor chrome. Defaults to light for backwards compatibility.
+   * Use system to follow the operating-system preference.
+   */
+  theme?: Lex4Theme;
 
   /** Capture undo/redo shortcuts at the window level, even when focus is outside the document. Defaults to true. */
   captureHistoryShortcutsOnWindow?: boolean;

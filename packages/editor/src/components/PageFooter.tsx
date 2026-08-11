@@ -85,6 +85,7 @@ export const PageFooter: React.FC<PageFooterProps> = ({
             <ContentEditable
               ref={contentRef}
               className={`lex4-page-hf-editable${hasPageCounter ? ' lex4-page-hf-narrow' : ''}`}
+              aria-label={t.regions.footer}
             />
           }
           placeholder={

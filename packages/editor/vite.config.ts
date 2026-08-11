@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
 
+const rootDir = import.meta.dirname;
+
 export default defineConfig({
   plugins: [
     react(),
@@ -14,10 +16,13 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(rootDir, 'src/index.ts'),
       name: 'Lex4Editor',
       formats: ['es', 'cjs'],
       fileName: 'lex4-editor',
+      // Vite >= 6 derives the lib CSS file name from `fileName`; the published
+      // `./style.css` export must keep its name.
+      cssFileName: 'style',
     },
     rollupOptions: {
       external: [
@@ -39,7 +44,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      '@': resolve(rootDir, 'src'),
     },
   },
 });

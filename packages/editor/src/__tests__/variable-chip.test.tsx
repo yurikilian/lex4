@@ -157,9 +157,12 @@ describe('VariableChip', () => {
   it('applies inline font weight styles from the stored variable style', () => {
     renderVariableChip('font-size: 22.5pt; font-weight: 700');
 
-    expect(screen.getByTestId('variable-chip-customer.name')).toHaveStyle({
-      fontSize: '22.5pt',
-      fontWeight: '700',
-    });
+    const chip = screen.getByTestId('variable-chip-customer.name');
+
+    expect(chip).toHaveStyle({ fontWeight: '700' });
+    // jsdom >= 26 normalises absolute length units in computed styles
+    // (`getComputedStyle(el).fontSize` reports `30px` for `22.5pt`), so the
+    // point value is asserted on the inline style declaration instead.
+    expect(chip.style.fontSize).toBe('22.5pt');
   });
 });

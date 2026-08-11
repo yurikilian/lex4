@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Lex4Editor, astExtension, variablesExtension, PT_BR_TRANSLATIONS } from '@yurikilian/lex4';
-import type { Lex4Document, Lex4EditorHandle, VariableDefinition, Lex4Translations } from '@yurikilian/lex4';
+import type { Lex4Document, Lex4EditorHandle, Lex4Theme, VariableDefinition, Lex4Translations } from '@yurikilian/lex4';
 import { Button } from '@/components/ui/button';
 import type { SerializedEditorState } from 'lexical';
-import { Save, Download, Globe, ChevronDown, ListOrdered } from 'lucide-react';
+import { Save, Download, Globe, ChevronDown, ListOrdered, Moon, Sun } from 'lucide-react';
 import '@yurikilian/lex4/style.css';
 
 type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
@@ -130,6 +130,13 @@ const ALPHA_LIST_SAMPLE_DOCUMENT: Lex4Document = {
 export const App: React.FC = () => {
   const editorRef = useRef<Lex4EditorHandle>(null);
   const [langCode, setLangCode] = useState('en');
+  const [theme, setTheme] = useState<Exclude<Lex4Theme, 'system'>>(() => {
+    const savedTheme = window.localStorage.getItem('lex4-demo-theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
   const currentLang = LANGUAGES.find(l => l.code === langCode) ?? LANGUAGES[0];
   const searchParams = new URLSearchParams(window.location.search);
@@ -181,29 +188,30 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    window.localStorage.setItem('lex4-demo-theme', theme);
+  }, [theme]);
+
   return (
-    <div className="h-screen flex flex-col bg-background">
-      <header className="h-12 border-b border-border bg-surface-elevated/95 backdrop-blur-xl sticky top-0 z-30">
+    <div className="lex4-demo-shell h-screen flex flex-col" data-theme={theme}>
+      <header className="lex4-demo-header h-12 border-b sticky top-0 z-30">
         <div className="h-full px-4 flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div
-              className="h-7 w-7 rounded-lg flex items-center justify-center text-primary-foreground font-bold text-sm shadow-sm"
-              style={{ background: 'var(--gradient-brand)' }}
-            >
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-primary text-primary-foreground font-bold text-sm">
               L
             </div>
             <div className="leading-tight">
               <div className="text-[13px] font-semibold tracking-tight">
                 Lex<span className="text-primary">4</span>
               </div>
-              <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">
+              <div className="lex4-demo-muted text-[10px] font-medium uppercase tracking-wider">
                 Document Editor
               </div>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-1 ml-4 text-[10px] text-muted-foreground">
-            <span className="font-medium text-foreground">Untitled proposal</span>
+          <div className="lex4-demo-muted hidden md:flex items-center gap-1 ml-4 text-[11px]">
+            <span className="lex4-demo-heading font-medium">Untitled proposal</span>
             <span className="opacity-40">·</span>
             <span>Auto-saved 2s ago</span>
             <span className="opacity-40">·</span>
@@ -211,15 +219,15 @@ export const App: React.FC = () => {
           </div>
 
           <div className="ml-auto flex items-center gap-1">
-            <button
-              className="h-7 px-2 inline-flex items-center gap-1 rounded-md hover:bg-secondary text-[10px] text-muted-foreground transition-colors"
+            <div
+              className="lex4-demo-muted h-7 px-2 inline-flex items-center gap-1 rounded-md hover:bg-secondary text-[11px] transition-colors"
               title={currentLang.label}
             >
               <Globe className="h-2.5 w-2.5" />
               <select
                 value={langCode}
                 onChange={(e) => setLangCode(e.target.value)}
-                className="w-[1.8rem] bg-transparent text-[10px] font-medium text-muted-foreground appearance-none cursor-pointer focus:outline-none"
+                className="lex4-demo-muted w-[1.8rem] bg-transparent text-[11px] font-medium appearance-none cursor-pointer focus:outline-none"
                 data-testid="language-selector"
                 aria-label="Language"
               >
@@ -229,13 +237,24 @@ export const App: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="h-2.5 w-2.5" />
-            </button>
+              <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              data-testid="theme-toggle"
+              className="lex4-demo-control h-7 w-7"
+              aria-label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}
+              title={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}
+              onClick={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+            </Button>
             <Button
               variant="outline"
               size="sm"
               data-testid="btn-toggle-alpha-sample"
-              className="h-7 gap-1 px-2 text-[10px]"
+              className="lex4-demo-control h-7 gap-1 px-2 text-[10px]"
               onClick={handleToggleAlphaSample}
             >
               <ListOrdered className="h-2.5 w-2.5" />
@@ -245,7 +264,7 @@ export const App: React.FC = () => {
               variant="outline"
               size="sm"
               data-testid="btn-export-ast"
-              className="h-7 gap-1 px-2 text-[10px]"
+              className="lex4-demo-control h-7 gap-1 px-2 text-[10px]"
               onClick={handleExportAst}
             >
               <Download className="h-2.5 w-2.5" />
@@ -254,8 +273,7 @@ export const App: React.FC = () => {
             <Button
               size="sm"
               data-testid="btn-save"
-              className="h-7 gap-1 px-2 text-[10px] shadow-sm hover:shadow-md transition-shadow"
-              style={{ background: 'var(--gradient-brand)' }}
+              className="lex4-demo-primary-control h-7 gap-1 px-2 text-[10px]"
               onClick={handleSave}
             >
               <Save className="h-2.5 w-2.5" />
@@ -272,6 +290,7 @@ export const App: React.FC = () => {
           onDocumentChange={handleChange}
           extensions={extensions}
           translations={currentLang.translations}
+          theme={theme}
         />
       </main>
     </div>

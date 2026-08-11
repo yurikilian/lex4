@@ -6,11 +6,20 @@ test.describe('Theme — Visual Design', () => {
     await page.waitForSelector('[data-testid="lex4-editor"]');
   });
 
-  test('document area has light background', async ({ page }) => {
-    const container = page.locator('[data-testid="lex4-editor"] > div:nth-child(3)');
-    const bgImage = await container.evaluate(el => getComputedStyle(el).backgroundImage);
-    // Canvas uses a radial gradient for depth
-    expect(bgImage).toContain('gradient');
+  test('document desk is a solid matte surface without gradients', async ({ page }) => {
+    const canvas = page.locator('.lex4-canvas');
+    const styles = await canvas.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        backgroundColor: computed.backgroundColor,
+        backgroundImage: computed.backgroundImage,
+        backdropFilter: computed.backdropFilter,
+      };
+    });
+
+    expect(styles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(styles.backgroundImage).toBe('none');
+    expect(styles.backdropFilter).toBe('none');
   });
 
   test('page has prominent shadow on dark background', async ({ page }) => {
@@ -28,9 +37,35 @@ test.describe('Theme — Visual Design', () => {
     expect(bg).toBe('rgb(255, 255, 255)');
   });
 
+  test('dark mode rethemes the chrome while preserving print-white paper', async ({ page }) => {
+    await page.getByTestId('theme-toggle').click();
+
+    const editor = page.getByTestId('lex4-editor');
+    await expect(editor).toHaveAttribute('data-lex4-theme', 'dark');
+
+    const colors = await page.evaluate(() => {
+      const toolbar = document.querySelector<HTMLElement>('.lex4-toolbar');
+      const canvas = document.querySelector<HTMLElement>('.lex4-canvas');
+      const paper = document.querySelector<HTMLElement>('.lex4-page');
+      if (!toolbar || !canvas || !paper) return null;
+      return {
+        toolbar: getComputedStyle(toolbar).backgroundColor,
+        canvas: getComputedStyle(canvas).backgroundColor,
+        paper: getComputedStyle(paper).backgroundColor,
+        foreground: getComputedStyle(toolbar).color,
+      };
+    });
+
+    expect(colors).not.toBeNull();
+    expect(colors!.toolbar).not.toBe('rgb(255, 255, 255)');
+    expect(colors!.canvas).not.toBe('rgb(255, 255, 255)');
+    expect(colors!.paper).toBe('rgb(255, 255, 255)');
+    expect(colors!.foreground).not.toBe(colors!.toolbar);
+  });
+
   test('header has blue tint when enabled', async ({ page }) => {
     // Enable header/footer
-    await page.getByTestId('header-footer-toggle').click();
+    await page.getByTestId('header-footer-switch').click();
     const headerPage = page.locator('[data-testid^="page-header-"]').first();
     await expect(headerPage).toBeVisible();
 
@@ -41,7 +76,7 @@ test.describe('Theme — Visual Design', () => {
   });
 
   test('footer has blue tint when enabled', async ({ page }) => {
-    await page.getByTestId('header-footer-toggle').click();
+    await page.getByTestId('header-footer-switch').click();
     const footerPage = page.locator('[data-testid^="page-footer-"]').first();
     await expect(footerPage).toBeVisible();
 
@@ -98,7 +133,7 @@ test.describe('Theme — Visual Design', () => {
     expect(text?.toLowerCase()).toContain('customer');
   });
 
-  test('toolbar and sidebar pills use shadcn-like outline sizing', async ({ page }) => {
+  test('toolbar and sidebar pills use compact or touch-safe sizing', async ({ page }, testInfo) => {
     const variableToggle = page.getByTestId('toggle-variable-panel');
     await expect(variableToggle).toBeVisible();
 
@@ -115,9 +150,9 @@ test.describe('Theme — Visual Design', () => {
 
     expect(toggleStyles.borderRadius).toBe('6px');
     expect(toggleStyles.fontSize).toBe('12px');
-    expect(toggleStyles.height).toBe('32px');
+    expect(toggleStyles.height).toBe(testInfo.project.name === 'mobile-chromium' ? '44px' : '32px');
     expect(toggleStyles.paddingLeft).toBe('12px');
-    expect(toggleStyles.backgroundColor).toBe('rgb(249, 250, 251)');
+    expect(toggleStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
 
     await variableToggle.click();
     const variablePill = page.getByTestId('variable-panel-customer.name');
@@ -140,7 +175,7 @@ test.describe('Theme — Visual Design', () => {
     expect(pillStyles.paddingLeft).toBe('8px');
     expect(pillStyles.boxShadow).toBe('none');
 
-    await page.getByTestId('header-footer-toggle').click();
+    await page.getByTestId('header-footer-switch').click();
     await page.getByTestId('toggle-history-sidebar').click();
     const historySourcePill = page.locator('.lex4-history-entry-source').first();
     await expect(historySourcePill).toBeVisible();
@@ -188,14 +223,19 @@ test.describe('i18n — Default Translations', () => {
     await expect(btn).toHaveAttribute('title', 'Italic (Ctrl+I)');
   });
 
+  test('font controls have accessible translated names', async ({ page }) => {
+    await expect(page.getByTestId('font-selector')).toHaveAttribute('aria-label', 'Font family');
+    await expect(page.getByTestId('font-size-selector')).toHaveAttribute('aria-label', 'Font size');
+  });
+
   test('header placeholder shows translated text', async ({ page }) => {
-    await page.getByTestId('header-footer-toggle').click();
+    await page.getByTestId('header-footer-switch').click();
     const headerPlaceholder = page.locator('[data-testid^="page-header-"] .lex4-page-hf-placeholder');
     await expect(headerPlaceholder.first()).toHaveText('Header');
   });
 
   test('footer placeholder shows translated text', async ({ page }) => {
-    await page.getByTestId('header-footer-toggle').click();
+    await page.getByTestId('header-footer-switch').click();
     const footerPlaceholder = page.locator('[data-testid^="page-footer-"] .lex4-page-hf-placeholder');
     await expect(footerPlaceholder.first()).toHaveText('Footer');
   });

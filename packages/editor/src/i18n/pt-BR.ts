@@ -18,6 +18,8 @@ export const PT_BR_TRANSLATIONS: Lex4Translations = {
     indent: 'Aumentar Recuo',
     outdent: 'Diminuir Recuo',
     history: 'Histórico',
+    fontFamily: 'Família tipográfica',
+    fontSize: 'Tamanho da fonte',
     blockType: 'Tipo de bloco',
     paragraph: 'Parágrafo',
     heading1: 'Título 1',

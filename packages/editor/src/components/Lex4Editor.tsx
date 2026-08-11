@@ -58,10 +58,12 @@ const EditorChrome: React.FC<{
   captureHistoryShortcutsOnWindow: boolean;
   onSave?: Lex4EditorProps['onSave'];
   className?: string;
+  theme: NonNullable<Lex4EditorProps['theme']>;
 }> = ({
   captureHistoryShortcutsOnWindow,
   onSave,
   className,
+  theme,
 }) => {
   const {
     document,
@@ -72,6 +74,7 @@ const EditorChrome: React.FC<{
     redo,
   } = useDocument();
   const { sidePanels, cssVariables, rootClassNames } = useExtensions();
+  const t = useTranslations();
   const rootRef = useRef<HTMLDivElement>(null);
   const selectionBufferRef = useRef<HTMLTextAreaElement>(null);
 
@@ -228,7 +231,7 @@ const EditorChrome: React.FC<{
     };
   }, [captureHistoryShortcutsOnWindow, clearGlobalSelection, handleHistoryShortcut, redo, undo]);
 
-  const rootClassName = ['lex4-editor', ...rootClassNames, className].filter(Boolean).join(' ');
+  const rootClassName = ['lex4-editor', `lex4-theme-${theme}`, ...rootClassNames, className].filter(Boolean).join(' ');
   const extensionStyle = Object.keys(cssVariables).length > 0
     ? cssVariables as React.CSSProperties
     : undefined;
@@ -239,6 +242,7 @@ const EditorChrome: React.FC<{
       className={rootClassName}
       style={extensionStyle}
       data-testid="lex4-editor"
+      data-lex4-theme={theme}
       data-global-selection-active={globalSelectionActive ? 'true' : 'false'}
       onKeyDownCapture={handleKeyDownCapture}
       onMouseDownCapture={handleMouseDownCapture}
@@ -253,7 +257,11 @@ const EditorChrome: React.FC<{
       />
       <Toolbar />
       <div className="lex4-canvas">
-        <div className="lex4-canvas-scroll">
+        <div
+          className="lex4-canvas-scroll"
+          tabIndex={0}
+          aria-label={t.regions.document}
+        >
           <DocumentView />
         </div>
         {sidePanels.map((Panel, idx) => (
@@ -273,7 +281,8 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
   captureHistoryShortcutsOnWindow: boolean;
   onSave?: Lex4EditorProps['onSave'];
   className?: string;
-}>(({ captureHistoryShortcutsOnWindow, onSave, className }, ref) => {
+  theme: NonNullable<Lex4EditorProps['theme']>;
+}>(({ captureHistoryShortcutsOnWindow, onSave, className, theme }, ref) => {
   const {
     document: doc,
     activePageId,
@@ -371,6 +380,7 @@ const EditorWithHandle = forwardRef<Lex4EditorHandle, {
       captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
       onSave={onSave}
       className={className}
+      theme={theme}
     />
   );
 });
@@ -399,6 +409,7 @@ export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
   translations,
   toolbar,
   className,
+  theme = 'light',
 }, ref) => {
   return (
     <TranslationsProvider translations={translations}>
@@ -414,6 +425,7 @@ export const Lex4Editor = forwardRef<Lex4EditorHandle, Lex4EditorProps>(({
                 captureHistoryShortcutsOnWindow={captureHistoryShortcutsOnWindow}
                 onSave={onSave}
                 className={className}
+                theme={theme}
               />
             </DocumentProvider>
           </ExtensionProvider>
