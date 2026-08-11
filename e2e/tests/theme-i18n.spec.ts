@@ -275,10 +275,8 @@ test.describe('i18n — Default Translations', () => {
   });
 
   test('history action labels use i18n strings', async ({ page }) => {
-    // History sidebar is hidden by default — open it
-    await page.getByTestId('toggle-history-sidebar').click();
-
-    // Click into the body, type, select all, and apply bold
+    // Create the history entry before opening the sidebar. On compact screens
+    // the sidebar intentionally overlays the document and blocks editing.
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
     await body.pressSequentially('Hello', { delay: 30 });
@@ -288,6 +286,8 @@ test.describe('i18n — Default Translations', () => {
     await page.waitForTimeout(100);
     await page.getByTestId('btn-bold').click();
     await page.waitForTimeout(200);
+
+    await page.getByTestId('toggle-history-sidebar').click();
 
     // The history should show "Bold applied"
     const historyEntries = page.getByTestId('history-entry-list');
