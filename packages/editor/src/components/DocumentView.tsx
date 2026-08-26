@@ -9,6 +9,7 @@ import { usePagination } from '../hooks/use-pagination';
 import { PageView } from './PageView';
 import { createPageFromTemplate } from '../types/document';
 import { debug, shortId } from '../utils/debug';
+import { mergeEditorStates } from '../utils/editor-state-utils';
 
 /**
  * DocumentView — Scrollable container rendering all pages vertically.
@@ -30,6 +31,8 @@ export const DocumentView: React.FC = () => {
   const t = useTranslations();
   const { handlePageUnderflow, reflowAll } = usePagination(document, dispatch);
   const previousBodyHeightsRef = useRef<number[] | null>(null);
+  const documentRef = useRef(document);
+  const pendingPageBodyStatesRef = useRef(new Map<string, SerializedEditorState | null>());
   const pasteOverflowSequenceRef = useRef(false);
   const pasteOverflowReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const defaultPageTemplate = useMemo(
@@ -46,6 +49,7 @@ export const DocumentView: React.FC = () => {
       document.defaultHeaderState,
     ],
   );
+  documentRef.current = document;
 
   const bodyHeights = useMemo(
     () => document.pages.map(page => computeBodyHeight(
@@ -118,13 +122,20 @@ export const DocumentView: React.FC = () => {
 
   const handlePageOverflow = useCallback(
     (
-      pageIndex: number,
+      sourcePageId: string,
       overflowContent: SerializedEditorState,
       cause: 'paste' | 'content',
     ) => {
+      const currentDocument = documentRef.current;
+      const pageIndex = currentDocument.pages.findIndex(page => page.id === sourcePageId);
+      if (pageIndex < 0) {
+        debug('page', `ignoring overflow from removed page ${shortId(sourcePageId)}`);
+        return;
+      }
+
       const nextPageIndex = pageIndex + 1;
       const overflowChildCount = overflowContent.root?.children?.length ?? 0;
-      debug('page', `handlePageOverflow: pageIndex=${pageIndex} overflowChildren=${overflowChildCount} totalPages=${document.pages.length}`);
+      debug('page', `handlePageOverflow: pageId=${shortId(sourcePageId)} pageIndex=${pageIndex} overflowChildren=${overflowChildCount} totalPages=${currentDocument.pages.length}`);
 
       if (cause === 'paste') {
         pasteOverflowSequenceRef.current = true;
@@ -140,12 +151,13 @@ export const DocumentView: React.FC = () => {
         }, 800);
       }
 
-      if (nextPageIndex < document.pages.length) {
+      if (nextPageIndex < currentDocument.pages.length) {
         // Prepend overflow content to the next page's editor directly
-        const nextPage = document.pages[nextPageIndex];
+        const nextPage = currentDocument.pages[nextPageIndex];
         const nextEditor = editorRegistry.get(nextPage.id);
 
         if (nextEditor) {
+          pendingPageBodyStatesRef.current.delete(nextPage.id);
           const currentState = nextEditor.getEditorState().toJSON();
           const existingChildren = currentState.root?.children ?? [];
           const overflowChildren = overflowContent.root?.children ?? [];
@@ -165,21 +177,22 @@ export const DocumentView: React.FC = () => {
             requestFocusAtEnd({ pageId: nextPage.id, region: 'body' });
           }
         } else {
-          debug('page', `editor not found in registry for page ${shortId(nextPage.id)} — falling back to ADD_PAGE`);
-          const newPage = createPageFromTemplate(defaultPageTemplate);
-          newPage.bodyState = overflowContent;
+          const currentState = pendingPageBodyStatesRef.current.get(nextPage.id) ?? nextPage.bodyState;
+          const mergedState = mergeEditorStates(overflowContent, currentState);
+          pendingPageBodyStatesRef.current.set(nextPage.id, mergedState);
+          debug('page', `editor not found in registry for page ${shortId(nextPage.id)} — merging into current document state`);
           runHistoryAction(
             {
-              label: 'Overflow created new page',
+              label: 'Overflow moved content to next page',
               source: 'overflow',
               region: 'document',
             },
             () => {
-              dispatch({ type: 'ADD_PAGE', afterIndex: pageIndex, page: newPage });
+              dispatch({ type: 'UPDATE_PAGE_BODY', pageId: nextPage.id, bodyState: mergedState });
             },
           );
           if (pasteOverflowSequenceRef.current) {
-            requestFocusAtEnd({ pageId: newPage.id, region: 'body' });
+            requestFocusAtEnd({ pageId: nextPage.id, region: 'body' });
           }
         }
       } else {
@@ -202,7 +215,7 @@ export const DocumentView: React.FC = () => {
         }
       }
     },
-    [defaultPageTemplate, document.pages, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction],
+    [defaultPageTemplate, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction],
   );
 
   const handleBackspaceAtPageStart = useCallback(
@@ -297,7 +310,7 @@ export const DocumentView: React.FC = () => {
           key={page.id}
           pageId={page.id}
           pageIndex={index}
-          onOverflow={(content, cause) => handlePageOverflow(index, content, cause)}
+          onOverflow={(content, cause) => handlePageOverflow(page.id, content, cause)}
           onBackspaceAtStart={handleBackspaceAtPageStart}
           onDeleteAtEnd={handleDeleteAtPageEnd}
           onMoveToPreviousPage={handleMoveToPreviousPage}

@@ -9,6 +9,10 @@ import {
 } from 'lexical';
 import { debug, debugWarn } from '../../utils/debug';
 import { performMidBlockSplit } from '../utils/mid-block-split';
+import {
+  createOverflowCheckGate,
+  type OverflowCheckCause,
+} from '../utils/overflow-check-gate';
 
 /**
  * Recursively serializes a Lexical node and all its children.
@@ -53,7 +57,6 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
   onOverflow,
 }) => {
   const [editor] = useLexicalComposerContext();
-  const processingRef = useRef(false);
   const onOverflowRef = useRef(onOverflow);
   onOverflowRef.current = onOverflow;
 
@@ -61,13 +64,48 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
     let observer: ResizeObserver | null = null;
     let unregisterUpdateListener: (() => void) | null = null;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let deliveryTimer: ReturnType<typeof setTimeout> | null = null;
+    const gate = createOverflowCheckGate<{
+      rootElement: HTMLElement;
+      container: HTMLElement;
+    }>();
 
-    const checkOverflow = (
+    let checkOverflow: (
       rootElement: HTMLElement,
       container: HTMLElement,
-      cause: 'paste' | 'content',
+      cause: OverflowCheckCause,
+    ) => void;
+
+    const finishProcessing = () => {
+      gate.finish(({ target, cause }) => {
+        checkOverflow(target.rootElement, target.container, cause);
+      });
+    };
+
+    const deliverOverflow = (
+      overflowState: SerializedEditorState,
+      cause: OverflowCheckCause,
     ) => {
-      if (processingRef.current) return;
+      deliveryTimer = setTimeout(() => {
+        deliveryTimer = null;
+        try {
+          onOverflowRef.current(overflowState, cause);
+        } finally {
+          finishProcessing();
+        }
+      }, 0);
+    };
+
+    checkOverflow = (
+      rootElement: HTMLElement,
+      container: HTMLElement,
+      cause: OverflowCheckCause,
+    ) => {
+      const request = {
+        target: { rootElement, container },
+        cause,
+      };
+      if (gate.deferIfProcessing(request)) return;
 
       const availableHeight = container.clientHeight;
       if (availableHeight <= 0) return;
@@ -86,41 +124,43 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       if (children.length <= 1) {
         debug('overflow', `single block overflows (content=${contentHeight}px > available=${availableHeight}px) — attempting mid-block split`);
 
-        processingRef.current = true;
+        if (!gate.start()) return;
 
-        editor.update(
-          () => {
-            const overflowNodes = performMidBlockSplit(rootElement, availableHeight, 0);
-            if (!overflowNodes || overflowNodes.length === 0) {
-              debug('overflow', 'mid-block split not possible for single block');
-              processingRef.current = false;
-              return;
-            }
+        try {
+          editor.update(
+            () => {
+              const overflowNodes = performMidBlockSplit(rootElement, availableHeight, 0);
+              if (!overflowNodes || overflowNodes.length === 0) {
+                debug('overflow', 'mid-block split not possible for single block');
+                finishProcessing();
+                return;
+              }
 
-            const overflowState: SerializedEditorState = {
-              root: {
-                children: overflowNodes,
-                direction: null,
-                format: '',
-                indent: 0,
-                type: 'root',
-                version: 1,
-              },
-            } as SerializedEditorState;
+              const overflowState: SerializedEditorState = {
+                root: {
+                  children: overflowNodes,
+                  direction: null,
+                  format: '',
+                  indent: 0,
+                  type: 'root',
+                  version: 1,
+                },
+              } as SerializedEditorState;
 
-            debug('overflow', `mid-block split extracted ${overflowNodes.length} overflow nodes from single block`);
+              debug('overflow', `mid-block split extracted ${overflowNodes.length} overflow nodes from single block`);
 
-            setTimeout(() => {
-              onOverflowRef.current(overflowState, cause);
-              processingRef.current = false;
-            }, 0);
-          },
-          { tag: 'overflow-split' },
-        );
+              deliverOverflow(overflowState, cause);
+            },
+            { tag: 'overflow-split' },
+          );
+        } catch (error) {
+          finishProcessing();
+          throw error;
+        }
         return;
       }
 
-      processingRef.current = true;
+      if (!gate.start()) return;
 
       debug('overflow', `OVERFLOW detected: content=${contentHeight}px available=${availableHeight}px children=${children.length}`);
 
@@ -149,77 +189,79 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
 
       if (splitIndex >= children.length) {
         debugWarn('overflow', 'no valid split point found — all children fit individually');
-        processingRef.current = false;
+        finishProcessing();
         return;
       }
 
-      editor.update(
-        () => {
-          const root = $getRoot();
-          const allChildren = root.getChildren();
+      try {
+        editor.update(
+          () => {
+            const root = $getRoot();
+            const allChildren = root.getChildren();
 
-          if (splitIndex >= allChildren.length) {
-            debugWarn('overflow', `splitIndex=${splitIndex} >= Lexical children=${allChildren.length} — mismatch`);
-            processingRef.current = false;
-            return;
-          }
+            if (splitIndex >= allChildren.length) {
+              debugWarn('overflow', `splitIndex=${splitIndex} >= Lexical children=${allChildren.length} — mismatch`);
+              finishProcessing();
+              return;
+            }
 
-          let overflowNodes: SerializedLexicalNode[] = [];
+            const overflowNodes: SerializedLexicalNode[] = [];
 
-          // If the first block itself overflows, try mid-block split on it
-          if (firstBlockOverflows) {
-            const midBlockOverflow = performMidBlockSplit(rootElement, availableHeight, 0);
-            if (midBlockOverflow && midBlockOverflow.length > 0) {
-              overflowNodes.push(...midBlockOverflow);
-              debug('overflow', `mid-block split on first block extracted ${midBlockOverflow.length} nodes`);
+            // If the first block itself overflows, try mid-block split on it
+            if (firstBlockOverflows) {
+              const midBlockOverflow = performMidBlockSplit(rootElement, availableHeight, 0);
+              if (midBlockOverflow && midBlockOverflow.length > 0) {
+                overflowNodes.push(...midBlockOverflow);
+                debug('overflow', `mid-block split on first block extracted ${midBlockOverflow.length} nodes`);
+              } else {
+                debug('overflow', 'mid-block split failed on first block — keeping it whole');
+              }
+
+              // Serialize and remove remaining blocks after the first
+              const freshChildren = root.getChildren();
+              const toRemove = freshChildren.slice(1);
+              for (const node of toRemove) {
+                overflowNodes.push(serializeNodeTree(node));
+              }
+              for (const node of toRemove) {
+                node.remove();
+              }
             } else {
-              debug('overflow', 'mid-block split failed on first block — keeping it whole');
+              const toRemove = allChildren.slice(splitIndex);
+              for (const node of toRemove) {
+                overflowNodes.push(serializeNodeTree(node));
+              }
+              for (const node of toRemove) {
+                node.remove();
+              }
             }
 
-            // Serialize and remove remaining blocks after the first
-            const freshChildren = root.getChildren();
-            const toRemove = freshChildren.slice(1);
-            for (const node of toRemove) {
-              overflowNodes.push(serializeNodeTree(node));
+            if (overflowNodes.length === 0) {
+              finishProcessing();
+              return;
             }
-            for (const node of toRemove) {
-              node.remove();
-            }
-          } else {
-            const toRemove = allChildren.slice(splitIndex);
-            for (const node of toRemove) {
-              overflowNodes.push(serializeNodeTree(node));
-            }
-            for (const node of toRemove) {
-              node.remove();
-            }
-          }
 
-          if (overflowNodes.length === 0) {
-            processingRef.current = false;
-            return;
-          }
+            debug('overflow', `extracted ${overflowNodes.length} overflow nodes total`);
 
-          debug('overflow', `extracted ${overflowNodes.length} overflow nodes total`);
+            const overflowState: SerializedEditorState = {
+              root: {
+                children: overflowNodes,
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'root',
+                version: 1,
+              },
+            } as SerializedEditorState;
 
-          const overflowState: SerializedEditorState = {
-            root: {
-              children: overflowNodes,
-              direction: null,
-              format: '',
-              indent: 0,
-              type: 'root',
-              version: 1,
-            },
-          } as SerializedEditorState;
-
-          setTimeout(() => {
-            onOverflowRef.current(overflowState, cause);
-            processingRef.current = false;
-          }, 0);
-        },
-        { tag: 'overflow-split' },
-      );
+            deliverOverflow(overflowState, cause);
+          },
+          { tag: 'overflow-split' },
+        );
+      } catch (error) {
+        finishProcessing();
+        throw error;
+      }
     };
 
     const setupObservers = (rootElement: HTMLElement) => {
@@ -300,6 +342,8 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       if (observer) observer.disconnect();
       if (unregisterUpdateListener) unregisterUpdateListener();
       if (debounceTimer) clearTimeout(debounceTimer);
+      if (deliveryTimer) clearTimeout(deliveryTimer);
+      gate.dispose();
     };
   }, [editor]);
 
