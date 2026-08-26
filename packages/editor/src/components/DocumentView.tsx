@@ -29,10 +29,11 @@ export const DocumentView: React.FC = () => {
     setActivePageId,
   } = useDocument();
   const t = useTranslations();
-  const { handlePageUnderflow, reflowAll } = usePagination(document, dispatch);
+  const { reflowAll } = usePagination(document, dispatch);
   const previousBodyHeightsRef = useRef<number[] | null>(null);
   const documentRef = useRef(document);
   const pendingPageBodyStatesRef = useRef(new Map<string, SerializedEditorState | null>());
+  const underflowInFlightRef = useRef(new Set<string>());
   const pasteOverflowSequenceRef = useRef(false);
   const pasteOverflowReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const defaultPageTemplate = useMemo(
@@ -218,6 +219,73 @@ export const DocumentView: React.FC = () => {
     [defaultPageTemplate, dispatch, editorRegistry, requestFocusAtEnd, runHistoryAction],
   );
 
+  /**
+   * Rejoin the next page before measuring it again. The overflow plugin on
+   * the current page then performs the exact DOM split, so a deleted line can
+   * pull the continuation of a paragraph back by as many lines as fit.
+   */
+  const handlePageContentUnderflow = useCallback(
+    (pageId: string) => {
+      if (underflowInFlightRef.current.has(pageId)) {
+        return;
+      }
+
+      const currentDocument = documentRef.current;
+      const pageIndex = currentDocument.pages.findIndex(page => page.id === pageId);
+      const page = currentDocument.pages[pageIndex];
+      const nextPage = currentDocument.pages[pageIndex + 1];
+      if (!page || !nextPage) {
+        return;
+      }
+
+      const currentEditor = editorRegistry.get(page.id);
+      const nextEditor = editorRegistry.get(nextPage.id);
+      const currentState = currentEditor?.getEditorState().toJSON()
+        ?? pendingPageBodyStatesRef.current.get(page.id)
+        ?? page.bodyState;
+      const nextState = nextEditor?.getEditorState().toJSON()
+        ?? pendingPageBodyStatesRef.current.get(nextPage.id)
+        ?? nextPage.bodyState;
+      const nextChildren = nextState?.root?.children ?? [];
+      if (nextChildren.length === 0) {
+        if (pageIndex + 1 === currentDocument.pages.length - 1) {
+          dispatch({ type: 'REMOVE_PAGE', pageId: nextPage.id });
+        }
+        return;
+      }
+
+      const mergedBody = mergeEditorStates(currentState, nextState);
+      if (!mergedBody) {
+        return;
+      }
+
+      underflowInFlightRef.current.add(pageId);
+      debug('page', `underflow merge page=${shortId(page.id)} next=${shortId(nextPage.id)} children=${nextChildren.length}`);
+      pendingPageBodyStatesRef.current.delete(page.id);
+      pendingPageBodyStatesRef.current.delete(nextPage.id);
+      dispatch({
+        type: 'SET_DOCUMENT',
+        document: {
+          ...currentDocument,
+          pages: currentDocument.pages.map(candidate => {
+            if (candidate.id === page.id) {
+              return { ...candidate, bodyState: mergedBody };
+            }
+            if (candidate.id === nextPage.id) {
+              return { ...candidate, bodyState: null };
+            }
+            return candidate;
+          }),
+        },
+      });
+
+      requestAnimationFrame(() => {
+        underflowInFlightRef.current.delete(pageId);
+      });
+    },
+    [dispatch, editorRegistry],
+  );
+
   const handleBackspaceAtPageStart = useCallback(
     (pageIndex: number, pageId: string) => {
       if (pageIndex <= 0) {
@@ -237,13 +305,13 @@ export const DocumentView: React.FC = () => {
           region: 'body',
         },
         () => {
-          handlePageUnderflow(pageIndex - 1);
+          handlePageContentUnderflow(previousPage.id);
         },
       );
 
       focusBodyEditor(previousPage.id, 'end');
     },
-    [document.pages, focusBodyEditor, handlePageUnderflow, runHistoryAction],
+    [document.pages, focusBodyEditor, handlePageContentUnderflow, runHistoryAction],
   );
 
   const handleDeleteAtPageEnd = useCallback(
@@ -262,13 +330,13 @@ export const DocumentView: React.FC = () => {
           region: 'body',
         },
         () => {
-          handlePageUnderflow(pageIndex);
+          handlePageContentUnderflow(currentPage.id);
         },
       );
 
       focusBodyEditor(currentPage.id, 'end');
     },
-    [document.pages, focusBodyEditor, handlePageUnderflow, runHistoryAction],
+    [document.pages, focusBodyEditor, handlePageContentUnderflow, runHistoryAction],
   );
 
   const handleMoveToPreviousPage = useCallback(
@@ -311,6 +379,7 @@ export const DocumentView: React.FC = () => {
           pageId={page.id}
           pageIndex={index}
           onOverflow={(content, cause) => handlePageOverflow(page.id, content, cause)}
+          onUnderflow={() => handlePageContentUnderflow(page.id)}
           onBackspaceAtStart={handleBackspaceAtPageStart}
           onDeleteAtEnd={handleDeleteAtPageEnd}
           onMoveToPreviousPage={handleMoveToPreviousPage}

@@ -626,7 +626,7 @@ test.describe('Bug Fix Regressions', () => {
     expect(await pages.count()).toBe(pageCountBeforeFooterPaste);
   });
 
-  test('backspace at the start of page 2 pulls the leading block back to page 1', async ({ page }) => {
+  test('backspace at the start of page 2 preserves exact continuous reflow', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"]').first();
     await body.click();
 
@@ -697,12 +697,12 @@ test.describe('Bug Fix Regressions', () => {
     await page.keyboard.press('Backspace');
     await page.waitForTimeout(500);
 
-    expect(await firstBody.innerText()).toContain(movedParagraph!);
+    expect(await firstBody.innerText()).not.toContain(movedParagraph!);
     const secondBodyTextAfter = await secondBody.innerText();
-    expect(secondBodyTextAfter.split('\n').find(Boolean)).not.toBe(movedParagraph);
+    expect(secondBodyTextAfter.split('\n').find(Boolean)).toBe(movedParagraph);
   });
 
-  test('delete at the end of page 1 pulls the leading block forward from page 2', async ({ page }) => {
+  test('delete at the end of page 1 preserves exact continuous reflow', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"]').first();
     await body.click();
 
@@ -773,9 +773,9 @@ test.describe('Bug Fix Regressions', () => {
     await page.keyboard.press('Delete');
     await page.waitForTimeout(500);
 
-    expect(await firstBody.innerText()).toContain(movedParagraph!);
+    expect(await firstBody.innerText()).not.toContain(movedParagraph!);
     const secondBodyTextAfter = await secondBody.innerText();
-    expect(secondBodyTextAfter.split('\n').find(Boolean)).not.toBe(movedParagraph);
+    expect(secondBodyTextAfter.split('\n').find(Boolean)).toBe(movedParagraph);
   });
 
   test('arrow keys move between adjacent pages at body boundaries', async ({ page }) => {

@@ -11,6 +11,7 @@ interface PageViewProps {
   pageId: string;
   pageIndex: number;
   onOverflow?: (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => void;
+  onUnderflow?: () => void;
   onBackspaceAtStart?: (pageIndex: number, pageId: string) => void;
   onDeleteAtEnd?: (pageIndex: number, pageId: string) => void;
   onMoveToPreviousPage?: (pageIndex: number) => void;
@@ -28,6 +29,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
   pageId,
   pageIndex,
   onOverflow,
+  onUnderflow,
   onBackspaceAtStart,
   onDeleteAtEnd,
   onMoveToPreviousPage,
@@ -111,6 +113,7 @@ export const PageView: React.FC<PageViewProps> = React.memo(({
         initialBodyState={page.bodyState}
         onBodyChange={handleBodyChange}
         onOverflow={handleOverflow}
+        onUnderflow={onUnderflow}
         onFocus={handleFocus}
         onBackspaceAtStart={() => onBackspaceAtStart?.(pageIndex, pageId)}
         onDeleteAtEnd={() => onDeleteAtEnd?.(pageIndex, pageId)}

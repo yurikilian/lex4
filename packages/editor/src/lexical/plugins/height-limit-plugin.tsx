@@ -56,13 +56,16 @@ export function HeightLimitPlugin({ maxHeight, channel }: { maxHeight: number; c
 
       const root = editor.getRootElement();
       if (!root) return;
-
+      const hadFocus = document.activeElement === root || root.contains(document.activeElement);
       // Use requestAnimationFrame to read DOM after paint
       requestAnimationFrame(() => {
         if (root.scrollHeight > maxHeight) {
           debug(channel, `reverting — scrollHeight ${root.scrollHeight}px > max ${maxHeight}px`);
+          // The listener's prevEditorState can be an intermediate batched
+          // update (not the last visible text). Prefer the DOM-confirmed last
+          // good snapshot so rejecting a paste never trims valid suffix text.
           const restoreState =
-            JSON.stringify(prevEditorState.toJSON()) || lastGoodStateRef.current;
+            lastGoodStateRef.current || JSON.stringify(prevEditorState.toJSON());
           if (!restoreState) {
             return;
           }
@@ -71,6 +74,12 @@ export function HeightLimitPlugin({ maxHeight, channel }: { maxHeight: number; c
           editor.setEditorState(editor.parseEditorState(restoreState));
 
           isRevertingRef.current = false;
+          if (hadFocus) {
+            // setEditorState may detach focus while rejecting an oversized
+            // paste. Restore it on the next paint, after Lexical commits the
+            // restored DOM and without disturbing ordinary typing updates.
+            requestAnimationFrame(() => editor.focus());
+          }
         } else {
           // Content fits — save as last good state
           lastGoodStateRef.current = JSON.stringify(editorState.toJSON());

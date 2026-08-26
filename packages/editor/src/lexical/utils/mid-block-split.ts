@@ -301,8 +301,8 @@ function splitParagraphNode(
   // Now directChild is the child of blockNode that contains (or is) afterText
   const splitChildIndex = blockNode.getChildren().indexOf(directChild);
 
-  if (splitChildIndex <= 0) {
-    debug('overflow', 'split index is 0 or not found — nothing to keep on this page');
+  if (splitChildIndex < 0) {
+    debug('overflow', 'split child was not found in block — cannot split');
     return null;
   }
 

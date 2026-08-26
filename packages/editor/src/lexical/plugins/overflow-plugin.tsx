@@ -4,6 +4,7 @@ import {
   $getRoot,
   $isElementNode,
   type LexicalNode,
+  type EditorState,
   type SerializedEditorState,
   type SerializedLexicalNode,
 } from 'lexical';
@@ -34,10 +35,20 @@ interface OverflowPluginProps {
     overflowContent: SerializedEditorState,
     cause: 'paste' | 'content',
   ) => void;
+  /** Called after content shrinks and the page has room for content to flow back. */
+  onUnderflow?: () => void;
 }
 
 /** Debounce delay for typing-triggered overflow checks (ms) */
 const OVERFLOW_DEBOUNCE_MS = 300;
+
+function getTextContentLength(editorState: EditorState): number {
+  let length = 0;
+  editorState.read(() => {
+    length = $getRoot().getTextContent().length;
+  });
+  return length;
+}
 
 /**
  * OverflowPlugin — Detects content overflow inside a Lexical editor
@@ -55,16 +66,20 @@ const OVERFLOW_DEBOUNCE_MS = 300;
  */
 export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
   onOverflow,
+  onUnderflow,
 }) => {
   const [editor] = useLexicalComposerContext();
   const onOverflowRef = useRef(onOverflow);
   onOverflowRef.current = onOverflow;
+  const onUnderflowRef = useRef(onUnderflow);
+  onUnderflowRef.current = onUnderflow;
 
   useEffect(() => {
     let observer: ResizeObserver | null = null;
     let unregisterUpdateListener: (() => void) | null = null;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     let deliveryTimer: ReturnType<typeof setTimeout> | null = null;
+    let underflowTimer: ReturnType<typeof setTimeout> | null = null;
     const gate = createOverflowCheckGate<{
       rootElement: HTMLElement;
       container: HTMLElement;
@@ -168,21 +183,16 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       // Uses offsetTop (relative to offsetParent, unaffected by scroll)
       // instead of getBoundingClientRect (which shifts with scroll).
       let splitIndex = children.length;
-      let firstBlockOverflows = false;
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
         const childBottom = child.offsetTop + child.offsetHeight;
 
         if (childBottom > availableHeight) {
-          if (i === 0) {
-            // First block itself overflows — attempt mid-block split on it,
-            // then fall through to extract remaining blocks after it
-            firstBlockOverflows = true;
-            splitIndex = 1; // everything after block 0 overflows
-          } else {
-            splitIndex = i;
-          }
-          debug('overflow', `split at index ${i === 0 ? '0 (mid-block)' : i} (childBottom=${childBottom}px > ${availableHeight}px)`);
+          // The first block that crosses the body boundary is the split
+          // target, regardless of its top-level index. Moving it as a whole
+          // leaves unused space on this page and breaks continuous reflow.
+          splitIndex = i;
+          debug('overflow', `split at index ${i} (childBottom=${childBottom}px > ${availableHeight}px)`);
           break;
         }
       }
@@ -207,26 +217,20 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
 
             const overflowNodes: SerializedLexicalNode[] = [];
 
-            // If the first block itself overflows, try mid-block split on it
-            if (firstBlockOverflows) {
-              const midBlockOverflow = performMidBlockSplit(rootElement, availableHeight, 0);
-              if (midBlockOverflow && midBlockOverflow.length > 0) {
-                overflowNodes.push(...midBlockOverflow);
-                debug('overflow', `mid-block split on first block extracted ${midBlockOverflow.length} nodes`);
-              } else {
-                debug('overflow', 'mid-block split failed on first block — keeping it whole');
-              }
-
-              // Serialize and remove remaining blocks after the first
-              const freshChildren = root.getChildren();
-              const toRemove = freshChildren.slice(1);
-              for (const node of toRemove) {
-                overflowNodes.push(serializeNodeTree(node));
-              }
-              for (const node of toRemove) {
-                node.remove();
-              }
+            // Split the exact block crossing the boundary, then transfer its
+            // continuation and every following sibling. This is what keeps
+            // fitting lines on the current page in the Google Docs style.
+            const midBlockOverflow = performMidBlockSplit(
+              rootElement,
+              availableHeight,
+              splitIndex,
+            );
+            if (midBlockOverflow && midBlockOverflow.length > 0) {
+              overflowNodes.push(...midBlockOverflow);
+              debug('overflow', `mid-block split at index ${splitIndex} extracted ${midBlockOverflow.length} nodes`);
             } else {
+              // Blocks that cannot be split (for example a custom atomic node)
+              // still move as one unit, but only as a last-resort fallback.
               const toRemove = allChildren.slice(splitIndex);
               for (const node of toRemove) {
                 overflowNodes.push(serializeNodeTree(node));
@@ -234,6 +238,7 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
               for (const node of toRemove) {
                 node.remove();
               }
+              debug('overflow', `mid-block split unavailable at index ${splitIndex} — moved ${toRemove.length} atomic block(s)`);
             }
 
             if (overflowNodes.length === 0) {
@@ -297,8 +302,24 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       observer.observe(rootElement);
       observer.observe(container);
 
-      unregisterUpdateListener = editor.registerUpdateListener(({ tags }) => {
+      unregisterUpdateListener = editor.registerUpdateListener(({ editorState, prevEditorState, tags }) => {
         if (tags.has('overflow-split')) return;
+
+        // Underflow is driven by a user/editor-state deletion, not by a
+        // ResizeObserver shrink. Reflow/remounts also shrink roots while a
+        // split is being delivered; treating those as deletions causes an
+        // endless merge/split loop across every page.
+        if (onUnderflowRef.current) {
+          const previousLength = getTextContentLength(prevEditorState);
+          const nextLength = getTextContentLength(editorState);
+          if (nextLength < previousLength) {
+            if (underflowTimer) clearTimeout(underflowTimer);
+            underflowTimer = setTimeout(() => {
+              underflowTimer = null;
+              onUnderflowRef.current?.();
+            }, 80);
+          }
+        }
 
         // Paste and external state changes trigger immediate overflow check.
         // Normal typing is debounced to avoid extracting only the cursor paragraph.
@@ -330,9 +351,11 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
           if (observer) observer.disconnect();
           if (unregisterUpdateListener) unregisterUpdateListener();
           if (debounceTimer) clearTimeout(debounceTimer);
+          if (underflowTimer) clearTimeout(underflowTimer);
           observer = null;
           unregisterUpdateListener = null;
           debounceTimer = null;
+          underflowTimer = null;
         }
       },
     );
@@ -343,6 +366,7 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
       if (unregisterUpdateListener) unregisterUpdateListener();
       if (debounceTimer) clearTimeout(debounceTimer);
       if (deliveryTimer) clearTimeout(deliveryTimer);
+      if (underflowTimer) clearTimeout(underflowTimer);
       gate.dispose();
     };
   }, [editor]);

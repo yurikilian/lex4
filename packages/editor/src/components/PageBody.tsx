@@ -26,6 +26,7 @@ interface PageBodyProps {
   initialBodyState?: SerializedEditorState | null;
   onBodyChange?: (state: SerializedEditorState) => void;
   onOverflow?: (overflowContent: SerializedEditorState, cause: 'paste' | 'content') => void;
+  onUnderflow?: () => void;
   onFocus?: () => void;
   onBackspaceAtStart?: () => void;
   onDeleteAtEnd?: () => void;
@@ -67,6 +68,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
   initialBodyState,
   onBodyChange,
   onOverflow,
+  onUnderflow,
   onFocus,
   onBackspaceAtStart,
   onDeleteAtEnd,
@@ -151,7 +153,7 @@ export const PageBody: React.FC<PageBodyProps> = ({
             onMoveToNextPage={onMoveToNextPage}
           />
         )}
-        <OverflowPlugin onOverflow={handleOverflow} />
+        <OverflowPlugin onOverflow={handleOverflow} onUnderflow={onUnderflow} />
         {bodyPlugins.map((Plugin, idx) => (
           <Plugin key={idx} />
         ))}

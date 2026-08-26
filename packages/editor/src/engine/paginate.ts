@@ -4,8 +4,9 @@ import type { BlockMeasurement, PageAssignment } from '../types/page';
  * Assigns an ordered list of measured blocks to pages.
  *
  * Fills each page up to `bodyHeightPx`, then starts a new page.
- * Blocks are never split — a block that doesn't fit moves entirely
- * to the next page (mid-block splitting is a future enhancement).
+ * This measurement-layer helper assigns whole blocks. The interactive editor
+ * performs DOM-backed mid-block splitting in OverflowPlugin before handing
+ * continuation content to the next page.
  *
  * Always returns at least one page, even if blocks is empty.
  */
