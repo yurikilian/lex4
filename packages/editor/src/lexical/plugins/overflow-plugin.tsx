@@ -3,6 +3,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import {
   $getRoot,
   $isElementNode,
+  SKIP_DOM_SELECTION_TAG,
   type LexicalNode,
   type EditorState,
   type SerializedEditorState,
@@ -37,6 +38,17 @@ interface OverflowPluginProps {
   ) => void;
   /** Called after content shrinks and the page has room for content to flow back. */
   onUnderflow?: () => void;
+}
+
+/**
+ * Update tags for an overflow split. A split in an editor that does not hold
+ * focus — a body shrinking because its footer grew — must not write that
+ * editor's stale selection to the DOM, which would pull focus into it.
+ */
+function overflowSplitTags(rootElement: HTMLElement): string[] {
+  return rootElement.contains(rootElement.ownerDocument.activeElement)
+    ? ['overflow-split']
+    : ['overflow-split', SKIP_DOM_SELECTION_TAG];
 }
 
 /** Debounce delay for typing-triggered overflow checks (ms) */
@@ -166,7 +178,7 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
 
               deliverOverflow(overflowState, cause);
             },
-            { tag: 'overflow-split' },
+            { tag: overflowSplitTags(rootElement) },
           );
         } catch (error) {
           finishProcessing();
@@ -261,7 +273,7 @@ export const OverflowPlugin: React.FC<OverflowPluginProps> = ({
 
             deliverOverflow(overflowState, cause);
           },
-          { tag: 'overflow-split' },
+          { tag: overflowSplitTags(rootElement) },
         );
       } catch (error) {
         finishProcessing();
