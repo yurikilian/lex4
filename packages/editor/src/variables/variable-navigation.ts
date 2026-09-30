@@ -1,11 +1,14 @@
 import {
   $createNodeSelection,
+  $createRangeSelectionFromDom,
+  $getNearestNodeFromDOMNode,
   $getSelection,
   $isElementNode,
   $isNodeSelection,
   $isRangeSelection,
   $isTextNode,
   $setSelection,
+  type LexicalEditor,
   type LexicalNode,
   type RangeSelection,
 } from 'lexical';
@@ -70,6 +73,48 @@ function $descendToEdge(
   }
 
   return current;
+}
+
+/**
+ * Reads the DOM caret into a range selection for arrow-key navigation.
+ *
+ * For a DOM caret at the end of an element, Lexical descends to the last
+ * descendant of the last child and then counts from offset 0. When that
+ * descendant is a variable after other content in an optional segment,
+ * `(paragraph, childCount)` — where Linux Chromium puts the caret after End —
+ * becomes a point before the variable: ArrowLeft would jump over the chip and
+ * ArrowRight would select it. Such a caret is placed after the variable.
+ */
+export function $createNavigationSelectionFromDom(
+  domSelection: Selection,
+  editor: LexicalEditor,
+): RangeSelection | null {
+  const selection = $createRangeSelectionFromDom(domSelection, editor);
+  const { anchorNode, anchorOffset } = domSelection;
+  if (
+    selection === null
+    || !selection.isCollapsed()
+    || anchorNode === null
+    || anchorNode.nodeType !== Node.ELEMENT_NODE
+    || anchorOffset === 0
+    || anchorOffset !== anchorNode.childNodes.length
+  ) {
+    return selection;
+  }
+
+  const container = $getNearestNodeFromDOMNode(anchorNode);
+  const lastChild = $getNearestNodeFromDOMNode(anchorNode.childNodes[anchorOffset - 1]);
+  if (!$isElementNode(container) || lastChild === null || lastChild.is(container)) {
+    return selection;
+  }
+  const variable = $descendToEdge(lastChild, 'previous');
+  const parent = variable?.getParent();
+  if ($isVariableNode(variable) && $isElementNode(parent)) {
+    const offset = variable.getIndexWithinParent() + 1;
+    selection.anchor.set(parent.getKey(), offset, 'element');
+    selection.focus.set(parent.getKey(), offset, 'element');
+  }
+  return selection;
 }
 
 function $getAdjacentNode(
@@ -144,6 +189,9 @@ function $selectOutsideOptionalSegment(
   let edgeNode: LexicalNode = selection.anchor.getNode();
   if (!$isAtInlineEdge(edgeNode, direction)) {
     return false;
+  }
+  if ($isOptionalSegmentNode(edgeNode) && $isElementNode(edgeNode.getParent())) {
+    return $selectEditableBeside(edgeNode, direction);
   }
 
   let parent = edgeNode.getParent();

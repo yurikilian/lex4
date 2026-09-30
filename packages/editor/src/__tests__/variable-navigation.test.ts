@@ -9,11 +9,14 @@ import {
   $setSelection,
   createEditor,
 } from 'lexical';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { $createOptionalSegmentNode, OptionalSegmentNode } from '../variables/optional-segment-node';
 import { $createVariableNode, VariableNode } from '../variables/variable-node';
 import { VariableCaretNode } from '../variables/variable-caret-node';
-import { $handleVariableArrowNavigation } from '../variables/variable-navigation';
+import {
+  $createNavigationSelectionFromDom,
+  $handleVariableArrowNavigation,
+} from '../variables/variable-navigation';
 
 function createTestEditor() {
   return createEditor({
@@ -75,5 +78,82 @@ describe('$handleVariableArrowNavigation', () => {
         expect(selection.has(variable.getKey())).toBe(true);
       }
     }, { discrete: true });
+  });
+
+  describe('with the caret read from the DOM', () => {
+    afterEach(() => {
+      window.getSelection()?.removeAllRanges();
+      document.body.innerHTML = '';
+    });
+
+    function mountTrailingVariableParagraph() {
+      const editor = createTestEditor();
+      const rootElement = document.createElement('div');
+      rootElement.contentEditable = 'true';
+      document.body.append(rootElement);
+      editor.setRootElement(rootElement);
+
+      let variableKey = '';
+      let paragraphKey = '';
+      editor.update(() => {
+        const paragraph = $createParagraphNode();
+        const segment = $createOptionalSegmentNode();
+        const variable = $createVariableNode('customer.name');
+        segment.append($createTextNode(', '), variable);
+        paragraph.append($createTextNode('Customer'), segment);
+        $getRoot().append(paragraph);
+        variableKey = variable.getKey();
+        paragraphKey = paragraph.getKey();
+      }, { discrete: true });
+
+      const paragraphElement = editor.getElementByKey(paragraphKey);
+      if (paragraphElement === null) {
+        throw new Error('paragraph was not rendered');
+      }
+      return { editor, paragraphElement, variableKey };
+    }
+
+    it('selects a trailing variable on ArrowLeft from the paragraph end', () => {
+      const { editor, paragraphElement, variableKey } = mountTrailingVariableParagraph();
+      // Where Linux Chromium puts the caret after End: after the optional
+      // segment span, which ends with the variable chip.
+      const domSelection = window.getSelection()!;
+      domSelection.collapse(paragraphElement, paragraphElement.childNodes.length);
+
+      editor.update(() => {
+        const selection = $createNavigationSelectionFromDom(domSelection, editor);
+        expect(selection).not.toBeNull();
+        $setSelection(selection);
+
+        expect($handleVariableArrowNavigation('previous')).toBe(true);
+        const nodeSelection = $getSelection();
+        expect($isNodeSelection(nodeSelection)).toBe(true);
+        if ($isNodeSelection(nodeSelection)) {
+          expect(nodeSelection.has(variableKey)).toBe(true);
+        }
+      }, { discrete: true });
+    });
+
+    it('leaves the optional segment on ArrowRight from the paragraph end', () => {
+      const { editor, paragraphElement } = mountTrailingVariableParagraph();
+      const domSelection = window.getSelection()!;
+      domSelection.collapse(paragraphElement, paragraphElement.childNodes.length);
+
+      editor.update(() => {
+        const selection = $createNavigationSelectionFromDom(domSelection, editor);
+        expect(selection).not.toBeNull();
+        $setSelection(selection);
+
+        expect($handleVariableArrowNavigation('next')).toBe(true);
+        const rangeSelection = $getSelection();
+        expect($isRangeSelection(rangeSelection)).toBe(true);
+        if ($isRangeSelection(rangeSelection)) {
+          const caret = rangeSelection.anchor.getNode();
+          expect(caret.getType()).toBe('variable-caret');
+          expect(caret.getParent()?.getType()).toBe('paragraph');
+          expect(caret.getPreviousSibling()?.getType()).toBe('optional-segment');
+        }
+      }, { discrete: true });
+    });
   });
 });

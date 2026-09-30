@@ -3,7 +3,6 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import {
   $getSelection,
   $createTextNode,
-  $createRangeSelectionFromDom,
   $isNodeSelection,
   $isRangeSelection,
   $setSelection,
@@ -16,7 +15,10 @@ import {
 import { $createVariableNode } from './variable-node';
 import { VariableCaretNode } from './variable-caret-node';
 import { INSERT_VARIABLE_COMMAND } from './variable-commands';
-import { $handleVariableArrowNavigation } from './variable-navigation';
+import {
+  $createNavigationSelectionFromDom,
+  $handleVariableArrowNavigation,
+} from './variable-navigation';
 
 /**
  * VariablePlugin — registers the INSERT_VARIABLE_COMMAND handler.
@@ -66,7 +68,7 @@ export const VariablePlugin: React.FC = () => {
           ) {
             const domSelection = window.getSelection();
             if (domSelection && domSelection.rangeCount > 0) {
-              const domRangeSelection = $createRangeSelectionFromDom(domSelection, editor);
+              const domRangeSelection = $createNavigationSelectionFromDom(domSelection, editor);
               if (domRangeSelection) {
                 $setSelection(domRangeSelection);
               }

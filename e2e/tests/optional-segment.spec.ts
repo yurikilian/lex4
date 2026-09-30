@@ -109,6 +109,44 @@ test.describe('Optional Segment', () => {
     await expect(page.locator('[data-lex4-optional-segment]')).toHaveText('Customer Name');
   });
 
+  test('arrow keys treat a caret at the end of a paragraph as after a trailing optional variable', async ({ page }) => {
+    const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
+    await body.click();
+    await page.keyboard.type('Customer, ');
+    await page.getByTestId('toggle-variable-panel').click();
+    await page.getByTestId('variable-panel-customer.name').click();
+
+    // Wrap ", " and the chip: the chip becomes the segment's last child.
+    await selectLastChars(page, 3);
+    await page.getByTestId('btn-optional-segment').click();
+
+    const chip = page.getByTestId('variable-chip-customer.name');
+    const segment = page.locator('[data-lex4-optional-segment]');
+    await expect(segment).toHaveText(', Customer Name');
+    expect(await segment.evaluate(node => node.lastElementChild?.hasAttribute('data-lexical-decorator'))).toBe(true);
+
+    // Linux Chromium puts the caret here after End: after the optional segment
+    // span, at the end of the paragraph, rather than inside the segment.
+    const placeCaretAtParagraphEnd = () => segment.evaluate((node) => {
+      const paragraph = node.parentElement!;
+      window.getSelection()!.collapse(paragraph, paragraph.childNodes.length);
+    });
+
+    await body.click();
+    await placeCaretAtParagraphEnd();
+    await page.keyboard.press('ArrowLeft');
+    await expect(chip).toHaveClass(/lex4-variable-chip-selected/);
+
+    await body.click();
+    await placeCaretAtParagraphEnd();
+    await page.keyboard.press('ArrowRight');
+    await expect(chip).not.toHaveClass(/lex4-variable-chip-selected/);
+    await page.keyboard.type(' continued');
+
+    await expect(body).toContainText('Customer, Customer Name continued');
+    await expect(segment).not.toContainText('continued');
+  });
+
   test('undo restores the wrapped segment', async ({ page }) => {
     const body = page.locator('[data-testid^="page-body-"] [data-lexical-editor="true"]').first();
     await body.click();
