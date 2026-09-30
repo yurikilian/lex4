@@ -1,6 +1,7 @@
 import {
   $createNodeSelection,
   $createParagraphNode,
+  $createRangeSelectionFromDom,
   $createTextNode,
   $getRoot,
   $getSelection,
@@ -8,6 +9,7 @@ import {
   $isRangeSelection,
   $setSelection,
   createEditor,
+  SELECTION_CHANGE_COMMAND,
 } from 'lexical';
 import { afterEach, describe, expect, it } from 'vitest';
 import { $createOptionalSegmentNode, OptionalSegmentNode } from '../variables/optional-segment-node';
@@ -16,6 +18,7 @@ import { VariableCaretNode } from '../variables/variable-caret-node';
 import {
   $createNavigationSelectionFromDom,
   $handleVariableArrowNavigation,
+  registerTrailingVariableCaret,
 } from '../variables/variable-navigation';
 
 function createTestEditor() {
@@ -95,6 +98,7 @@ describe('$handleVariableArrowNavigation', () => {
 
       let variableKey = '';
       let paragraphKey = '';
+      let segmentKey = '';
       editor.update(() => {
         const paragraph = $createParagraphNode();
         const segment = $createOptionalSegmentNode();
@@ -104,13 +108,14 @@ describe('$handleVariableArrowNavigation', () => {
         $getRoot().append(paragraph);
         variableKey = variable.getKey();
         paragraphKey = paragraph.getKey();
+        segmentKey = segment.getKey();
       }, { discrete: true });
 
       const paragraphElement = editor.getElementByKey(paragraphKey);
       if (paragraphElement === null) {
         throw new Error('paragraph was not rendered');
       }
-      return { editor, paragraphElement, variableKey };
+      return { editor, paragraphElement, variableKey, segmentKey };
     }
 
     it('selects a trailing variable on ArrowLeft from the paragraph end', () => {
@@ -130,6 +135,26 @@ describe('$handleVariableArrowNavigation', () => {
         expect($isNodeSelection(nodeSelection)).toBe(true);
         if ($isNodeSelection(nodeSelection)) {
           expect(nodeSelection.has(variableKey)).toBe(true);
+        }
+      }, { discrete: true });
+    });
+
+    it('keeps the selection read on a selection change after a trailing variable', () => {
+      const { editor, paragraphElement, segmentKey } = mountTrailingVariableParagraph();
+      registerTrailingVariableCaret(editor);
+      const domSelection = window.getSelection()!;
+      domSelection.collapse(paragraphElement, paragraphElement.childNodes.length);
+
+      editor.update(() => {
+        $setSelection($createRangeSelectionFromDom(domSelection, editor));
+        editor.dispatchCommand(SELECTION_CHANGE_COMMAND, undefined);
+
+        const selection = $getSelection();
+        expect($isRangeSelection(selection)).toBe(true);
+        if ($isRangeSelection(selection)) {
+          expect(selection.anchor.key).toBe(segmentKey);
+          expect(selection.anchor.offset).toBe(2);
+          expect(selection.focus.offset).toBe(2);
         }
       }, { discrete: true });
     });

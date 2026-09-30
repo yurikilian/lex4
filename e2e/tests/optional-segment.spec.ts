@@ -125,20 +125,30 @@ test.describe('Optional Segment', () => {
     await expect(segment).toHaveText(', Customer Name');
     expect(await segment.evaluate(node => node.lastElementChild?.hasAttribute('data-lexical-decorator'))).toBe(true);
 
-    // Linux Chromium puts the caret here after End: after the optional segment
-    // span, at the end of the paragraph, rather than inside the segment.
-    const placeCaretAtParagraphEnd = () => segment.evaluate((node) => {
-      const paragraph = node.parentElement!;
-      window.getSelection()!.collapse(paragraph, paragraph.childNodes.length);
-    });
+    // Linux Chromium puts the caret here after End: after the optional
+    // segment span, at the end of the paragraph, rather than inside the
+    // segment. Other platforms get it explicitly. Waiting for the selection
+    // change lets Lexical read the caret, and write it back, before the key.
+    const pressEndLikeLinuxChromium = async () => {
+      await body.click();
+      await page.keyboard.press('End');
+      await segment.evaluate(node => new Promise<void>((resolve) => {
+        // Collapsing onto the caret's current position may not fire an event.
+        const timeout = setTimeout(resolve, 200);
+        document.addEventListener('selectionchange', () => {
+          clearTimeout(timeout);
+          setTimeout(resolve, 0);
+        }, { once: true });
+        const paragraph = node.parentElement!;
+        window.getSelection()!.collapse(paragraph, paragraph.childNodes.length);
+      }));
+    };
 
-    await body.click();
-    await placeCaretAtParagraphEnd();
+    await pressEndLikeLinuxChromium();
     await page.keyboard.press('ArrowLeft');
     await expect(chip).toHaveClass(/lex4-variable-chip-selected/);
 
-    await body.click();
-    await placeCaretAtParagraphEnd();
+    await pressEndLikeLinuxChromium();
     await page.keyboard.press('ArrowRight');
     await expect(chip).not.toHaveClass(/lex4-variable-chip-selected/);
     await page.keyboard.type(' continued');

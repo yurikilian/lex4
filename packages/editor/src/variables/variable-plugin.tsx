@@ -18,6 +18,7 @@ import { INSERT_VARIABLE_COMMAND } from './variable-commands';
 import {
   $createNavigationSelectionFromDom,
   $handleVariableArrowNavigation,
+  registerTrailingVariableCaret,
 } from './variable-navigation';
 
 /**
@@ -89,6 +90,7 @@ export const VariablePlugin: React.FC = () => {
         },
         COMMAND_PRIORITY_CRITICAL,
       ),
+      registerTrailingVariableCaret(editor),
       editor.registerNodeTransform(VariableCaretNode, (node) => {
         const text = node.getTextWithoutAnchor();
         if (text.length === 0) {

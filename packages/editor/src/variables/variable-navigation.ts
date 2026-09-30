@@ -8,6 +8,8 @@ import {
   $isRangeSelection,
   $isTextNode,
   $setSelection,
+  COMMAND_PRIORITY_CRITICAL,
+  SELECTION_CHANGE_COMMAND,
   type LexicalEditor,
   type LexicalNode,
   type RangeSelection,
@@ -76,36 +78,36 @@ function $descendToEdge(
 }
 
 /**
- * Reads the DOM caret into a range selection for arrow-key navigation.
+ * Places a caret that the DOM puts after a trailing variable after it in
+ * Lexical too.
  *
  * For a DOM caret at the end of an element, Lexical descends to the last
  * descendant of the last child and then counts from offset 0. When that
  * descendant is a variable after other content in an optional segment,
  * `(paragraph, childCount)` — where Linux Chromium puts the caret after End —
- * becomes a point before the variable: ArrowLeft would jump over the chip and
- * ArrowRight would select it. Such a caret is placed after the variable.
+ * becomes a point before the variable. Lexical then writes that point back to
+ * the DOM, so ArrowLeft jumps over the chip and ArrowRight selects it.
  */
-export function $createNavigationSelectionFromDom(
+function $placeCaretAfterTrailingVariable(
+  selection: RangeSelection,
   domSelection: Selection,
-  editor: LexicalEditor,
-): RangeSelection | null {
-  const selection = $createRangeSelectionFromDom(domSelection, editor);
+): void {
   const { anchorNode, anchorOffset } = domSelection;
   if (
-    selection === null
-    || !selection.isCollapsed()
+    !selection.isCollapsed()
+    || !domSelection.isCollapsed
     || anchorNode === null
     || anchorNode.nodeType !== Node.ELEMENT_NODE
     || anchorOffset === 0
     || anchorOffset !== anchorNode.childNodes.length
   ) {
-    return selection;
+    return;
   }
 
   const container = $getNearestNodeFromDOMNode(anchorNode);
   const lastChild = $getNearestNodeFromDOMNode(anchorNode.childNodes[anchorOffset - 1]);
   if (!$isElementNode(container) || lastChild === null || lastChild.is(container)) {
-    return selection;
+    return;
   }
   const variable = $descendToEdge(lastChild, 'previous');
   const parent = variable?.getParent();
@@ -114,7 +116,38 @@ export function $createNavigationSelectionFromDom(
     selection.anchor.set(parent.getKey(), offset, 'element');
     selection.focus.set(parent.getKey(), offset, 'element');
   }
+}
+
+/** Reads the DOM caret into a range selection for arrow-key navigation. */
+export function $createNavigationSelectionFromDom(
+  domSelection: Selection,
+  editor: LexicalEditor,
+): RangeSelection | null {
+  const selection = $createRangeSelectionFromDom(domSelection, editor);
+  if (selection !== null) {
+    $placeCaretAfterTrailingVariable(selection, domSelection);
+  }
   return selection;
+}
+
+/**
+ * Corrects the selection Lexical reads on every DOM selection change, before
+ * it is written back to the DOM, so a caret after a trailing variable stays
+ * after it.
+ */
+export function registerTrailingVariableCaret(editor: LexicalEditor): () => void {
+  return editor.registerCommand(
+    SELECTION_CHANGE_COMMAND,
+    () => {
+      const selection = $getSelection();
+      const domSelection = typeof window === 'undefined' ? null : window.getSelection();
+      if ($isRangeSelection(selection) && domSelection !== null) {
+        $placeCaretAfterTrailingVariable(selection, domSelection);
+      }
+      return false;
+    },
+    COMMAND_PRIORITY_CRITICAL,
+  );
 }
 
 function $getAdjacentNode(
